@@ -55,8 +55,8 @@ if __name__ == "__main__":
     print(f"expected: {TEXT!r}\n")
 
     with OpenRouter(
-            api_key=settings.openrouter_api_key.get_secret_value(),
-            server_url=settings.openrouter_api_base,
+        api_key=settings.openrouter_api_key.get_secret_value(),
+        server_url=settings.openrouter_api_base,
     ) as client:
         for model in MODELS:
             print(f"--- {model} ---")

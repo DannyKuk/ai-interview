@@ -1,18 +1,10 @@
-from langchain_openrouter import ChatOpenRouter
-
-from backend.config import settings
+from backend.chains.llm import get_chat_model
 
 PROMPT = "You are a job interviewer. Greet the candidate in one sentence."
 
 
 def run(label: str, max_tokens: int, effort: str) -> None:
-    llm = ChatOpenRouter(
-        model=settings.default_model,
-        api_key=settings.openrouter_api_key,
-        base_url=settings.openrouter_api_base,
-        max_tokens=max_tokens,
-        reasoning={"effort": effort},
-    )
+    llm = get_chat_model(max_tokens=max_tokens, effort=effort)
 
     response = llm.invoke(PROMPT)
 

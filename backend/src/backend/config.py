@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     openrouter_api_key: SecretStr  # no default = required
     openrouter_api_base: str = "https://openrouter.ai/api/v1"
     default_model: str = "openai/gpt-5-mini"
+    llm_timeout_ms: int = 30_000
 
 
 # Created once when the app starts. Import it wherever you need config.
