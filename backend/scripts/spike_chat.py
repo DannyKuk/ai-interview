@@ -1,7 +1,9 @@
 from langchain_openrouter import ChatOpenRouter
+
 from backend.config import settings
 
 PROMPT = "You are a job interviewer. Greet the candidate in one sentence."
+
 
 def run(label: str, max_tokens: int, effort: str) -> None:
     llm = ChatOpenRouter(
@@ -19,6 +21,7 @@ def run(label: str, max_tokens: int, effort: str) -> None:
     print("usage:", response.usage_metadata)
     print("meta:", response.response_metadata)
     print()
+
 
 if __name__ == "__main__":
     # 1. Normal settings for an interviewer turn: should reply fine
