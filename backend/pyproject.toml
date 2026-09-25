@@ -12,6 +12,7 @@ dependencies = [
     "httpx>=0.28.1",
     "langchain>=1.4.2",
     "langchain-openrouter>=0.2.9",
+    "openrouter>=0.11.46",
     "pydantic-settings>=2.15.0",
     "uvicorn>=0.54.0",
 ]
