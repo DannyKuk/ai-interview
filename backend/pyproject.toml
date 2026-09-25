@@ -1,7 +1,7 @@
 [project]
 name = "backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "FastAPI backend for the AI interview practice app"
 readme = "README.md"
 authors = [
     { name = "Danny", email = "danny.kukic.priv@gmail.com" }
