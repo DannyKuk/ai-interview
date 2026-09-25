@@ -18,3 +18,7 @@ class ChatRequest(BaseModel):
     # empty messages -> new chat
     model_config = ConfigDict(extra="forbid")
     messages: list[ChatMessage] = Field(max_length=MAX_MESSAGES)
+
+
+class ChatResponse(BaseModel):
+    reply: str
