@@ -22,3 +22,9 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+
+
+class Usage(BaseModel):
+    input_tokens: int = 0
+    output_tokens: int = 0  # includes reasoning tokens
+    cost: float | None = None
