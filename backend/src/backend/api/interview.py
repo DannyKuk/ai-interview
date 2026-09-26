@@ -4,7 +4,7 @@ from fastapi import APIRouter
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
-from backend.chains.interviewer import build_interviewer_chain
+from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.schemas.chat import ChatMessage, ChatRequest, ChatResponse, Usage
 
 router = APIRouter(prefix="/api/interview", tags=["interview"])
@@ -23,7 +23,9 @@ def to_langchain_messages(messages: list[ChatMessage]) -> list[BaseMessage]:
 
 def prepare_chat(request: ChatRequest):
     chain = build_interviewer_chain()
-    chain_input = {"history": to_langchain_messages(request.messages)}
+    chain_input = build_interviewer_input(
+        request.settings, to_langchain_messages(request.messages)
+    )
     return chain, chain_input
 
 
