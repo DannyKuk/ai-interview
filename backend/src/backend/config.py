@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     default_model: str = "openai/gpt-5-mini"
     llm_timeout_ms: int = 30_000
 
+    cors_origins: list[str] = ["http://localhost:3000"]
+
 
 # Created once when the app starts. Import it wherever you need config.
 settings = Settings()
