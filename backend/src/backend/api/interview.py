@@ -22,7 +22,7 @@ def to_langchain_messages(messages: list[ChatMessage]) -> list[BaseMessage]:
 
 
 def prepare_chat(request: ChatRequest):
-    chain = build_interviewer_chain()
+    chain = build_interviewer_chain(request.system_prompt)
     chain_input = build_interviewer_input(
         request.settings, to_langchain_messages(request.messages)
     )

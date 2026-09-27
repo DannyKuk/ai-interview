@@ -5,14 +5,17 @@ from langchain_core.runnables import Runnable
 from backend.chains.llm import get_chat_model
 from backend.prompts import load_prompt
 from backend.prompts.interview_settings import DIFFICULTY, PERSONA
-from backend.schemas.chat import InterviewSettings
+from backend.schemas.chat import InterviewSettings, Technique
 
 
-def build_interviewer_chain() -> Runnable:
+def build_interviewer_chain(technique: Technique = "zero_shot") -> Runnable:
     # Build prompt "template" for consistent system prompt + history to be
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", load_prompt("interviewer/zero_shot_v1")),
+            (
+                "system",
+                load_prompt(f"interviewer/{technique}_v1"),
+            ),  # technique translates to file-name!
             MessagesPlaceholder("history"),
         ]
     )

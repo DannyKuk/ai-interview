@@ -42,11 +42,17 @@ class InterviewSettings(BaseModel):
     persona: Literal["friendly", "neutral", "strict"] = "friendly"
 
 
+Technique = Literal[
+    "zero_shot", "few_shot", "chain_of_thought", "persona", "self_critique"
+]
+
+
 class ChatRequest(BaseModel):
     # empty messages -> new chat
     model_config = ConfigDict(extra="forbid")
     messages: list[ChatMessage] = Field(max_length=MAX_MESSAGES)
     settings: InterviewSettings = Field(default_factory=InterviewSettings)
+    system_prompt: Technique = "zero_shot"
 
 
 class ChatResponse(BaseModel):
