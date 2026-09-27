@@ -1,9 +1,9 @@
-import html
 import logging
 
 import httpx
 
 from backend.config import settings
+from backend.guard.delimiters import wrap
 from backend.schemas.guard import BLOCKED_CATEGORIES, BlockReason, GuardVerdict
 
 logger = logging.getLogger(__name__)
@@ -37,13 +37,11 @@ ROLE_QUESTION = {
 
 def build_state(role: str, last_question: str | None, message: str | None) -> str:
     # using <> tags for safety against injection
-    parts = [f"<role>{html.escape(role)}</role>"]
+    parts = [wrap("role", role)]
     if last_question:
-        parts.append(
-            f"<interviewer_question>{html.escape(last_question)}</interviewer_question>"
-        )
+        parts.append(wrap("interviewer_question", last_question))
     if message:
-        parts.append(f"<candidate_message>{html.escape(message)}</candidate_message>")
+        parts.append(wrap("candidate_message", message))
     return "\n".join(parts)
 
 
