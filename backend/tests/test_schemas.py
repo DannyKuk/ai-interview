@@ -95,3 +95,13 @@ def test_normal_roles_are_allowed(role):
 def test_suspicious_roles_are_rejected(role):
     with pytest.raises(ValidationError):
         ChatRequest.model_validate({"messages": [], "settings": {"role": role}})
+
+
+def test_system_prompt_defaults_to_zero_shot():
+    assert ChatRequest.model_validate({"messages": []}).system_prompt == "zero_shot"
+
+
+def test_unknown_system_prompt_is_rejected():
+    # the name becomes part of a file path, so no free text
+    with pytest.raises(ValidationError):
+        ChatRequest.model_validate({"messages": [], "system_prompt": "../../config"})

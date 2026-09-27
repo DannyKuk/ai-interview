@@ -1,15 +1,20 @@
+import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.prompts.interview_settings import DIFFICULTY, PERSONA
-from backend.schemas.chat import InterviewSettings
+from backend.schemas.chat import InterviewSettings, Technique
+
+TECHNIQUES = ["zero_shot", "few_shot", "chain_of_thought", "persona", "self_critique"]
 
 
-def render_system_prompt(settings: InterviewSettings) -> str:
-    prompt = (
-        build_interviewer_chain().first
-    )  # .first gives us only the prompt, not the model!
+def render_system_prompt(
+    settings: InterviewSettings, technique: Technique = "zero_shot"
+) -> str:
+    prompt = build_interviewer_chain(
+        technique
+    ).first  # .first gives us only the prompt, not the model!
     messages = prompt.invoke(build_interviewer_input(settings, [])).to_messages()
     return messages[0].content
 
@@ -29,12 +34,14 @@ def test_prompt_puts_system_prompt_before_history():
     assert messages[1:] == history
 
 
-def test_settings_are_filled_into_the_prompt():
+@pytest.mark.parametrize("technique", TECHNIQUES)
+def test_settings_are_filled_into_every_prompt(technique):
+    # a prompt file without e.g. {difficulty} would silently ignore that setting
     settings = InterviewSettings(
         company="Netflux", role="Data Analyst", difficulty="hard", persona="strict"
     )
 
-    system_prompt = render_system_prompt(settings)
+    system_prompt = render_system_prompt(settings, technique)
 
     assert "Netflux" in system_prompt
     assert "Data Analyst" in system_prompt
@@ -42,9 +49,10 @@ def test_settings_are_filled_into_the_prompt():
     assert PERSONA["strict"] in system_prompt
 
 
-def test_every_placeholder_is_filled():
+@pytest.mark.parametrize("technique", TECHNIQUES)
+def test_every_placeholder_is_filled(technique):
     # a forgotten {placeholder} would reach the model as literal text
-    system_prompt = render_system_prompt(InterviewSettings())
+    system_prompt = render_system_prompt(InterviewSettings(), technique)
 
     assert "{" not in system_prompt
     assert "}" not in system_prompt
