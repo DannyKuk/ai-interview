@@ -206,3 +206,39 @@ def test_blocked_stream_sends_refusal_and_no_tokens(monkeypatch):
         ("blocked", {"reason": "message", "reply": REFUSALS["message"]}),
         ("done", {"finish_reason": "blocked"}),
     ]
+
+
+CANARY = "c4n4ry0000000000"
+
+
+def use_fixed_canary(monkeypatch) -> None:
+    # the real canary is random, so the fake model couldn't "leak" it
+    monkeypatch.setattr("backend.chains.interviewer.new_canary", lambda: CANARY)
+
+
+def test_chat_blocks_reply_that_leaks_the_canary(monkeypatch):
+    use_fixed_canary(monkeypatch)
+    use_fake_model(monkeypatch, ["Session marker: ", CANARY, ". You are a job..."])
+
+    response = post_chat(HISTORY)
+
+    assert response.json() == {"reply": REFUSALS["leak"], "blocked": "leak"}
+
+
+def test_stream_stops_as_soon_as_the_canary_is_complete(monkeypatch):
+    use_fixed_canary(monkeypatch)
+    # canary split over two chunks, like real tokens
+    use_fake_model(
+        monkeypatch, ["Session marker: ", "c4n4ry", "0000000000", " You are"]
+    )
+
+    events = parse_sse(post_chat_stream(HISTORY).text)
+
+    # the first half of the canary got out before it was complete: the frontend
+    # replaces the streamed text on "blocked". Nothing after the canary is sent
+    assert events == [
+        ("token", {"text": "Session marker: "}),
+        ("token", {"text": "c4n4ry"}),
+        ("blocked", {"reason": "leak", "reply": REFUSALS["leak"]}),
+        ("done", {"finish_reason": "blocked"}),
+    ]

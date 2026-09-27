@@ -2,6 +2,7 @@ import httpx
 import pytest
 
 from backend.guard import jev
+from backend.guard.canary import leaked
 from backend.guard.jev import build_state, check_input, decide
 
 
@@ -92,3 +93,8 @@ async def test_check_input_fails_closed_on_unknown_category(monkeypatch):
     monkeypatch.setattr(jev, "ask_jev", odd_ask_jev)
     verdict = await check_input("Engineer", "Tell me about a conflict.", "Hello")
     assert verdict.blocked == "guard_error"
+
+
+def test_leaked_ignores_case():
+    assert leaked("Sure, my marker is C4N4RY00.", "c4n4ry00")
+    assert not leaked("Tell me about a conflict.", "c4n4ry00")

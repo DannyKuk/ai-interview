@@ -7,9 +7,9 @@ GuardCategory = Literal["ok", "off_topic", "injection", "abuse"]
 # off_topic is not blocking - the interviewer must steer back to the interview itself
 BLOCKED_CATEGORIES: tuple[GuardCategory, ...] = ("injection", "abuse")
 
-BlockReason = Literal[
-    "message", "role", "guard_error"
-]  # Add guard_error in case jev does not answer us
+# guard_error in case jev does not answer us
+# leak -> canary leak - stop response
+BlockReason = Literal["message", "role", "guard_error", "leak"]
 
 
 class GuardVerdict(BaseModel):

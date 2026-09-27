@@ -20,6 +20,7 @@ from pydantic import ValidationError
 
 from backend.api.interview import FALLBACK_REPLY, to_langchain_messages
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
+from backend.guard.canary import leaked
 from backend.guard.jev import check_input
 from backend.schemas.chat import ChatMessage, InterviewSettings, Technique
 from backend.schemas.guard import GuardVerdict
@@ -69,6 +70,9 @@ async def interviewer_turn(
         reply = FALLBACK_REPLY
         print(f"{RED}{reply}{RESET}", end="")
     print()
+    if leaked(reply, chain_input["canary"]):
+        # the test script can show it - helps with debugging
+        print(f"{RED}  CANARY LEAKED: the API would block this reply{RESET}")
 
     tokens = (
         f"in {usage['input_tokens']} / out {usage['output_tokens']}" if usage else "?"

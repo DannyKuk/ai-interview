@@ -3,6 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables import Runnable
 
 from backend.chains.llm import get_chat_model
+from backend.guard.canary import new_canary
 from backend.guard.delimiters import wrap
 from backend.prompts import load_prompt
 from backend.prompts.interview_settings import DIFFICULTY, PERSONA
@@ -15,7 +16,13 @@ def build_interviewer_chain(technique: Technique = "zero_shot") -> Runnable:
         [
             (
                 "system",
-                load_prompt(f"interviewer/{technique}_v1")  # technique translates to file-name!
+                load_prompt(
+                    "interviewer/canary_v1"
+                )  # add canary to the top -> stop before leaking system prompt
+                + "\n\n"
+                + load_prompt(
+                    f"interviewer/{technique}_v1"
+                )  # technique translates to file-name!
                 + "\n\n"
                 + load_prompt("interviewer/security_v1"),  # add security prompt
             ),
@@ -26,7 +33,7 @@ def build_interviewer_chain(technique: Technique = "zero_shot") -> Runnable:
 
 
 def build_interviewer_input(
-        settings: InterviewSettings, history: list[BaseMessage]
+    settings: InterviewSettings, history: list[BaseMessage]
 ) -> dict:
     # fills every {placeholder} in the prompt + the history slot.
     # Candidate text is wrapped in tags, so the model sees it as data (see security_v1.md)
@@ -36,6 +43,7 @@ def build_interviewer_input(
         "difficulty": DIFFICULTY[settings.difficulty],
         "persona": PERSONA[settings.persona],
         "history": [wrap_candidate(m) for m in history],
+        "canary": new_canary(),  # new per request
     }
 
 
