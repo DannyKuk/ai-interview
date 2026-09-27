@@ -89,7 +89,7 @@ def decide(answers: dict, threshold: float) -> GuardVerdict:
 
 
 async def check_input(
-        role: str, last_question: str | None = None, message: str | None = None
+    role: str, last_question: str | None = None, message: str | None = None
 ) -> GuardVerdict:
     # the role is checked on every turn: it's in the system prompt from the start
     questions = {"role_injection": ROLE_QUESTION}

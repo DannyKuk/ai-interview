@@ -2,6 +2,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from backend.schemas.guard import BlockReason
+
 MAX_MESSAGE_CHARS = 4000  # we must "speak it", so keep it "short"
 MAX_MESSAGES = 50
 MAX_ROLE_CHARS = 60
@@ -30,8 +32,8 @@ class InterviewSettings(BaseModel):
         "Starbacks",
     ] = "Guugle"
 
-    # free text (a CV can be for any job), but short and without sentences
-    # TODO: currently the user could still prompt inject like "Ignore all instructions". We must implement a guard.
+    # free text (a CV can be for any job), but short and without sentences.
+    # simple filter before guard checks it
     role: str = Field(
         default="Software Engineer",
         min_length=2,
@@ -57,6 +59,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    blocked: BlockReason | None = None
 
 
 class Usage(BaseModel):

@@ -85,7 +85,9 @@ async def test_check_input_fails_closed(monkeypatch, failure):
 @pytest.mark.anyio
 async def test_check_input_fails_closed_on_unknown_category(monkeypatch):
     async def odd_ask_jev(_state, _questions):
-        return answers(maybe=1.0)  # jev answers with an unknown category -> ValidationError
+        return answers(
+            maybe=1.0
+        )  # jev answers with an unknown category -> ValidationError
 
     monkeypatch.setattr(jev, "ask_jev", odd_ask_jev)
     verdict = await check_input("Engineer", "Tell me about a conflict.", "Hello")
