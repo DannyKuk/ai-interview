@@ -12,3 +12,8 @@ uv run ruff check --fix . && uv run ruff format .
 ```bash
 uv run pytest -v
 ```
+
+## chat cli (guard + interviewer in the terminal)
+```bash
+uv run python scripts/chat_cli.py --role "Data Scientist" --technique few_shot --persona strict
+```
