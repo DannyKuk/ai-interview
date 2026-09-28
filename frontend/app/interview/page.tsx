@@ -1,13 +1,14 @@
 import Link from "next/link";
 
+import { InterviewChat } from "@/components/interview/interview-chat";
 import { buttonVariants } from "@/components/ui/button";
 
-// Interview page: transcript + input, streamed replies (built in F5).
+// Server Component: the chat inside is the only part that needs the browser.
 export default function InterviewPage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-6 px-6 py-16">
       <h1 className="text-2xl font-semibold tracking-tight">Interview</h1>
-      <p className="text-muted-foreground">The chat comes here.</p>
+      <InterviewChat />
       <Link
         href="/results"
         className={buttonVariants({ variant: "destructive", className: "self-start" })}

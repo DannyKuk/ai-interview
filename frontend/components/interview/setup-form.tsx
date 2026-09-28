@@ -14,11 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ApiError, getConfig, type AppConfig } from "@/lib/api";
-import { useInterviewStore } from "@/lib/store";
+import { useInterviewStore, useStoreHydrated } from "@/lib/store";
 
 export function SetupForm() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const hydrated = useStoreHydrated();
   const settings = useInterviewStore((state) => state.settings);
   const updateSettings = useInterviewStore((state) => state.updateSettings);
   const startInterview = useInterviewStore((state) => state.startInterview);
@@ -28,20 +29,28 @@ export function SetupForm() {
   useEffect(() => {
     async function loadConfig() {
       try {
-        const config = await getConfig();
-        // keep what the candidate picked earlier in this tab, else start from the backend defaults
-        if (!useInterviewStore.getState().settings) updateSettings(config.default_settings);
-        setConfig(config);
+        setConfig(await getConfig());
       } catch (error) {
         setError(error instanceof ApiError ? error.message : "Could not reach the server.");
       }
     }
     loadConfig();
-  }, [updateSettings]);
+  }, []);
 
-  if (error) return <p role="alert">{error}</p>;
+  // keep what the candidate picked earlier in this tab, else start from the backend defaults
+  useEffect(() => {
+    if (hydrated && config && !settings) {
+      updateSettings(config.default_settings);
+    }
+  }, [hydrated, config, settings, updateSettings]);
 
-  if (!config || !settings) return <p>Loading…</p>;
+  if (error) {
+    return <p>{error}</p>;
+  }
+
+  if (!hydrated || !config || !settings) {
+    return <p>Loading…</p>;
+  }
 
   function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault(); // no page reload

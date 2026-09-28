@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   ApiError,
@@ -27,8 +27,8 @@ export function useChatStream() {
   // stop the stream when the page is left
   useEffect(() => () => controllerRef.current?.abort(), []);
 
-  // streams one turn
-  async function send(request: ChatRequest): Promise<StreamedTurn | null> {
+  // streams one turn. useCallback keeps the same function between renders
+  const send = useCallback(async (request: ChatRequest): Promise<StreamedTurn | null> => {
     controllerRef.current?.abort();
     const controller = new AbortController();
     controllerRef.current = controller;
@@ -46,6 +46,11 @@ export function useChatStream() {
 
       return current;
     } catch (error) {
+      // a newer send() already took over - leave its state alone
+      if (controllerRef.current !== controller) {
+        return null;
+      }
+
       setTurn({ ...current, streaming: false });
 
       if (!controller.signal.aborted) {
@@ -54,11 +59,9 @@ export function useChatStream() {
 
       return null;
     }
-  }
+  }, []);
 
-  function stop() {
-    controllerRef.current?.abort();
-  }
+  const stop = useCallback(() => controllerRef.current?.abort(), []);
 
   return { turn, error, send, stop };
 }
