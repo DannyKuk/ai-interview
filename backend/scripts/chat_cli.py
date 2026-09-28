@@ -22,6 +22,7 @@ from backend.api.interview import FALLBACK_REPLY, to_langchain_messages
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.guard.canary import leaked
 from backend.guard.jev import check_input
+from backend.prompts.turn_hints import HintName, pick_hint
 from backend.schemas.chat import ChatMessage, InterviewSettings, Technique
 from backend.schemas.guard import GuardVerdict
 
@@ -44,13 +45,24 @@ def print_verdict(verdict: GuardVerdict, seconds: float) -> None:
         f"{DIM}  guard {seconds:.2f}s | role_injection {verdict.role_injection} | "
         f"{probabilities or 'no message'} | {RESET}{color}{status}{RESET}"
     )
+    if verdict.answered is not None or verdict.wants_to_end is not None:
+        hint = pick_hint(verdict)
+        print(
+            f"{DIM}  signals | answered {verdict.answered} | "
+            f"wants_to_end {verdict.wants_to_end} | hint {hint}{RESET}"
+        )
 
 
 async def interviewer_turn(
-    chain, settings: InterviewSettings, history: list[ChatMessage]
+    chain,
+    settings: InterviewSettings,
+    history: list[ChatMessage],
+    hint: HintName | None = None,
 ) -> str:
     # stream the reply to the terminal, then show usage + cost
-    chain_input = build_interviewer_input(settings, to_langchain_messages(history))
+    chain_input = build_interviewer_input(
+        settings, to_langchain_messages(history), hint
+    )
     start = time.perf_counter()
     first_token = None
     reply, usage, cost, finish = "", None, None, None
@@ -165,8 +177,14 @@ async def main() -> None:
             continue
 
         history.append(message)
-        reply = await interviewer_turn(chain, settings, history)
+        hint = pick_hint(verdict)
+        reply = await interviewer_turn(chain, settings, history, hint)
         history.append(ChatMessage(role="assistant", content=reply))
+
+        if hint == "end":
+            # the API sends ended="candidate_left"
+            print(f"\n{DIM}  interviewer has left the meeting{RESET}")
+            break
 
 
 if __name__ == "__main__":

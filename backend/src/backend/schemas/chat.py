@@ -2,6 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from backend.prompts.turn_hints import HintName
 from backend.schemas.guard import BlockReason
 
 MAX_MESSAGE_CHARS = 4000  # we must "speak it", so keep it "short"
@@ -57,9 +58,14 @@ class ChatRequest(BaseModel):
     system_prompt: Technique = "zero_shot"
 
 
+EndReason = Literal["candidate_left"]
+
+
 class ChatResponse(BaseModel):
     reply: str
     blocked: BlockReason | None = None
+    hint: HintName | None = None
+    ended: EndReason | None = None  # TODO: the frontend will end the call when set
 
 
 class Usage(BaseModel):

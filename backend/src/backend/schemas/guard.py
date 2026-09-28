@@ -17,3 +17,7 @@ class GuardVerdict(BaseModel):
     probabilities: dict[GuardCategory, float] = Field(default_factory=dict)
     role_injection: float | None = None  # P(the role field is more than a job title)
     blocked: BlockReason | None = None  # None = allowed
+
+    # turn signals from the same Jev call (not used for blocking, see prompts/turn_hints.py)
+    answered: float | None = None  # P(the message responds to the last question)
+    wants_to_end: float | None = None  # P(the candidate wants to stop the interview)

@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     guard_threshold: float = 0.5  # block when P(injection) + P(abuse) >= this
     guard_timeout_ms: int = 5_000  # Jev typically answeres in <1s
 
+    # turn hints
+    end_threshold: float = 0.7
+    off_topic_threshold: float = 0.7
+    not_answered_threshold: float = 0.3
+
     cors_origins: list[str] = ["http://localhost:3000"]
 
 

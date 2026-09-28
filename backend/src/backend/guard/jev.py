@@ -34,6 +34,26 @@ ROLE_QUESTION = {
     ),
 }
 
+ANSWERED_QUESTION = {
+    "type": "noul",
+    "instructions": (
+        "This is one turn of a job interview. Does the text in <candidate_message> "
+        "respond to the <interviewer_question>? A short, wrong or honest "
+        "'I don't know' answer still counts as a response. Talking about something "
+        "else, or dodging the question, does not."
+    ),
+}
+
+WANTS_TO_END_QUESTION = {
+    "type": "noul",
+    "instructions": (
+        "This is one turn of a job interview with an AI interviewer. Does the "
+        "candidate in <candidate_message> clearly want to stop the interview or "
+        "withdraw from the application? Not knowing the answer to one question, "
+        "or being nervous, does not count."
+    ),
+}
+
 
 def build_state(role: str, last_question: str | None, message: str | None) -> str:
     # using <> tags for safety against injection
@@ -83,6 +103,8 @@ def decide(answers: dict, threshold: float) -> GuardVerdict:
         probabilities=probabilities,
         role_injection=role_injection,
         blocked=blocked,
+        answered=answers.get("answered", {}).get("noul"),
+        wants_to_end=answers.get("wants_to_end", {}).get("noul"),
     )
 
 
@@ -93,6 +115,9 @@ async def check_input(
     questions = {"role_injection": ROLE_QUESTION}
     if message:
         questions["category"] = CATEGORY_QUESTION
+        questions["wants_to_end"] = WANTS_TO_END_QUESTION
+        if last_question:  # "answered" needs a question to compare with
+            questions["answered"] = ANSWERED_QUESTION
 
     try:
         answers = await ask_jev(build_state(role, last_question, message), questions)

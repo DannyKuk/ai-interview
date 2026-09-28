@@ -1,14 +1,23 @@
 from collections.abc import AsyncIterator
 from contextlib import aclosing
+from dataclasses import dataclass
 
 from fastapi import APIRouter
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.runnables import Runnable
 
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.guard.canary import leaked
 from backend.guard.jev import check_input
-from backend.schemas.chat import ChatMessage, ChatRequest, ChatResponse, Usage
+from backend.prompts.turn_hints import HintName, pick_hint
+from backend.schemas.chat import (
+    ChatMessage,
+    ChatRequest,
+    ChatResponse,
+    EndReason,
+    Usage,
+)
 from backend.schemas.guard import BlockReason, GuardVerdict
 
 router = APIRouter(prefix="/api/interview", tags=["interview"])
@@ -59,48 +68,69 @@ async def guard_chat(request: ChatRequest) -> GuardVerdict:
     )
 
 
-async def prepare_chat(request: ChatRequest):
+@dataclass
+class PreparedChat:
+    verdict: GuardVerdict
+    hint: HintName | None
+    ended: EndReason | None
+    chain: Runnable
+    chain_input: dict
+
+
+async def prepare_chat(request: ChatRequest) -> PreparedChat:
     verdict = await guard_chat(request)
+    hint = pick_hint(verdict)
     chain = build_interviewer_chain(request.system_prompt)
     chain_input = build_interviewer_input(
-        request.settings, to_langchain_messages(request.messages)
+        request.settings, to_langchain_messages(request.messages), hint
     )
-    return verdict, chain, chain_input
+    return PreparedChat(
+        verdict=verdict,
+        hint=hint,
+        ended="candidate_left" if hint == "end" else None,
+        chain=chain,
+        chain_input=chain_input,
+    )
 
 
 @router.post("/chat")
 async def chat(request: ChatRequest) -> ChatResponse:
     # whole reply at once, as JSON (easy to try in /docs)
-    verdict, chain, chain_input = await prepare_chat(request)
-    if verdict.blocked:
-        return ChatResponse(reply=REFUSALS[verdict.blocked], blocked=verdict.blocked)
+    turn = await prepare_chat(request)
+    if turn.verdict.blocked:
+        reason = turn.verdict.blocked
+        return ChatResponse(reply=REFUSALS[reason], blocked=reason)
 
-    result = await chain.ainvoke(chain_input)
-    if leaked(result.text, chain_input["canary"]):
+    result = await turn.chain.ainvoke(turn.chain_input)
+    if leaked(result.text, turn.chain_input["canary"]):
         return ChatResponse(reply=REFUSALS["leak"], blocked="leak")
-    return ChatResponse(reply=result.text or FALLBACK_REPLY)
+    return ChatResponse(
+        reply=result.text or FALLBACK_REPLY, hint=turn.hint, ended=turn.ended
+    )
 
 
 @router.post("/chat/stream", response_class=EventSourceResponse)
 async def chat_stream(request: ChatRequest) -> AsyncIterator[ServerSentEvent]:
-    verdict, chain, chain_input = await prepare_chat(request)
-    if verdict.blocked:
+    turn = await prepare_chat(request)
+    if turn.verdict.blocked:
         # show refusal instead of streamed reply
-        for event in blocked_events(verdict.blocked):
+        for event in blocked_events(turn.verdict.blocked):
             yield event
         return
+
+    yield ServerSentEvent(event="meta", data={"hint": turn.hint, "ended": turn.ended})
 
     reply = ""
     finish_reason = None
     usage = Usage()
 
     # answer comes in small chunks. aclosing - stop the model (and its cost) on return
-    async with aclosing(chain.astream(chain_input)) as stream:
+    async with aclosing(turn.chain.astream(turn.chain_input)) as stream:
         async for chunk in stream:
             if chunk.text:
                 reply += chunk.text
                 # check everything so far: the canary is split over several chunks
-                if leaked(reply, chain_input["canary"]):
+                if leaked(reply, turn.chain_input["canary"]):
                     for event in blocked_events("leak"):
                         yield event
                     return
