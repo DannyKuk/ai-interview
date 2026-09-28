@@ -125,8 +125,8 @@ def test_suspicious_roles_are_rejected(role):
 
 def test_system_prompt_defaults_to_zero_shot():
     assert (
-            ChatRequest.model_validate({**VALID, "messages": []}).system_prompt
-            == "zero_shot"
+        ChatRequest.model_validate({**VALID, "messages": []}).system_prompt
+        == "zero_shot"
     )
 
 

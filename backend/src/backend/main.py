@@ -11,6 +11,7 @@ app.add_middleware(
     allow_origins=settings.cors_origins,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
+    expose_headers=["Retry-After"],  # Reach it to the browser
 )
 
 app.include_router(health.router)
