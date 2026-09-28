@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AnswerInput } from "@/components/interview/answer-input";
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { useChatStream } from "@/hooks/use-chat-stream";
 import type { ChatMessage, ChatRequest } from "@/lib/api";
 import { useInterviewStore, useStoreHydrated } from "@/lib/store";
@@ -27,7 +27,7 @@ export function InterviewChat() {
   const ended = useInterviewStore((state) => state.ended);
   const addMessage = useInterviewStore((state) => state.addMessage);
   const endInterview = useInterviewStore((state) => state.endInterview);
-  const { turn, error, send } = useChatStream();
+  const { turn, error, send, stop } = useChatStream();
   const router = useRouter();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<string | null>(null);
@@ -68,6 +68,12 @@ export function InterviewChat() {
       // blocked or failed: keep it out of the history
       setDraft(text);
     }
+  }
+
+  function leave() {
+    stop();
+    endInterview("candidate_left");
+    router.push("/results");
   }
 
   if (!hydrated) {
@@ -111,6 +117,11 @@ export function InterviewChat() {
           onSend={answer}
           disabled={messages.length === 0 || !!turn?.streaming}
         />
+      )}
+      {!ended && (
+        <Button variant="destructive" className="self-start" onClick={leave}>
+          Leave interview
+        </Button>
       )}
     </div>
   );
