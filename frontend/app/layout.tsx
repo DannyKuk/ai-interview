@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
+
 import "./globals.css";
 
+import { DevPanel } from "@/components/dev-panel/dev-panel";
 import { Toaster } from "@/components/ui/sonner";
 
 // globals.css reads --font-sans / --font-geist-mono for the Tailwind font-sans / font-mono classes.
@@ -26,6 +29,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         {children}
         <Toaster position="top-center" />
+        <Suspense>
+          <DevPanel />
+        </Suspense>
       </body>
     </html>
   );

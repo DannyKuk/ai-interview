@@ -3,16 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ApiError, getConfig, type AppConfig } from "@/lib/api";
 import { useInterviewStore, useStoreHydrated } from "@/lib/store";
 
@@ -101,39 +95,5 @@ export function SetupForm() {
         Start interview
       </Button>
     </form>
-  );
-}
-
-type OptionSelectProps<T extends string> = {
-  id: string;
-  label: string;
-  options: T[];
-  value: T;
-  onChange: (value: T) => void;
-};
-
-function OptionSelect<T extends string>({
-  id,
-  label,
-  options,
-  value,
-  onChange,
-}: OptionSelectProps<T>) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      <Select value={value} onValueChange={(next) => next && onChange(next)}>
-        <SelectTrigger id={id}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {options.map((option) => (
-            <SelectItem key={option} value={option}>
-              {option}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
   );
 }

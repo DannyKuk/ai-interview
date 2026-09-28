@@ -28,7 +28,7 @@ Company = Literal[
     "HeadBook",
     "Instakilogram",
     "Netflux",
-    "Amazin'",
+    "Amazin",
     "Goldman Sax",
     "Tesler",
     "Starbacks",

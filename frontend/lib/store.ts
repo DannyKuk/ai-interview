@@ -62,7 +62,11 @@ export const useInterviewStore = create<InterviewState>()(
 export function useStoreHydrated(): boolean {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    Promise.resolve(useInterviewStore.persist.rehydrate()).then(() => setHydrated(true));
+    async function rehydrate() {
+      await useInterviewStore.persist.rehydrate();
+      setHydrated(true);
+    }
+    rehydrate();
   }, []);
   return hydrated;
 }
