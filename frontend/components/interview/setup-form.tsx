@@ -1,7 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,6 +21,8 @@ export function SetupForm() {
   const [error, setError] = useState<string | null>(null);
   const settings = useInterviewStore((state) => state.settings);
   const updateSettings = useInterviewStore((state) => state.updateSettings);
+  const startInterview = useInterviewStore((state) => state.startInterview);
+  const router = useRouter();
 
   // runs once after the first render (like onMounted)
   useEffect(() => {
@@ -39,8 +43,14 @@ export function SetupForm() {
 
   if (!config || !settings) return <p>Loading…</p>;
 
+  function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault(); // no page reload
+    startInterview(); // new session_id for this interview
+    router.push("/interview");
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <OptionSelect
         id="company"
         label="Company"
@@ -70,7 +80,10 @@ export function SetupForm() {
         value={settings.persona}
         onChange={(persona) => updateSettings({ persona })}
       />
-    </div>
+      <Button type="submit" size="lg" className="self-start">
+        Start interview
+      </Button>
+    </form>
   );
 }
 
