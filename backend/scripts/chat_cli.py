@@ -4,6 +4,7 @@ Calls the guard and the interviewer chain directly (no server needed).
 
     uv run python scripts/chat_cli.py
     uv run python scripts/chat_cli.py --role "Data Scientist" --technique few_shot --persona strict
+    uv run python scripts/chat_cli.py --model openai/gpt-5-nano --effort minimal --max-tokens 600
 
 Commands while chatting:
     /guard <text>   only ask the guard (cheap, nothing goes to the interviewer)
@@ -20,10 +21,17 @@ from pydantic import ValidationError
 
 from backend.api.interview import FALLBACK_REPLY, to_langchain_messages
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
+from backend.config import settings as app_settings
 from backend.guard.canary import leaked
 from backend.guard.jev import check_input
 from backend.prompts.turn_hints import HintName, pick_hint
-from backend.schemas.chat import ChatMessage, InterviewSettings, Technique
+from backend.schemas.chat import (
+    ChatMessage,
+    Effort,
+    InterviewSettings,
+    ModelSettings,
+    Technique,
+)
 from backend.schemas.guard import GuardVerdict
 
 DIM, RED, GREEN, CYAN, RESET = "\033[2m", "\033[31m", "\033[32m", "\033[36m", "\033[0m"
@@ -120,6 +128,9 @@ async def main() -> None:
     parser.add_argument("--difficulty", choices=choices("difficulty"), default="medium")
     parser.add_argument("--persona", choices=choices("persona"), default="friendly")
     parser.add_argument("--technique", choices=get_args(Technique), default="zero_shot")
+    parser.add_argument("--model", choices=app_settings.allowed_models)
+    parser.add_argument("--effort", choices=get_args(Effort), default="low")
+    parser.add_argument("--max-tokens", type=int, default=1000)
     args = parser.parse_args()
 
     try:
@@ -129,13 +140,21 @@ async def main() -> None:
             difficulty=args.difficulty,
             persona=args.persona,
         )
+        model_settings = ModelSettings(
+            model=args.model,
+            reasoning_effort=args.effort,
+            max_tokens=args.max_tokens,
+        )
     except ValidationError as error:
         # same schema checks as the API (e.g. role pattern / length)
         print(f"{RED}invalid settings:{RESET} {error}")
         return
 
-    print(f"{DIM}{settings.model_dump()} | technique {args.technique}{RESET}\n")
-    chain = build_interviewer_chain(args.technique)
+    print(
+        f"{DIM}{settings.model_dump()} | technique {args.technique} | "
+        f"{model_settings.model_dump()}{RESET}\n"
+    )
+    chain = build_interviewer_chain(args.technique, model_settings)
     history = await start_interview(chain, settings)
     if history is None:
         print(f"{RED}role blocked, try another --role{RESET}")
