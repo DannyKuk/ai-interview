@@ -61,7 +61,7 @@ export function useChatStream() {
       setTurn({ ...current, streaming: false });
 
       if (!controller.signal.aborted) {
-        setError(error instanceof ApiError ? error.message : "Connection lost. Please try again.");
+        setError(errorMessage(error));
       }
 
       return null;
@@ -86,4 +86,15 @@ function applyEvent(turn: StreamedTurn, event: ChatStreamEvent): StreamedTurn {
     case "done":
       return { ...turn, streaming: false };
   }
+}
+
+function errorMessage(error: unknown): string {
+  if (!(error instanceof ApiError)) {
+    return "Connection lost. Please try again.";
+  }
+  // 429: the backend says how long to wait in Retry-After
+  if (error.retryAfter) {
+    return `${error.message} (about ${error.retryAfter}s)`;
+  }
+  return error.message;
 }

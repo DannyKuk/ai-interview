@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { AnswerInput } from "@/components/interview/answer-input";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -32,6 +33,13 @@ export function InterviewChat() {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<string | null>(null);
 
+  const firstTurn = useCallback(async () => {
+    const finished = await send(buildRequest([]));
+    if (finished && !finished.blocked) {
+      addMessage({ role: "assistant", content: finished.reply });
+    }
+  }, [send, addMessage]);
+
   useEffect(() => {
     if (!hydrated) {
       return;
@@ -42,13 +50,14 @@ export function InterviewChat() {
     if (!sessionId) {
       router.replace("/");
     } else if (messages.length === 0) {
-      send(buildRequest([])).then((finished) => {
-        if (finished && !finished.blocked) {
-          addMessage({ role: "assistant", content: finished.reply });
-        }
-      });
+      firstTurn();
     }
-  }, [hydrated, router, send, addMessage]);
+  }, [hydrated, router, firstTurn]);
+
+  // a new error (429, backend down, ...) pops up as a toast. The answer is back in the box
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
 
   async function answer(text: string) {
     const answerMessage: ChatMessage = { role: "user", content: text };
@@ -80,6 +89,9 @@ export function InterviewChat() {
     return <p>Loading…</p>;
   }
 
+  // the first turn failed or the role was blocked: nothing to answer yet
+  const noQuestion = messages.length === 0 && !turn?.streaming && (!!error || !!turn?.blocked);
+
   return (
     <div className="flex flex-col gap-4">
       <ol className="flex flex-col gap-3">
@@ -102,13 +114,19 @@ export function InterviewChat() {
           </li>
         )}
       </ol>
-      {error && <p>{error}</p>}
       {ended ? (
         <div className="flex items-center justify-between gap-2">
           <p className="text-muted-foreground">The interviewer has left the meeting.</p>
           <Link href="/results" className={buttonVariants()}>
             See your feedback
           </Link>
+        </div>
+      ) : noQuestion ? (
+        <div className="flex items-center justify-end gap-2">
+          <Link href="/" className={buttonVariants({ variant: "outline" })}>
+            Back to setup
+          </Link>
+          <Button onClick={firstTurn}>Try again</Button>
         </div>
       ) : (
         <AnswerInput
