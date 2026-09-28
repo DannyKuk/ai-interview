@@ -2,11 +2,12 @@ from collections.abc import AsyncIterator
 from contextlib import aclosing
 from dataclasses import dataclass
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import Runnable
 
+from backend.api.rate_limit import rate_limit
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.guard.canary import leaked
 from backend.guard.jev import check_input
@@ -20,7 +21,10 @@ from backend.schemas.chat import (
 )
 from backend.schemas.guard import BlockReason, GuardVerdict
 
-router = APIRouter(prefix="/api/interview", tags=["interview"])
+# Add rate_limit to the APIRouter
+router = APIRouter(
+    prefix="/api/interview", tags=["interview"], dependencies=[Depends(rate_limit)]
+)
 
 # sent when the model returns no text (e.g. reasoning used up max_tokens)
 FALLBACK_REPLY = "Sorry, I lost my train of thought. Could you say that again?"

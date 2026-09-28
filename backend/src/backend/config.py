@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     off_topic_threshold: float = 0.7
     not_answered_threshold: float = 0.3
 
+    # per client IP, shared by both chat endpoints ("limits" syntax)
+    chat_rate_limit: str = "20/minute"
+
     cors_origins: list[str] = ["http://localhost:3000"]
 
 
