@@ -5,9 +5,12 @@ from fastapi import APIRouter
 from backend.config import settings
 from backend.schemas.chat import (
     DEFAULT_TECHNIQUE,
+    MAX_MAX_TOKENS,
+    MIN_MAX_TOKENS,
     Company,
     Difficulty,
     InterviewSettings,
+    ModelSettings,
     Persona,
     Technique,
 )
@@ -28,4 +31,6 @@ async def get_config() -> AppConfig:
         difficulties=list(get_args(Difficulty)),
         personas=list(get_args(Persona)),
         default_settings=InterviewSettings(),
+        default_model_settings=ModelSettings(model=settings.default_model),
+        max_tokens_range=(MIN_MAX_TOKENS, MAX_MAX_TOKENS),
     )

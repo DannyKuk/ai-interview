@@ -96,6 +96,12 @@ export interface components {
             /** Personas */
             personas: ("friendly" | "neutral" | "strict")[];
             default_settings: components["schemas"]["InterviewSettings"];
+            default_model_settings: components["schemas"]["ModelSettings"];
+            /** Max Tokens Range */
+            max_tokens_range: [
+                number,
+                number
+            ];
         };
         /** ChatMessage */
         ChatMessage: {

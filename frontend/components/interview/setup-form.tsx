@@ -22,6 +22,8 @@ export function SetupForm() {
   const hydrated = useStoreHydrated();
   const settings = useInterviewStore((state) => state.settings);
   const updateSettings = useInterviewStore((state) => state.updateSettings);
+  const dev = useInterviewStore((state) => state.dev);
+  const updateDev = useInterviewStore((state) => state.updateDev);
   const startInterview = useInterviewStore((state) => state.startInterview);
   const router = useRouter();
 
@@ -42,13 +44,19 @@ export function SetupForm() {
     if (hydrated && config && !settings) {
       updateSettings(config.default_settings);
     }
-  }, [hydrated, config, settings, updateSettings]);
+    if (hydrated && config && !dev) {
+      updateDev({
+        technique: config.default_technique,
+        modelSettings: config.default_model_settings,
+      });
+    }
+  }, [hydrated, config, settings, updateSettings, dev, updateDev]);
 
   if (error) {
     return <p>{error}</p>;
   }
 
-  if (!hydrated || !config || !settings) {
+  if (!hydrated || !config || !settings || !dev) {
     return <p>Loading…</p>;
   }
 

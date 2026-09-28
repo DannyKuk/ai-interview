@@ -13,12 +13,13 @@ import { useInterviewStore, useStoreHydrated } from "@/lib/store";
 
 // request for the next interviewer turn: the whole transcript goes along every time
 function buildRequest(messages: ChatMessage[]): ChatRequest {
-  const { sessionId, settings } = useInterviewStore.getState();
+  const { sessionId, settings, dev } = useInterviewStore.getState();
   return {
     session_id: sessionId!,
     messages,
     settings: settings!,
-    system_prompt: "zero_shot",
+    system_prompt: dev!.technique,
+    model_settings: dev!.modelSettings,
   };
 }
 
@@ -45,9 +46,10 @@ export function InterviewChat() {
       return;
     }
 
-    const { sessionId, messages } = useInterviewStore.getState();
+    const { sessionId, messages, dev } = useInterviewStore.getState();
 
-    if (!sessionId) {
+    // no interview started (or started before the dev settings existed): back to setup
+    if (!sessionId || !dev) {
       router.replace("/");
     } else if (messages.length === 0) {
       firstTurn();

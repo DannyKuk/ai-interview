@@ -4,6 +4,7 @@ from backend.schemas.chat import (
     Company,
     Difficulty,
     InterviewSettings,
+    ModelSettings,
     Persona,
     Technique,
 )
@@ -28,3 +29,5 @@ class AppConfig(BaseModel):
     difficulties: list[Difficulty]
     personas: list[Persona]
     default_settings: InterviewSettings
+    default_model_settings: ModelSettings
+    max_tokens_range: tuple[int, int]  # (min, max) the backend accepts

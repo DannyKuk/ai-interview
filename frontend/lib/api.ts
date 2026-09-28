@@ -5,6 +5,8 @@ export type ChatMessage = components["schemas"]["ChatMessage"];
 export type ChatRequest = components["schemas"]["ChatRequest"];
 export type ChatResponse = components["schemas"]["ChatResponse"];
 export type InterviewSettings = components["schemas"]["InterviewSettings"];
+export type ModelSettings = components["schemas"]["ModelSettings"];
+export type Technique = ChatRequest["system_prompt"];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
