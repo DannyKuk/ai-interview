@@ -3,6 +3,7 @@ import type { components } from "@/lib/api-types";
 export type AppConfig = components["schemas"]["AppConfig"];
 export type ChatRequest = components["schemas"]["ChatRequest"];
 export type ChatResponse = components["schemas"]["ChatResponse"];
+export type InterviewSettings = components["schemas"]["InterviewSettings"];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
