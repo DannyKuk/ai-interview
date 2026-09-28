@@ -19,20 +19,25 @@ class ChatMessage(BaseModel):
     content: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
 
 
+Company = Literal[
+    "Guugle",
+    "HeadBook",
+    "Instakilogram",
+    "Netflux",
+    "Amazin'",
+    "Goldman Sax",
+    "Tesler",
+    "Starbacks",
+]
+Difficulty = Literal["easy", "medium", "hard"]
+Persona = Literal["friendly", "neutral", "strict"]
+
+
 class InterviewSettings(BaseModel):
     # these values will be in the system prompt, so we try to keep them as "safe" as possible
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    company: Literal[
-        "Guugle",
-        "HeadBook",
-        "Instakilogram",
-        "Netflux",
-        "Amazin'",
-        "Goldman Sax",
-        "Tesler",
-        "Starbacks",
-    ] = "Guugle"
+    company: Company = "Guugle"
 
     # free text (a CV can be for any job), but short and without sentences.
     # simple filter before guard checks it
@@ -42,13 +47,14 @@ class InterviewSettings(BaseModel):
         max_length=MAX_ROLE_CHARS,
         pattern=r"^[A-Za-z0-9 \-/&,.()']+$",
     )
-    difficulty: Literal["easy", "medium", "hard"] = "medium"
-    persona: Literal["friendly", "neutral", "strict"] = "friendly"
+    difficulty: Difficulty = "medium"
+    persona: Persona = "friendly"
 
 
 Technique = Literal[
     "zero_shot", "few_shot", "chain_of_thought", "persona", "self_critique"
 ]
+DEFAULT_TECHNIQUE: Technique = "zero_shot"
 
 
 class ChatRequest(BaseModel):
@@ -57,7 +63,7 @@ class ChatRequest(BaseModel):
     session_id: UUID
     messages: list[ChatMessage] = Field(max_length=MAX_MESSAGES)
     settings: InterviewSettings = Field(default_factory=InterviewSettings)
-    system_prompt: Technique = "zero_shot"
+    system_prompt: Technique = DEFAULT_TECHNIQUE
 
 
 EndReason = Literal["candidate_left", "limit_reached"]

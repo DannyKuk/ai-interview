@@ -15,7 +15,9 @@ class Settings(BaseSettings):
     openrouter_api_key: SecretStr  # no default = required
     openrouter_api_base: str = "https://openrouter.ai/api/v1"
     default_model: str = "openai/gpt-5-mini"
+    allowed_models: list[str] = ["openai/gpt-5-mini", "openai/gpt-5-nano"]
     llm_timeout_ms: int = 30_000
+    models_timeout_ms: int = 5_000
 
     # GUARD model
     guard_model: str = "typesafe/jev-1.13"

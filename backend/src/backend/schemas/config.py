@@ -1,0 +1,30 @@
+from pydantic import BaseModel
+
+from backend.schemas.chat import (
+    Company,
+    Difficulty,
+    InterviewSettings,
+    Persona,
+    Technique,
+)
+
+
+class ModelInfo(BaseModel):
+    id: str
+    name: str | None = None
+    input_price_per_m: float | None = None  # USD per 1M tokens
+    output_price_per_m: float | None = None
+    supported_parameters: list[str] | None = None  # the dev panel hides the rest
+    reasoning_efforts: list[str] | None = None
+
+
+class AppConfig(BaseModel):
+    # everything the setup page and dev panel need
+    models: list[ModelInfo]
+    default_model: str
+    techniques: list[Technique]
+    default_technique: Technique
+    companies: list[Company]
+    difficulties: list[Difficulty]
+    personas: list[Persona]
+    default_settings: InterviewSettings
