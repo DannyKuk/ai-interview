@@ -1,14 +1,18 @@
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from backend import config
 from backend.prompts.turn_hints import HintName
 from backend.schemas.guard import BlockReason
 
 MAX_MESSAGE_CHARS = 4000  # we must "speak it", so keep it "short"
 MAX_MESSAGES = 50
 MAX_ROLE_CHARS = 60
+# max_tokens includes the reasoning tokens: below ~500 low effort can use it all up
+MIN_MAX_TOKENS = 500
+MAX_MAX_TOKENS = 4000
 
 
 class ChatMessage(BaseModel):
@@ -56,6 +60,23 @@ Technique = Literal[
 ]
 DEFAULT_TECHNIQUE: Technique = "zero_shot"
 
+Effort = Literal["minimal", "low", "medium", "high"]
+
+
+class ModelSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    model: str | None = None  # None = default_model from config
+    reasoning_effort: Effort = "low"
+    max_tokens: int = Field(default=1000, ge=MIN_MAX_TOKENS, le=MAX_MAX_TOKENS)
+
+    @field_validator("model")
+    @classmethod
+    def model_is_allowed(cls, model: str | None) -> str | None:
+        if model is not None and model not in config.settings.allowed_models:
+            raise ValueError(f"model must be one of {config.settings.allowed_models}")
+        return model
+
 
 class ChatRequest(BaseModel):
     # empty messages -> new chat
@@ -64,6 +85,7 @@ class ChatRequest(BaseModel):
     messages: list[ChatMessage] = Field(max_length=MAX_MESSAGES)
     settings: InterviewSettings = Field(default_factory=InterviewSettings)
     system_prompt: Technique = DEFAULT_TECHNIQUE
+    model_settings: ModelSettings = Field(default_factory=ModelSettings)
 
 
 EndReason = Literal["candidate_left", "limit_reached"]

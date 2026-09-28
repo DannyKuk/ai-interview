@@ -89,14 +89,16 @@ async def prepare_chat(request: ChatRequest) -> PreparedChat:
             verdict=GuardVerdict(),
             hint=None,
             ended="limit_reached",
-            chain=build_interviewer_chain(request.system_prompt),
+            chain=build_interviewer_chain(
+                request.system_prompt, request.model_settings
+            ),
             chain_input={},
             over_cap=True,
         )
 
     verdict = await guard_chat(request)
     hint = pick_hint(verdict)
-    chain = build_interviewer_chain(request.system_prompt)
+    chain = build_interviewer_chain(request.system_prompt, request.model_settings)
     chain_input = build_interviewer_input(
         request.settings, to_langchain_messages(request.messages), hint
     )

@@ -1,14 +1,13 @@
-from typing import Literal
-
 from langchain_openrouter import ChatOpenRouter
 
 from backend.config import settings
-
-Effort = Literal["minimal", "low", "medium", "high"]
+from backend.schemas.chat import Effort
 
 
 def get_chat_model(
-    model: str | None = None, max_tokens: int = 1000, effort: Effort = "low"
+    model: str | None = None,
+    max_tokens: int = 1000,
+    effort: Effort = "low",
 ) -> ChatOpenRouter:
     return ChatOpenRouter(
         model=model or settings.default_model,

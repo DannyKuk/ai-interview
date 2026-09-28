@@ -8,10 +8,12 @@ from backend.guard.delimiters import wrap
 from backend.prompts import load_prompt
 from backend.prompts.interview_settings import DIFFICULTY, PERSONA
 from backend.prompts.turn_hints import HINTS, HintName
-from backend.schemas.chat import InterviewSettings, Technique
+from backend.schemas.chat import InterviewSettings, ModelSettings, Technique
 
 
-def build_interviewer_chain(technique: Technique = "zero_shot") -> Runnable:
+def build_interviewer_chain(
+    technique: Technique = "zero_shot", model_settings: ModelSettings | None = None
+) -> Runnable:
     # Build prompt "template" for consistent system prompt + history to be
     prompt = ChatPromptTemplate.from_messages(
         [
@@ -31,7 +33,13 @@ def build_interviewer_chain(technique: Technique = "zero_shot") -> Runnable:
             MessagesPlaceholder("note"),
         ]
     )
-    return prompt | get_chat_model()  # returns a langchain "chain"
+    model_settings = model_settings or ModelSettings()
+    llm = get_chat_model(
+        model=model_settings.model,
+        max_tokens=model_settings.max_tokens,
+        effort=model_settings.reasoning_effort,
+    )
+    return prompt | llm  # returns a langchain "chain"
 
 
 def build_interviewer_input(
