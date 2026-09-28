@@ -1,6 +1,8 @@
 import type { components } from "@/lib/api-types";
 
 export type AppConfig = components["schemas"]["AppConfig"];
+export type ChatRequest = components["schemas"]["ChatRequest"];
+export type ChatResponse = components["schemas"]["ChatResponse"];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -38,4 +40,13 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function getConfig(): Promise<AppConfig> {
   return request<AppConfig>("/api/config");
+}
+
+// One whole interviewer turn as JSON (not streamed!)
+export function chat(body: ChatRequest): Promise<ChatResponse> {
+  return request<ChatResponse>("/api/interview/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
 }
