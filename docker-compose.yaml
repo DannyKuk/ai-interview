@@ -1,0 +1,34 @@
+# Full app: docker compose up --build → http://localhost:3000
+# Needs a root .env with OPENROUTER_API_KEY (see .env.example).
+
+services:
+  backend:
+    build: ./backend
+    # all backend settings, incl. the key. Read at runtime, never baked into the image
+    env_file: .env
+    ports:
+      - "8000:8000"
+    # the frontend waits until this passes (python is in the image, curl isn't)
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=2)
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # inlined into the JS at build time. The browser calls it, so it's the host URL
+        # (localhost:8000), not http://backend:8000. ${...} is read from the root .env
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
