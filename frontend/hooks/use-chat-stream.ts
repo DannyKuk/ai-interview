@@ -16,6 +16,7 @@ export type StreamedTurn = {
   reply: string;
   streaming: boolean;
   ended: NonNullable<ChatResponse["ended"]> | null; // the interviewer said goodbye
+  blocked: boolean;
   usage: Usage | null;
 };
 
@@ -33,7 +34,13 @@ export function useChatStream() {
     const controller = new AbortController();
     controllerRef.current = controller;
 
-    let current: StreamedTurn = { reply: "", streaming: true, ended: null, usage: null };
+    let current: StreamedTurn = {
+      reply: "",
+      streaming: true,
+      ended: null,
+      blocked: false,
+      usage: null,
+    };
 
     setTurn(current);
     setError(null);
@@ -73,7 +80,7 @@ function applyEvent(turn: StreamedTurn, event: ChatStreamEvent): StreamedTurn {
     case "token":
       return { ...turn, reply: turn.reply + event.data.text };
     case "blocked":
-      return { ...turn, reply: event.data.reply };
+      return { ...turn, reply: event.data.reply, blocked: true };
     case "usage":
       return { ...turn, usage: event.data };
     case "done":
