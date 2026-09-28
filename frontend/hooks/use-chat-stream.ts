@@ -16,7 +16,8 @@ export type StreamedTurn = {
   reply: string;
   streaming: boolean;
   ended: NonNullable<ChatResponse["ended"]> | null; // the interviewer said goodbye
-  blocked: boolean;
+  blocked: NonNullable<ChatResponse["blocked"]> | null; // why the guard stopped it
+  hint: NonNullable<ChatResponse["hint"]> | null; // the turn note from the guard's signals
   usage: Usage | null;
 };
 
@@ -38,7 +39,8 @@ export function useChatStream() {
       reply: "",
       streaming: true,
       ended: null,
-      blocked: false,
+      blocked: null,
+      hint: null,
       usage: null,
     };
 
@@ -76,11 +78,11 @@ export function useChatStream() {
 function applyEvent(turn: StreamedTurn, event: ChatStreamEvent): StreamedTurn {
   switch (event.event) {
     case "meta":
-      return { ...turn, ended: event.data.ended ?? null };
+      return { ...turn, ended: event.data.ended ?? null, hint: event.data.hint ?? null };
     case "token":
       return { ...turn, reply: turn.reply + event.data.text };
     case "blocked":
-      return { ...turn, reply: event.data.reply, blocked: true };
+      return { ...turn, reply: event.data.reply, blocked: event.data.reason };
     case "usage":
       return { ...turn, usage: event.data };
     case "done":

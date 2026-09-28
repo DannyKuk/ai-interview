@@ -126,7 +126,47 @@ function DevSettingsForm({ config }: { config: AppConfig }) {
         onChange={(max_tokens) => updateModel({ max_tokens })}
         disabled={!supports("max_tokens")}
       />
+      <SessionInfo />
     </>
+  );
+}
+
+const usd = (value: number) => `$${value.toFixed(4)}`;
+
+// cost + what happened on the last turn: the guard, its hint, an ending
+function SessionInfo() {
+  const sessionCost = useInterviewStore((state) => state.sessionCost);
+  const lastTurn = useInterviewStore((state) => state.lastTurn);
+
+  return (
+    <section className="flex flex-col gap-2 border-t pt-4">
+      <h3 className="font-medium">This interview</h3>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+        <dt className="text-muted-foreground">Session cost</dt>
+        <dd>{usd(sessionCost)}</dd>
+        {lastTurn ? (
+          <>
+            <dt className="text-muted-foreground">Last turn</dt>
+            <dd>
+              {lastTurn.usage
+                ? `${lastTurn.usage.input_tokens} in / ${lastTurn.usage.output_tokens} out tokens, ${usd(lastTurn.usage.cost ?? 0)}`
+                : "no model call"}
+            </dd>
+            <dt className="text-muted-foreground">Guard</dt>
+            <dd>{lastTurn.blocked ? `blocked (${lastTurn.blocked})` : "passed"}</dd>
+            <dt className="text-muted-foreground">Hint</dt>
+            <dd>{lastTurn.hint ?? "none"}</dd>
+            <dt className="text-muted-foreground">Ended</dt>
+            <dd>{lastTurn.ended ?? "no"}</dd>
+          </>
+        ) : (
+          <>
+            <dt className="text-muted-foreground">Last turn</dt>
+            <dd>none yet</dd>
+          </>
+        )}
+      </dl>
+    </section>
   );
 }
 

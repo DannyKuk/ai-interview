@@ -29,6 +29,7 @@ export function InterviewChat() {
   const ended = useInterviewStore((state) => state.ended);
   const addMessage = useInterviewStore((state) => state.addMessage);
   const endInterview = useInterviewStore((state) => state.endInterview);
+  const recordTurn = useInterviewStore((state) => state.recordTurn);
   const { turn, error, send, stop } = useChatStream();
   const router = useRouter();
   const [draft, setDraft] = useState("");
@@ -36,10 +37,13 @@ export function InterviewChat() {
 
   const firstTurn = useCallback(async () => {
     const finished = await send(buildRequest([]));
+    if (finished) {
+      recordTurn(finished); // for the dev panel, blocked turns too
+    }
     if (finished && !finished.blocked) {
       addMessage({ role: "assistant", content: finished.reply });
     }
-  }, [send, addMessage]);
+  }, [send, addMessage, recordTurn]);
 
   useEffect(() => {
     if (!hydrated) {
@@ -68,6 +72,9 @@ export function InterviewChat() {
 
     const finished = await send(buildRequest([...messages, answerMessage]));
     setPending(null);
+    if (finished) {
+      recordTurn(finished);
+    }
 
     if (finished && !finished.blocked) {
       addMessage(answerMessage);
