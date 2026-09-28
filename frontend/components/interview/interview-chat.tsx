@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AnswerInput } from "@/components/interview/answer-input";
+import { Transcript, TranscriptLine } from "@/components/interview/transcript";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useChatStream } from "@/hooks/use-chat-stream";
 import type { ChatMessage, ChatRequest } from "@/lib/api";
@@ -103,26 +104,12 @@ export function InterviewChat() {
 
   return (
     <div className="flex flex-col gap-4">
-      <ol className="flex flex-col gap-3">
-        {messages.map((message, index) => (
-          <li key={index}>
-            <strong>{message.role === "assistant" ? "Interviewer" : "You"}:</strong>{" "}
-            {message.content}
-          </li>
-        ))}
-
-        {pending && (
-          <li>
-            <strong>You:</strong> {pending}
-          </li>
-        )}
-
+      <Transcript messages={messages}>
+        {pending && <TranscriptLine role="user" content={pending} />}
         {(turn?.streaming || turn?.blocked) && (
-          <li>
-            <strong>Interviewer:</strong> {turn.reply || "…"}
-          </li>
+          <TranscriptLine role="assistant" content={turn.reply || "…"} />
         )}
-      </ol>
+      </Transcript>
       {ended ? (
         <div className="flex items-center justify-between gap-2">
           <p className="text-muted-foreground">The interviewer has left the meeting.</p>
