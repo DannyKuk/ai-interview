@@ -95,7 +95,7 @@ class ChatResponse(BaseModel):
     reply: str
     blocked: BlockReason | None = None
     hint: HintName | None = None
-    ended: EndReason | None = None  # TODO: the frontend will end the call when set
+    ended: EndReason | None = None  # the frontend ends the call when set
 
 
 class Usage(BaseModel):

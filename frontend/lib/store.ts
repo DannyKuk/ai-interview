@@ -4,15 +4,19 @@ import { useEffect, useState } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import type { ChatMessage, InterviewSettings } from "@/lib/api";
+import type { ChatMessage, ChatResponse, InterviewSettings } from "@/lib/api";
+
+export type EndReason = NonNullable<ChatResponse["ended"]>;
 
 type InterviewState = {
   settings: InterviewSettings | null; // null until the setup page fills in the backend defaults
   sessionId: string | null; // one per interview, the backend's cost cap counts per session
   messages: ChatMessage[]; // the transcript, sent as history on every turn
+  ended: EndReason | null; // set once the interviewer has said goodbye
   updateSettings: (patch: Partial<InterviewSettings>) => void;
   startInterview: () => void;
   addMessage: (message: ChatMessage) => void;
+  endInterview: (reason: EndReason) => void;
   reset: () => void;
 };
 
@@ -22,11 +26,14 @@ export const useInterviewStore = create<InterviewState>()(
       settings: null,
       sessionId: null,
       messages: [],
+      ended: null,
+
       updateSettings: (patch) =>
         set((state) => ({ settings: { ...state.settings, ...patch } as InterviewSettings })),
-      startInterview: () => set({ sessionId: crypto.randomUUID(), messages: [] }),
+      startInterview: () => set({ sessionId: crypto.randomUUID(), messages: [], ended: null }),
       addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
-      reset: () => set({ settings: null, sessionId: null, messages: [] }),
+      endInterview: (reason) => set({ ended: reason }),
+      reset: () => set({ settings: null, sessionId: null, messages: [], ended: null }),
     }),
     {
       name: "interview",

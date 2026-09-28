@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { AnswerInput } from "@/components/interview/answer-input";
+import { buttonVariants } from "@/components/ui/button";
 import { useChatStream } from "@/hooks/use-chat-stream";
 import type { ChatMessage, ChatRequest } from "@/lib/api";
 import { useInterviewStore, useStoreHydrated } from "@/lib/store";
@@ -22,7 +24,9 @@ function buildRequest(messages: ChatMessage[]): ChatRequest {
 export function InterviewChat() {
   const hydrated = useStoreHydrated();
   const messages = useInterviewStore((state) => state.messages);
+  const ended = useInterviewStore((state) => state.ended);
   const addMessage = useInterviewStore((state) => state.addMessage);
+  const endInterview = useInterviewStore((state) => state.endInterview);
   const { turn, error, send } = useChatStream();
   const router = useRouter();
   const [draft, setDraft] = useState("");
@@ -57,6 +61,9 @@ export function InterviewChat() {
     if (finished && !finished.blocked) {
       addMessage(answerMessage);
       addMessage({ role: "assistant", content: finished.reply });
+      if (finished.ended) {
+        endInterview(finished.ended);
+      }
     } else {
       // blocked or failed: keep it out of the history
       setDraft(text);
@@ -90,12 +97,21 @@ export function InterviewChat() {
         )}
       </ol>
       {error && <p>{error}</p>}
-      <AnswerInput
-        value={draft}
-        onChange={setDraft}
-        onSend={answer}
-        disabled={messages.length === 0 || !!turn?.streaming}
-      />
+      {ended ? (
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-muted-foreground">The interviewer has left the meeting.</p>
+          <Link href="/results" className={buttonVariants()}>
+            See your feedback
+          </Link>
+        </div>
+      ) : (
+        <AnswerInput
+          value={draft}
+          onChange={setDraft}
+          onSend={answer}
+          disabled={messages.length === 0 || !!turn?.streaming}
+        />
+      )}
     </div>
   );
 }
