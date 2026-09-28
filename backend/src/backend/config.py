@@ -22,7 +22,8 @@ class Settings(BaseSettings):
     # GUARD model
     guard_model: str = "typesafe/jev-1.13"
     guard_threshold: float = 0.5  # block when P(injection) + P(abuse) >= this
-    guard_timeout_ms: int = 5_000  # Jev typically answeres in <1s
+    guard_timeout_ms: int = 5_000  # Jev typically answeres in <1s but is sometimes much slower
+    guard_retries: int = 1  # extra tries on a timeout / 502-504, then fail closed
 
     # turn hints
     end_threshold: float = 0.7

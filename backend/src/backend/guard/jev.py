@@ -65,23 +65,47 @@ def build_state(role: str, last_question: str | None, message: str | None) -> st
     return "\n".join(parts)
 
 
+# Jev's upstream is briefly down or overloaded: worth one more try.
+# Not 4xx (our request is wrong) and not 429 (retrying right away makes it worse)
+RETRY_STATUSES = {502, 503, 504}
+
+
+def is_retryable(error: httpx.HTTPError) -> bool:
+    if isinstance(error, httpx.HTTPStatusError):
+        return error.response.status_code in RETRY_STATUSES
+    return isinstance(error, httpx.TransportError)  # timeouts, connection errors
+
+
+def describe(error: Exception) -> str:
+    # for the log: "HTTPStatusError 503" says more than the type alone. No request data (PII)
+    if isinstance(error, httpx.HTTPStatusError):
+        return f"{type(error).__name__} {error.response.status_code}"
+    return type(error).__name__
+
+
 async def ask_jev(state: str, questions: dict) -> dict:
     async with httpx.AsyncClient(timeout=settings.guard_timeout_ms / 1000) as client:
-        response = await client.post(
-            f"{settings.openrouter_api_base}/systemone",
-            headers={
-                "Authorization": f"Bearer {settings.openrouter_api_key.get_secret_value()}"
-            },
-            json={
-                "model": settings.guard_model,
-                "state": state,
-                "questions": questions,
-            },
-        )
-        response.raise_for_status()
-        return response.json()[
-            "answers"
-        ]  # {"category": {"choice": "ok", "probabilities": {...}}}
+        for attempt in range(settings.guard_retries + 1):
+            try:
+                response = await client.post(
+                    f"{settings.openrouter_api_base}/systemone",
+                    headers={
+                        "Authorization": f"Bearer {settings.openrouter_api_key.get_secret_value()}"
+                    },
+                    json={
+                        "model": settings.guard_model,
+                        "state": state,
+                        "questions": questions,
+                    },
+                )
+                response.raise_for_status()
+                return response.json()[
+                    "answers"
+                ]  # {"category": {"choice": "ok", "probabilities": {...}}}
+            except httpx.HTTPError as error:
+                if attempt == settings.guard_retries or not is_retryable(error):
+                    raise
+                logger.warning("guard retry after: %s", describe(error))
 
 
 def decide(answers: dict, threshold: float) -> GuardVerdict:
@@ -124,5 +148,5 @@ async def check_input(
         return decide(answers, settings.guard_threshold)
     except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
         # if we can't check the text, it doesn't reach the interviewer.
-        logger.warning("guard failed: %s", type(error).__name__)
+        logger.warning("guard failed: %s", describe(error))
         return GuardVerdict(blocked="guard_error")

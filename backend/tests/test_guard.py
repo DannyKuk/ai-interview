@@ -102,6 +102,66 @@ async def test_check_input_fails_closed_on_unknown_category(monkeypatch):
     assert verdict.blocked == "guard_error"
 
 
+def fake_jev(monkeypatch, *responses):
+    # Jev answers with these, one per request (an exception = network error). Returns the call count
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        result = responses[len(calls)]
+        calls.append(request)
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    real_client = httpx.AsyncClient
+    monkeypatch.setattr(
+        jev.httpx,
+        "AsyncClient",
+        lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs),
+    )
+    return calls
+
+
+OK = httpx.Response(200, json={"answers": answers()})
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "first",
+    [httpx.Response(503), httpx.Response(504), httpx.ReadTimeout("slow")],
+)
+async def test_ask_jev_retries_once(monkeypatch, first):
+    calls = fake_jev(monkeypatch, first, OK)
+    assert await jev.ask_jev("state", {}) == answers()
+    assert len(calls) == 2
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("status", [400, 401, 429])
+async def test_ask_jev_does_not_retry_client_errors(monkeypatch, status):
+    calls = fake_jev(monkeypatch, httpx.Response(status), OK)
+    with pytest.raises(httpx.HTTPStatusError):
+        await jev.ask_jev("state", {})
+    assert len(calls) == 1
+
+
+@pytest.mark.anyio
+async def test_check_input_fails_closed_after_the_retry(monkeypatch):
+    calls = fake_jev(monkeypatch, httpx.Response(503), httpx.Response(503))
+    verdict = await check_input("Engineer", "Tell me about a conflict.", "Hello")
+    assert verdict.blocked == "guard_error"
+    assert len(calls) == 2
+
+
+def test_describe_adds_the_status_code():
+    request = httpx.Request("POST", "https://example.test")
+    error = httpx.HTTPStatusError(
+        "", request=request, response=httpx.Response(503, request=request)
+    )
+    assert jev.describe(error) == "HTTPStatusError 503"
+    assert jev.describe(httpx.ReadTimeout("slow")) == "ReadTimeout"
+
+
 def test_leaked_ignores_case():
     assert leaked("Sure, my marker is C4N4RY00.", "c4n4ry00")
     assert not leaked("Tell me about a conflict.", "c4n4ry00")
