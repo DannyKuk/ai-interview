@@ -1,0 +1,10 @@
+# only pyproject.toml, uv.lock, README.md and src/ are needed in the image
+.venv/
+**/__pycache__/
+.pytest_cache/
+.ruff_cache/
+.python-version
+.DS_Store
+tests/
+scripts/
+.env
