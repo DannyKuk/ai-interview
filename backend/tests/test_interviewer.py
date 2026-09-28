@@ -4,6 +4,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.prompts.interview_settings import DIFFICULTY, PERSONA
+from backend.prompts.turn_hints import HINTS
 from backend.schemas.chat import InterviewSettings, Technique
 
 TECHNIQUES = ["zero_shot", "few_shot", "chain_of_thought", "persona", "self_critique"]
@@ -108,3 +109,21 @@ def test_canary_is_new_per_request_and_at_both_ends_of_the_prompt():
 
     assert system_prompt.startswith(f"Session marker: {first['canary']}.")
     assert system_prompt.count(first["canary"]) == 2
+
+
+def test_hint_is_a_system_note_after_the_newest_message():
+    history = [
+        AIMessage("Tell me about a conflict."),
+        HumanMessage("I'd like to stop."),
+    ]
+    prompt = build_interviewer_chain().first
+
+    with_hint = prompt.invoke(
+        build_interviewer_input(InterviewSettings(), history, "end")
+    ).to_messages()
+    without = prompt.invoke(
+        build_interviewer_input(InterviewSettings(), history)
+    ).to_messages()
+
+    assert with_hint[-1] == SystemMessage(f"Note for this turn: {HINTS['end']}")
+    assert len(without) == 3  # system prompt + 2 history messages, no note

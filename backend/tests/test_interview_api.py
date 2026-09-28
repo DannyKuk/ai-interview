@@ -64,13 +64,14 @@ def use_fake_model(monkeypatch, words: list[str], finish_reason="stop") -> None:
     monkeypatch.setattr("backend.chains.interviewer.get_chat_model", lambda: fake)
 
 
-def use_fake_guard(monkeypatch, blocked=None) -> list[tuple]:
-    # replaces the Jev call - returns what the guard was asked, to check it later
+def use_fake_guard(monkeypatch, **verdict) -> list[tuple]:
+    # replaces the Jev call - returns what the guard was asked, to check it later.
+    # verdict: GuardVerdict fields, e.g. blocked="message" or wants_to_end=0.97
     calls = []
 
     async def fake_check_input(role, last_question=None, message=None):
         calls.append((role, last_question, message))
-        return GuardVerdict(blocked=blocked)
+        return GuardVerdict(**verdict)
 
     monkeypatch.setattr(interview, "check_input", fake_check_input)
     return calls
@@ -80,6 +81,9 @@ def use_fake_guard(monkeypatch, blocked=None) -> list[tuple]:
 def guard_allows_everything(monkeypatch):
     # tests never call the real Jev. Guard tests override this with use_fake_guard
     use_fake_guard(monkeypatch)
+
+
+NO_HINT = {"hint": None, "ended": None}
 
 
 def parse_sse(body: str) -> list[tuple[str, dict]]:
@@ -104,13 +108,21 @@ def test_chat_returns_whole_reply(monkeypatch):
     response = post_chat([])
 
     assert response.status_code == 200
-    assert response.json() == {"reply": "Welcome to Guugle!", "blocked": None}
+    assert response.json() == {
+        "reply": "Welcome to Guugle!",
+        "blocked": None,
+        **NO_HINT,
+    }
 
 
 def test_chat_returns_fallback_when_reply_is_empty(monkeypatch):
     use_fake_model(monkeypatch, [])
 
-    assert post_chat([]).json() == {"reply": FALLBACK_REPLY, "blocked": None}
+    assert post_chat([]).json() == {
+        "reply": FALLBACK_REPLY,
+        "blocked": None,
+        **NO_HINT,
+    }
 
 
 def test_chat_stream_tokens_then_usage_then_done(monkeypatch):
@@ -122,6 +134,7 @@ def test_chat_stream_tokens_then_usage_then_done(monkeypatch):
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     assert events == [
+        ("meta", NO_HINT),
         ("token", {"text": "Welcome"}),
         ("token", {"text": " to"}),
         ("token", {"text": " Guugle!"}),
@@ -136,7 +149,7 @@ def test_chat_stream_sends_fallback_when_reply_is_empty(monkeypatch):
 
     events = parse_sse(post_chat_stream([]).text)
 
-    assert events[0] == ("token", {"text": FALLBACK_REPLY})
+    assert events[1] == ("token", {"text": FALLBACK_REPLY})
     assert events[-1] == ("done", {"finish_reason": "length"})
 
 
@@ -193,7 +206,11 @@ def test_blocked_chat_returns_refusal(monkeypatch, reason):
 
     response = post_chat(HISTORY)
 
-    assert response.json() == {"reply": REFUSALS[reason], "blocked": reason}
+    assert response.json() == {
+        "reply": REFUSALS[reason],
+        "blocked": reason,
+        **NO_HINT,
+    }
 
 
 def test_blocked_stream_sends_refusal_and_no_tokens(monkeypatch):
@@ -222,7 +239,11 @@ def test_chat_blocks_reply_that_leaks_the_canary(monkeypatch):
 
     response = post_chat(HISTORY)
 
-    assert response.json() == {"reply": REFUSALS["leak"], "blocked": "leak"}
+    assert response.json() == {
+        "reply": REFUSALS["leak"],
+        "blocked": "leak",
+        **NO_HINT,
+    }
 
 
 def test_stream_stops_as_soon_as_the_canary_is_complete(monkeypatch):
@@ -237,8 +258,24 @@ def test_stream_stops_as_soon_as_the_canary_is_complete(monkeypatch):
     # the first half of the canary got out before it was complete: the frontend
     # replaces the streamed text on "blocked". Nothing after the canary is sent
     assert events == [
+        ("meta", NO_HINT),
         ("token", {"text": "Session marker: "}),
         ("token", {"text": "c4n4ry"}),
         ("blocked", {"reason": "leak", "reply": REFUSALS["leak"]}),
         ("done", {"finish_reason": "blocked"}),
     ]
+
+
+def test_candidate_leaving_ends_the_interview(monkeypatch):
+    use_fake_model(monkeypatch, ["Thanks for your time,", " goodbye."])
+    use_fake_guard(monkeypatch, answered=0.11, wants_to_end=0.97)
+    leaving = [
+        {"role": "assistant", "content": "Tell me about a conflict."},
+        {"role": "user", "content": "This isn't for me, I'd like to stop here."},
+    ]
+
+    body = post_chat(leaving).json()
+    events = parse_sse(post_chat_stream(leaving).text)
+
+    assert (body["hint"], body["ended"]) == ("end", "candidate_left")
+    assert events[0] == ("meta", {"hint": "end", "ended": "candidate_left"})

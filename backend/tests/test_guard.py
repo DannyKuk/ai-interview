@@ -62,8 +62,15 @@ async def test_check_input_only_asks_about_the_message_if_there_is_one(monkeypat
     monkeypatch.setattr(jev, "ask_jev", fake_ask_jev)
 
     await check_input("Engineer")
+    await check_input("Engineer", None, "Hi, I'm ready.")
     await check_input("Engineer", "Tell me about a conflict.", "We disagreed once.")
-    assert asked == [{"role_injection"}, {"role_injection", "category"}]
+
+    message_questions = {"role_injection", "category", "wants_to_end"}
+    assert asked == [
+        {"role_injection"},  # first turn - only the role
+        message_questions,  # no interviewer question yet, so no "answered"
+        message_questions | {"answered"},
+    ]
 
 
 @pytest.mark.anyio
