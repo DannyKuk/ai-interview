@@ -7,6 +7,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import Runnable
 
+from backend.api.cost_cap import OUT_OF_TIME, add_cost, over_cap
 from backend.api.rate_limit import rate_limit
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.guard.canary import leaked
@@ -79,9 +80,20 @@ class PreparedChat:
     ended: EndReason | None
     chain: Runnable
     chain_input: dict
+    over_cap: bool = False
 
 
 async def prepare_chat(request: ChatRequest) -> PreparedChat:
+    if over_cap(request.session_id):
+        return PreparedChat(
+            verdict=GuardVerdict(),
+            hint=None,
+            ended="limit_reached",
+            chain=build_interviewer_chain(request.system_prompt),
+            chain_input={},
+            over_cap=True,
+        )
+
     verdict = await guard_chat(request)
     hint = pick_hint(verdict)
     chain = build_interviewer_chain(request.system_prompt)
@@ -101,11 +113,14 @@ async def prepare_chat(request: ChatRequest) -> PreparedChat:
 async def chat(request: ChatRequest) -> ChatResponse:
     # whole reply at once, as JSON (easy to try in /docs)
     turn = await prepare_chat(request)
+    if turn.over_cap:
+        return ChatResponse(reply=OUT_OF_TIME, ended=turn.ended)
     if turn.verdict.blocked:
         reason = turn.verdict.blocked
         return ChatResponse(reply=REFUSALS[reason], blocked=reason)
 
     result = await turn.chain.ainvoke(turn.chain_input)
+    add_cost(request.session_id, result.response_metadata.get("cost"))
     if leaked(result.text, turn.chain_input["canary"]):
         return ChatResponse(reply=REFUSALS["leak"], blocked="leak")
     return ChatResponse(
@@ -116,6 +131,12 @@ async def chat(request: ChatRequest) -> ChatResponse:
 @router.post("/chat/stream", response_class=EventSourceResponse)
 async def chat_stream(request: ChatRequest) -> AsyncIterator[ServerSentEvent]:
     turn = await prepare_chat(request)
+    if turn.over_cap:
+        # same shape as a normal goodbye turn, so the frontend closes the call
+        yield ServerSentEvent(event="meta", data={"hint": None, "ended": turn.ended})
+        yield ServerSentEvent(event="token", data={"text": OUT_OF_TIME})
+        yield ServerSentEvent(event="done", data={"finish_reason": "limit_reached"})
+        return
     if turn.verdict.blocked:
         # show refusal instead of streamed reply
         for event in blocked_events(turn.verdict.blocked):
@@ -145,6 +166,8 @@ async def chat_stream(request: ChatRequest) -> AsyncIterator[ServerSentEvent]:
                 usage.input_tokens = chunk.usage_metadata["input_tokens"]
                 usage.output_tokens = chunk.usage_metadata["output_tokens"]
                 usage.cost = chunk.response_metadata.get("cost")
+
+    add_cost(request.session_id, usage.cost)
 
     if not reply:
         yield ServerSentEvent(event="token", data={"text": FALLBACK_REPLY})

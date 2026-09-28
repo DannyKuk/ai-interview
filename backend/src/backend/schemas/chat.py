@@ -1,4 +1,5 @@
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -53,12 +54,13 @@ Technique = Literal[
 class ChatRequest(BaseModel):
     # empty messages -> new chat
     model_config = ConfigDict(extra="forbid")
+    session_id: UUID
     messages: list[ChatMessage] = Field(max_length=MAX_MESSAGES)
     settings: InterviewSettings = Field(default_factory=InterviewSettings)
     system_prompt: Technique = "zero_shot"
 
 
-EndReason = Literal["candidate_left"]
+EndReason = Literal["candidate_left", "limit_reached"]
 
 
 class ChatResponse(BaseModel):
