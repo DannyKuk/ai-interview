@@ -6,7 +6,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 
-from backend.api import interview
+from backend.api import interview, rate_limit
 from backend.api.interview import FALLBACK_REPLY, REFUSALS, to_langchain_messages
 from backend.main import app
 from backend.schemas.chat import ChatMessage
@@ -75,6 +75,12 @@ def use_fake_guard(monkeypatch, **verdict) -> list[tuple]:
 
     monkeypatch.setattr(interview, "check_input", fake_check_input)
     return calls
+
+
+@pytest.fixture(autouse=True)
+def fresh_rate_limit():
+    # the limiter counts across tests; without this the suite hits 20/minute
+    rate_limit.storage.reset()
 
 
 @pytest.fixture(autouse=True)
@@ -279,3 +285,16 @@ def test_candidate_leaving_ends_the_interview(monkeypatch):
 
     assert (body["hint"], body["ended"]) == ("end", "candidate_left")
     assert events[0] == ("meta", {"hint": "end", "ended": "candidate_left"})
+
+
+def test_chat_endpoints_share_one_rate_limit_per_ip(monkeypatch):
+    use_fake_model(monkeypatch, ["Hi."])
+    monkeypatch.setattr(rate_limit.settings, "chat_rate_limit", "2/minute")
+
+    post_chat([])
+    post_chat_stream([])
+    response = post_chat([])  # third request in a minute, across both endpoints
+
+    assert response.status_code == 429
+    assert response.json()["detail"] == rate_limit.RATE_LIMITED
+    assert 0 < int(response.headers["Retry-After"]) <= 60
