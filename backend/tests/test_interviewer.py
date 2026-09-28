@@ -65,7 +65,7 @@ def test_every_placeholder_is_filled(technique):
 def test_chain_returns_model_reply(monkeypatch):
     fake = FakeListChatModel(responses=["Welcome! Tell me about yourself."])
     # Patch the name inside interviewer.py, because that's the one the chain uses
-    monkeypatch.setattr("backend.chains.interviewer.get_chat_model", lambda: fake)
+    monkeypatch.setattr("backend.chains.interviewer.get_chat_model", lambda **_: fake)
 
     chain_input = build_interviewer_input(InterviewSettings(), [])
     reply = build_interviewer_chain().invoke(chain_input)

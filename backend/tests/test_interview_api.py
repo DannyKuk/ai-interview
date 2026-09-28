@@ -63,7 +63,7 @@ class FakeOpenRouterModel(BaseChatModel):
 
 def use_fake_model(monkeypatch, words: list[str], finish_reason="stop") -> None:
     fake = FakeOpenRouterModel(words=words, finish_reason=finish_reason)
-    monkeypatch.setattr("backend.chains.interviewer.get_chat_model", lambda: fake)
+    monkeypatch.setattr("backend.chains.interviewer.get_chat_model", lambda **_: fake)
 
 
 def use_fake_guard(monkeypatch, **verdict) -> list[tuple]:
@@ -346,3 +346,29 @@ def test_cost_cap_is_per_session(monkeypatch):
     other = post_chat([], session_id="0b7e4c1a-2f3d-4e5f-8a9b-1c2d3e4f5a6b").json()
 
     assert other["ended"] is None
+
+
+def test_model_settings_reach_the_model(monkeypatch):
+    # both endpoints build the chain in prepare_chat, so checking one is enough
+    calls = []
+    fake = FakeOpenRouterModel(words=["Hi"])
+    monkeypatch.setattr(
+        "backend.chains.interviewer.get_chat_model",
+        lambda **kwargs: calls.append(kwargs) or fake,
+    )
+    model_settings = {
+        "model": "openai/gpt-5-nano",
+        "reasoning_effort": "minimal",
+        "max_tokens": 600,
+    }
+
+    body = {"session_id": SESSION_ID, "messages": [], "model_settings": model_settings}
+    client.post("/api/interview/chat", json=body)
+
+    assert calls == [
+        {
+            "model": "openai/gpt-5-nano",
+            "effort": "minimal",
+            "max_tokens": 600,
+        }
+    ]
