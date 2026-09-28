@@ -24,8 +24,12 @@ async function toApiError(response: Response): Promise<ApiError> {
   try {
     // HTTPException -> {detail: "..."}; validation error (422) -> {detail: [{msg, ...}]}
     const body = await response.json();
-    if (typeof body.detail === "string") message = body.detail;
-    else if (Array.isArray(body.detail) && body.detail[0]?.msg) message = body.detail[0].msg;
+
+    if (typeof body.detail === "string") {
+      message = body.detail;
+    } else if (Array.isArray(body.detail) && body.detail[0]?.msg) {
+      message = body.detail[0].msg;
+    }
   } catch {
     // no JSON body, keep the generic message
   }
@@ -35,7 +39,11 @@ async function toApiError(response: Response): Promise<ApiError> {
 
 export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, init);
-  if (!response.ok) throw await toApiError(response);
+
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+
   return response.json() as Promise<T>;
 }
 
@@ -43,11 +51,77 @@ export function getConfig(): Promise<AppConfig> {
   return request<AppConfig>("/api/config");
 }
 
-// One whole interviewer turn as JSON (not streamed!)
+// one whole interviewer turn as JSON (not streamed!)
 export function chat(body: ChatRequest): Promise<ChatResponse> {
   return request<ChatResponse>("/api/interview/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+}
+
+// stream events
+export type ChatStreamEvent =
+  | { event: "meta"; data: Pick<ChatResponse, "hint" | "ended"> }
+  | { event: "token"; data: { text: string } }
+  | { event: "usage"; data: { input_tokens: number; output_tokens: number; cost: number | null } }
+  | { event: "blocked"; data: { reason: NonNullable<ChatResponse["blocked"]>; reply: string } }
+  | { event: "done"; data: { finish_reason: string | null } };
+
+// one interviewer turn, streamed - yields each event as it arrives.
+export async function* streamChat(
+  body: ChatRequest,
+  signal?: AbortSignal,
+): AsyncGenerator<ChatStreamEvent> {
+  const response = await fetch(`${API_URL}/api/interview/chat/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+
+  // 422 / 429 come back as JSON before the stream starts
+  if (!response.ok || !response.body) {
+    throw await toApiError(response);
+  }
+
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) return;
+    buffer += value;
+    // an event is a block of lines ending in a blank line; a network chunk can hold
+    // several events or half of one, so only complete blocks are parsed
+    let end;
+
+    while ((end = buffer.indexOf("\n\n")) !== -1) {
+      const block = buffer.slice(0, end);
+      buffer = buffer.slice(end + 2);
+      const event = parseEvent(block);
+
+      if (event) {
+        yield event;
+      }
+    }
+  }
+}
+
+function parseEvent(block: string): ChatStreamEvent | null {
+  let event = "";
+  let data = "";
+
+  for (const line of block.split("\n")) {
+    if (line.startsWith("event:")) {
+      event = line.slice(6).trim();
+    } else if (line.startsWith("data:")) {
+      data += line.slice(5).trim();
+    }
+  }
+
+  if (!event || !data) {
+    return null;
+  }
+  return { event, data: JSON.parse(data) } as ChatStreamEvent;
 }
