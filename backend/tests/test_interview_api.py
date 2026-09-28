@@ -6,7 +6,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage
 from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResult
 
-from backend.api import interview, rate_limit
+from backend.api import cost_cap, interview, rate_limit
 from backend.api.interview import FALLBACK_REPLY, REFUSALS, to_langchain_messages
 from backend.main import app
 from backend.schemas.chat import ChatMessage
@@ -35,7 +35,9 @@ class FakeOpenRouterModel(BaseChatModel):
 
     def _generate(self, messages, stop=None, run_manager=None, **kwargs):
         # used by invoke(): the whole reply at once
-        message = AIMessage(content="".join(self.words))
+        message = AIMessage(
+            content="".join(self.words), response_metadata={"cost": 0.0003}
+        )
         return ChatResult(generations=[ChatGeneration(message=message)])
 
     def _stream(self, messages, stop=None, run_manager=None, **kwargs):
@@ -78,6 +80,11 @@ def use_fake_guard(monkeypatch, **verdict) -> list[tuple]:
 
 
 @pytest.fixture(autouse=True)
+def fresh_cost_cap():
+    cost_cap.spent.clear()
+
+
+@pytest.fixture(autouse=True)
 def fresh_rate_limit():
     # the limiter counts across tests; without this the suite hits 20/minute
     rate_limit.storage.reset()
@@ -100,12 +107,17 @@ def parse_sse(body: str) -> list[tuple[str, dict]]:
     return events
 
 
-def post_chat(messages: list[dict]):
-    return client.post("/api/interview/chat", json={"messages": messages})
+SESSION_ID = "6f1c2b1e-8a47-4a8e-9a55-3f0d7c1e2b90"
 
 
-def post_chat_stream(messages: list[dict]):
-    return client.post("/api/interview/chat/stream", json={"messages": messages})
+def post_chat(messages: list[dict], session_id=SESSION_ID):
+    body = {"session_id": session_id, "messages": messages}
+    return client.post("/api/interview/chat", json=body)
+
+
+def post_chat_stream(messages: list[dict], session_id=SESSION_ID):
+    body = {"session_id": session_id, "messages": messages}
+    return client.post("/api/interview/chat/stream", json=body)
 
 
 def test_chat_returns_whole_reply(monkeypatch):
@@ -298,3 +310,39 @@ def test_chat_endpoints_share_one_rate_limit_per_ip(monkeypatch):
     assert response.status_code == 429
     assert response.json()["detail"] == rate_limit.RATE_LIMITED
     assert 0 < int(response.headers["Retry-After"]) <= 60
+
+
+def test_session_id_is_required():
+    response = client.post("/api/interview/chat", json={"messages": []})
+
+    assert response.status_code == 422
+
+
+def test_session_over_the_cost_cap_ends_without_calling_any_model(monkeypatch):
+    use_fake_model(monkeypatch, ["Hi."])  # each turn costs 0.0003
+    calls = use_fake_guard(monkeypatch)
+    monkeypatch.setattr(cost_cap.settings, "session_cost_cap_usd", 0.0005)
+
+    post_chat([])
+    post_chat_stream([])  # 0.0006 spent now, over the cap
+    body = post_chat([]).json()
+    events = parse_sse(post_chat_stream([]).text)
+
+    assert (body["reply"], body["ended"]) == (cost_cap.OUT_OF_TIME, "limit_reached")
+    assert events == [
+        ("meta", {"hint": None, "ended": "limit_reached"}),
+        ("token", {"text": cost_cap.OUT_OF_TIME}),
+        ("done", {"finish_reason": "limit_reached"}),
+    ]
+    assert len(calls) == 2  # the guard (Jev) ran only for the first two turns
+
+
+def test_cost_cap_is_per_session(monkeypatch):
+    use_fake_model(monkeypatch, ["Hi."])
+    monkeypatch.setattr(cost_cap.settings, "session_cost_cap_usd", 0.0005)
+
+    post_chat([])
+    post_chat([])  # this session is over the cap now
+    other = post_chat([], session_id="0b7e4c1a-2f3d-4e5f-8a9b-1c2d3e4f5a6b").json()
+
+    assert other["ended"] is None
