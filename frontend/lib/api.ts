@@ -25,6 +25,8 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000
 export const MAX_MESSAGE_CHARS = 4000;
 // same as MAX_JD_CHARS in the backend (plan request)
 export const MAX_JD_CHARS = 8000;
+// same as MAX_CV_BYTES in the backend: checked here too, so a big file isn't sent at all
+export const MAX_CV_BYTES = 5 * 1024 * 1024;
 
 export class ApiError extends Error {
   status: number;
@@ -95,6 +97,14 @@ export function getConfig(): Promise<AppConfig> {
 // ready-made candidates (settings + profile + sample JD), static data
 export function getPresets(): Promise<Preset[]> {
   return request<Preset[]>("/api/presets");
+}
+
+// PDF → guarded → CandidateProfile (~7 s: Jev + one LLM call). The CV itself isn't kept
+export function parseCv(file: File): Promise<CandidateProfile> {
+  const body = new FormData();
+  body.append("file", file);
+  // no Content-Type header: the browser sets multipart/form-data with its boundary
+  return request<CandidateProfile>("/api/cv/parse", { method: "POST", body });
 }
 
 // the question list for one interview (~6 s: guard + one LLM call).

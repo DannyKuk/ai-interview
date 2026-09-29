@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { CvUpload } from "@/components/interview/cv-upload";
 import { PresetPicker } from "@/components/interview/preset-picker";
 import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ export function SetupForm() {
   const [presets, setPresets] = useState<Preset[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const hydrated = useStoreHydrated();
   const settings = useInterviewStore((state) => state.settings);
@@ -97,8 +99,9 @@ export function SetupForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <fieldset disabled={starting} className="flex flex-col gap-4">
+      <fieldset disabled={starting || uploading} className="flex flex-col gap-4">
         <PresetPicker presets={presets} />
+        <CvUpload locked={starting || uploading} onUploadingChange={setUploading} />
         <OptionSelect
           id="company"
           label="Company"

@@ -49,6 +49,7 @@ type InterviewState = {
   choosePreset: (preset: Preset) => void;
   clearCandidate: () => void;
   setJobDescription: (jobDescription: string) => void;
+  setProfile: (profile: CandidateProfile) => void;
   startInterview: (plan: SignedPlan) => void;
   addMessage: (message: TranscriptMessage) => void;
   setProgress: (progress: PlanProgress) => void;
@@ -88,6 +89,8 @@ export const useInterviewStore = create<InterviewState>()(
         })),
       clearCandidate: () => set({ presetId: null, profile: null, jobDescription: "" }),
       setJobDescription: (jobDescription) => set({ jobDescription }),
+      // an uploaded CV replaces the preset candidate; company, role and JD stay
+      setProfile: (profile) => set({ presetId: null, profile }),
       startInterview: (plan) =>
         set({
           sessionId: crypto.randomUUID(),
