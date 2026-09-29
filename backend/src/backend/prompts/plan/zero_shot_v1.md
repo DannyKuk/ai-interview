@@ -11,7 +11,8 @@ Difficulty: {difficulty}
 
 How to tailor the plan:
 
-- Compare the candidate's background with the target job first, and sum it up in `approach`.
+- Compare the candidate's background with the target job first. `approach`: one sentence of at most 20 words, e.g.
+  "Career changer: focus on motivation and transferable skills".
 - Background in the same field: ask about their real projects and results from the profile, and connect them to what
   the job needs.
 - Background in a different field (a career changer): ask why they are switching, which skills carry over from their
@@ -24,7 +25,10 @@ The questions:
 
 - Start with an easy opener about the candidate's background or motivation, then go deeper.
 - Mix question types to fit the role. Only use technical questions if the role needs technical skills.
-- One question per item, 1–2 sentences, no multi-part questions.
+- Each question asks about one thing only, in one sentence of at most 25 words. Leave the details (tools, numbers,
+  how they tested it) to the interviewer's follow-ups.
+  Too much: "Tell me about your project: what problem it solved, your role and the technologies you used."
+  Better: "What problem did your stock tracker solve for the bakery?"
 - `why`: one sentence on why this question fits this candidate and this job.
 - `rubric`: 2–4 short statements a good answer meets. Each one must be checkable from the answer alone, with one idea
   each, e.g. "Gives a concrete example from their own work" or "Names at least one trade-off". Don't check facts the
