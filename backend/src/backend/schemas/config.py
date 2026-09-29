@@ -31,3 +31,4 @@ class AppConfig(BaseModel):
     default_settings: InterviewSettings
     default_model_settings: ModelSettings
     max_tokens_range: tuple[int, int]  # (min, max) the backend accepts
+    question_count_range: tuple[int, int]  # (min, max) questions in a plan

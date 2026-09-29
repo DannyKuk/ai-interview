@@ -15,6 +15,7 @@ from backend.schemas.chat import (
     Technique,
 )
 from backend.schemas.config import AppConfig
+from backend.schemas.plan import MAX_QUESTIONS, MIN_QUESTIONS
 from backend.services.model_catalog import get_models
 
 router = APIRouter(prefix="/api", tags=["config"])
@@ -33,4 +34,5 @@ async def get_config() -> AppConfig:
         default_settings=InterviewSettings(),
         default_model_settings=ModelSettings(model=settings.default_model),
         max_tokens_range=(MIN_MAX_TOKENS, MAX_MAX_TOKENS),
+        question_count_range=(MIN_QUESTIONS, MAX_QUESTIONS),
     )

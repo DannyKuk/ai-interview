@@ -72,6 +72,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/cv/parse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Parse Cv */
+        post: operations["parse_cv_api_cv_parse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interview/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Plan */
+        post: operations["create_plan_api_interview_plan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -90,7 +124,7 @@ export interface components {
              */
             default_technique: "zero_shot" | "few_shot" | "chain_of_thought" | "persona" | "self_critique";
             /** Companies */
-            companies: ("Guugle" | "HeadBook" | "Instakilogram" | "Netflux" | "Amazin'" | "Goldman Sax" | "Tesler" | "Starbacks")[];
+            companies: ("Guugle" | "HeadBook" | "Instakilogram" | "Netflux" | "Amazin" | "Goldman Sax" | "Tesler" | "Starbacks")[];
             /** Difficulties */
             difficulties: ("easy" | "medium" | "hard")[];
             /** Personas */
@@ -102,6 +136,54 @@ export interface components {
                 number,
                 number
             ];
+            /** Question Count Range */
+            question_count_range: [
+                number,
+                number
+            ];
+        };
+        /** Body_parse_cv_api_cv_parse_post */
+        Body_parse_cv_api_cv_parse_post: {
+            /** File */
+            file: string;
+        };
+        /** CandidateProfile */
+        CandidateProfile: {
+            /**
+             * First Name
+             * @description First name only, null if not found
+             */
+            first_name: string | null;
+            /**
+             * Headline
+             * @description One line: profession, years, focus
+             */
+            headline: string;
+            /**
+             * Seniority
+             * @description Level in the candidate's own field, not in the job they apply for
+             * @enum {string}
+             */
+            seniority: "junior" | "mid" | "senior" | "lead";
+            /**
+             * Years Experience
+             * @description Total years of work experience, null if unclear
+             */
+            years_experience: number | null;
+            /** Skills */
+            skills: string[];
+            /**
+             * Experience
+             * @description Newest first
+             */
+            experience: components["schemas"]["Experience"][];
+            /** Education */
+            education: string[];
+            /**
+             * Interview Topics
+             * @description Concrete things from this CV an interviewer could ask about
+             */
+            interview_topics: string[];
         };
         /** ChatMessage */
         ChatMessage: {
@@ -130,6 +212,8 @@ export interface components {
              */
             system_prompt: "zero_shot" | "few_shot" | "chain_of_thought" | "persona" | "self_critique";
             model_settings?: components["schemas"]["ModelSettings"];
+            plan?: components["schemas"]["SignedPlan-Input"] | null;
+            progress?: components["schemas"]["PlanProgress"] | null;
         };
         /** ChatResponse */
         ChatResponse: {
@@ -140,12 +224,43 @@ export interface components {
             /** Hint */
             hint?: ("end" | "off_topic" | "not_answered") | null;
             /** Ended */
-            ended?: ("candidate_left" | "limit_reached") | null;
+            ended?: ("candidate_left" | "limit_reached" | "completed") | null;
+            progress?: components["schemas"]["PlanProgress"] | null;
+        };
+        /** Experience */
+        Experience: {
+            /**
+             * Title
+             * @description Job title as written in the CV
+             */
+            title: string;
+            /** Company */
+            company: string;
+            /**
+             * Period
+             * @description As written in the CV, e.g. "2021 – present"
+             */
+            period: string;
+            /**
+             * Highlights
+             * @description Up to 3 short achievements, only facts from the CV
+             */
+            highlights: string[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InterviewPlan */
+        InterviewPlan: {
+            /**
+             * Approach
+             * @description One line, e.g. "Career changer: focus on motivation and transferable skills"
+             */
+            approach: string;
+            /** Questions */
+            questions: components["schemas"]["PlannedQuestion"][];
         };
         /** InterviewSettings */
         InterviewSettings: {
@@ -154,7 +269,7 @@ export interface components {
              * @default Guugle
              * @enum {string}
              */
-            company: "Guugle" | "HeadBook" | "Instakilogram" | "Netflux" | "Amazin'" | "Goldman Sax" | "Tesler" | "Starbacks";
+            company: "Guugle" | "HeadBook" | "Instakilogram" | "Netflux" | "Amazin" | "Goldman Sax" | "Tesler" | "Starbacks";
             /**
              * Role
              * @default Software Engineer
@@ -172,6 +287,11 @@ export interface components {
              * @enum {string}
              */
             persona: "friendly" | "neutral" | "strict";
+            /**
+             * Question Count
+             * @default 5
+             */
+            question_count: number;
         };
         /** ModelInfo */
         ModelInfo: {
@@ -203,6 +323,66 @@ export interface components {
              * @default 1000
              */
             max_tokens: number;
+        };
+        /** PlanProgress */
+        PlanProgress: {
+            /**
+             * Question
+             * @default 0
+             */
+            question: number;
+            /**
+             * Extra Turns
+             * @default 0
+             */
+            extra_turns: number;
+        };
+        /** PlanRequest */
+        PlanRequest: {
+            settings?: components["schemas"]["InterviewSettings"];
+            profile?: components["schemas"]["CandidateProfile"] | null;
+            /** Job Description */
+            job_description?: string | null;
+        };
+        /** PlannedQuestion */
+        PlannedQuestion: {
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "motivation" | "experience" | "behavioural" | "technical" | "situational";
+            /**
+             * Topic
+             * @description Short label, e.g. "event streaming at Spotifly"
+             */
+            topic: string;
+            /**
+             * Question
+             * @description The core question. The interviewer phrases it in its own words
+             */
+            question: string;
+            /**
+             * Why
+             * @description One sentence, e.g. "The job description asks for Kafka, the CV shows Kafka"
+             */
+            why: string;
+            /**
+             * Rubric
+             * @description Yes/no statements a good answer meets, e.g. "Gives a concrete example"
+             */
+            rubric: string[];
+        };
+        /** SignedPlan */
+        "SignedPlan-Input": {
+            plan: components["schemas"]["InterviewPlan"];
+            /** Signature */
+            signature: string;
+        };
+        /** SignedPlan */
+        "SignedPlan-Output": {
+            plan: components["schemas"]["InterviewPlan"];
+            /** Signature */
+            signature: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -328,6 +508,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AppConfig"];
+                };
+            };
+        };
+    };
+    parse_cv_api_cv_parse_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_parse_cv_api_cv_parse_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateProfile"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_plan_api_interview_plan_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedPlan-Output"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -7,6 +7,11 @@ export type ChatResponse = components["schemas"]["ChatResponse"];
 export type InterviewSettings = components["schemas"]["InterviewSettings"];
 export type ModelSettings = components["schemas"]["ModelSettings"];
 export type Technique = ChatRequest["system_prompt"];
+export type InterviewPlan = components["schemas"]["InterviewPlan"];
+export type PlanRequest = components["schemas"]["PlanRequest"];
+export type PlanProgress = components["schemas"]["PlanProgress"];
+// FastAPI lists it twice (request + response body), both have the same shape
+export type SignedPlan = components["schemas"]["SignedPlan-Output"];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -54,22 +59,32 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function getConfig(): Promise<AppConfig> {
-  return request<AppConfig>("/api/config");
-}
-
-// one whole interviewer turn as JSON (not streamed!)
-export function chat(body: ChatRequest): Promise<ChatResponse> {
-  return request<ChatResponse>("/api/interview/chat", {
+function post<T>(path: string, body: unknown): Promise<T> {
+  return request<T>(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
 }
 
+export function getConfig(): Promise<AppConfig> {
+  return request<AppConfig>("/api/config");
+}
+
+// the question list for one interview (~6 s: guard + one LLM call).
+// Send it back unchanged with every chat turn: it's signed
+export function createPlan(body: PlanRequest): Promise<SignedPlan> {
+  return post<SignedPlan>("/api/interview/plan", body);
+}
+
+// one whole interviewer turn as JSON (not streamed!)
+export function chat(body: ChatRequest): Promise<ChatResponse> {
+  return post<ChatResponse>("/api/interview/chat", body);
+}
+
 // stream events
 export type ChatStreamEvent =
-  | { event: "meta"; data: Pick<ChatResponse, "hint" | "ended"> }
+  | { event: "meta"; data: Pick<ChatResponse, "hint" | "ended" | "progress"> }
   | { event: "token"; data: { text: string } }
   | { event: "usage"; data: { input_tokens: number; output_tokens: number; cost: number | null } }
   | { event: "blocked"; data: { reason: NonNullable<ChatResponse["blocked"]>; reply: string } }
