@@ -1,5 +1,7 @@
 import io
 import logging
+import re
+import unicodedata
 
 from pypdf import PdfReader
 
@@ -41,10 +43,18 @@ def read_cv(data: bytes) -> str:
         logger.warning("cv read failed: %s", type(error).__name__)
         raise CvError("We couldn't read this PDF. Please try another file.") from error
 
-    text = text.strip()
+    text = clean_text(text)
     if not text:
         raise CvError(
             "We couldn't find any text in this PDF. Is it a scan? "
             "Please upload a PDF with selectable text."
         )
     return text[:MAX_CV_CHARS]
+
+
+def clean_text(text: str) -> str:
+    # NFKC turns font ligatures back into letters ("ﬁ" → "fi"), else "lena.ﬁscher@…"
+    # is a different email. It also turns non-breaking spaces into normal ones
+    text = unicodedata.normalize("NFKC", text)
+    text = re.sub(r"[ \t]+", " ", text)  # "6 years of  experience" → one space
+    return text.strip()

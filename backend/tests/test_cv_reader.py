@@ -5,7 +5,13 @@ from pypdf import PdfWriter
 from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
 from backend.services import cv_reader
-from backend.services.cv_reader import MAX_CV_BYTES, MAX_CV_PAGES, CvError, read_cv
+from backend.services.cv_reader import (
+    MAX_CV_BYTES,
+    MAX_CV_PAGES,
+    CvError,
+    clean_text,
+    read_cv,
+)
 
 
 def make_pdf(*pages: str, password: str | None = None) -> bytes:
@@ -37,6 +43,16 @@ def test_reads_the_text_of_every_page():
     assert read_cv(make_pdf("Jane Doe, Python developer", "Projects")) == (
         "Jane Doe, Python developer\nProjects"
     )
+
+
+def test_turns_ligatures_back_into_letters():
+    # "\ufb01" is the single "ﬁ" character many fonts use for "fi". Tested on clean_text:
+    # make_pdf's built-in font can't hold it (the sample CVs cover real fonts)
+    assert clean_text("lena.\ufb01scher@example.com") == "lena.fischer@example.com"
+
+
+def test_collapses_repeated_spaces():
+    assert read_cv(make_pdf("6 years of   experience")) == "6 years of experience"
 
 
 def test_opens_a_pdf_with_an_empty_password():
