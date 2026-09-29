@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tomasz Nowak - CV</title>
+<!-- 02 two columns: the sidebar is on the LEFT on screen but SECOND in the HTML,
+     and the profile text flows over two CSS columns. Tests the reading order. -->
+<style>
+  @page { size: A4; margin: 0; }
+  body { margin: 0; font-family: "Avenir Next", "Futura", sans-serif; font-size: 10pt; color: #1d2433; }
+  .page { display: grid; grid-template-columns: 62mm 1fr; min-height: 297mm; }
+  main { grid-column: 2; grid-row: 1; padding: 14mm 12mm; }
+  aside { grid-column: 1; grid-row: 1; background: #1d2433; color: #e8ecf5; padding: 14mm 8mm; }
+  h1 { font-family: "Futura", sans-serif; font-size: 26pt; margin: 0; letter-spacing: 0.02em; }
+  .title { color: #3b82f6; font-size: 12pt; margin-bottom: 6mm; }
+  h2 { font-size: 11pt; text-transform: uppercase; color: #3b82f6; margin: 6mm 0 2mm; }
+  aside h2 { color: #93c5fd; }
+  .profile { column-count: 2; column-gap: 6mm; text-align: justify; }
+  .job { margin-bottom: 4mm; }
+  .job b { display: block; }
+  .meta { color: #6b7280; font-size: 9pt; }
+  ul { margin: 1mm 0; padding-left: 4mm; }
+  .bar { height: 2mm; background: #334155; border-radius: 1mm; margin: 1mm 0 2mm; }
+  .bar span { display: block; height: 100%; background: #93c5fd; border-radius: 1mm; }
+</style>
+</head>
+<body>
+<div class="page">
+  <main>
+    <h1>Tomasz Nowak</h1>
+    <div class="title">Data Scientist</div>
+
+    <h2>Profile</h2>
+    <p class="profile">Data scientist with five years of experience in demand forecasting and experimentation. I have shipped models that run every night for thousands of stores, and I care as much about monitoring and explaining a model as about its accuracy. Recently I have focused on causal inference for pricing decisions and on making A/B tests trustworthy for product teams who are not statisticians.</p>
+
+    <h2>Experience</h2>
+    <div class="job">
+      <b>Senior Data Scientist — Amazin'</b>
+      <span class="meta">Warsaw · 03/2022 – present</span>
+      <ul>
+        <li>Built a hierarchical demand forecast (LightGBM + reconciliation) for 4,000 SKUs; MAPE improved from 31% to 19%.</li>
+        <li>Designed the company-wide A/B testing guidelines, including CUPED variance reduction.</li>
+      </ul>
+    </div>
+    <div class="job">
+      <b>Data Scientist — Allegrow</b>
+      <span class="meta">Poznań · 06/2019 – 02/2022</span>
+      <ul>
+        <li>Churn model for sellers, used by the account managers every Monday.</li>
+        <li>Automated weekly reporting with dbt and Airflow, saving ~10 analyst hours a week.</li>
+      </ul>
+    </div>
+
+    <h2>Education</h2>
+    <p><b>MSc Applied Mathematics</b>, University of Warsaw, 2019<br>Thesis: Bayesian hierarchical models for sparse sales data</p>
+  </main>
+
+  <aside>
+    <h2>Contact</h2>
+    <p>tomasz.nowak@example.com<br>+48 501 234 567<br>Warsaw, Poland<br>github.com/tnowak-example</p>
+
+    <h2>Skills</h2>
+    <div>Python</div><div class="bar"><span style="width: 95%"></span></div>
+    <div>SQL</div><div class="bar"><span style="width: 90%"></span></div>
+    <div>Statistics</div><div class="bar"><span style="width: 85%"></span></div>
+    <div>Spark</div><div class="bar"><span style="width: 60%"></span></div>
+    <div>MLOps</div><div class="bar"><span style="width: 55%"></span></div>
+
+    <h2>Tools</h2>
+    <p>pandas, scikit-learn, LightGBM, PyMC, dbt, Airflow, BigQuery, MLflow</p>
+
+    <h2>Languages</h2>
+    <p>Polish (native)<br>English (C1)<br>German (B1)</p>
+  </aside>
+</div>
+</body>
+</html>

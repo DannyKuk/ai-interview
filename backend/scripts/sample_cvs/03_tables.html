@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Priya Raman - CV</title>
+<!-- 03 tables: experience and skills as tables, small font, dot ratings.
+     Tests whether table cells come out in a sensible order. -->
+<style>
+  @page { size: A4; margin: 12mm; }
+  body { font-family: "Helvetica Neue", "Arial", sans-serif; font-size: 8.5pt; color: #111; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0f766e; padding-bottom: 2mm; }
+  h1 { font-size: 20pt; margin: 0; color: #0f766e; }
+  .right { text-align: right; line-height: 1.5; }
+  h2 { font-size: 10pt; color: #0f766e; margin: 5mm 0 1.5mm; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #cbd5e1; padding: 1.5mm 2mm; vertical-align: top; text-align: left; }
+  th { background: #f0fdfa; }
+  td.period { width: 22mm; white-space: nowrap; }
+  td ul { margin: 0; padding-left: 3.5mm; }
+  .skills td { width: 25%; }
+  .dots { color: #0f766e; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Priya Raman</h1>
+      <div>Product Manager · B2C mobile · 7 years</div>
+    </div>
+    <div class="right">priya.raman@example.com<br>+44 7700 900123<br>London, UK</div>
+  </header>
+
+  <h2>Experience</h2>
+  <table>
+    <tr><th>Period</th><th>Company</th><th>Role</th><th>Key results</th></tr>
+    <tr>
+      <td class="period">2021 – now</td><td>HeadBook</td><td>Senior PM, Groups</td>
+      <td><ul><li>Grew weekly active group admins by 22% with a new moderation queue.</li><li>Ran 40+ experiments per quarter with a team of 9 engineers.</li></ul></td>
+    </tr>
+    <tr>
+      <td class="period">2018 – 2021</td><td>Deliverwoo</td><td>Product Manager, Checkout</td>
+      <td><ul><li>Cut checkout drop-off from 18% to 11% (Apple Pay, address autocomplete).</li><li>Owned the roadmap for 3 markets.</li></ul></td>
+    </tr>
+    <tr>
+      <td class="period">2016 – 2018</td><td>Bank of Albion</td><td>Associate PM, Mobile app</td>
+      <td><ul><li>Launched fingerprint login; app store rating went from 3.1 to 4.4.</li></ul></td>
+    </tr>
+  </table>
+
+  <h2>Skills</h2>
+  <table class="skills">
+    <tr><td>Discovery &amp; interviews</td><td class="dots">●●●●●</td><td>SQL / Amplitude</td><td class="dots">●●●●○</td></tr>
+    <tr><td>Roadmapping</td><td class="dots">●●●●●</td><td>Figma</td><td class="dots">●●●○○</td></tr>
+    <tr><td>A/B testing</td><td class="dots">●●●●○</td><td>Python</td><td class="dots">●●○○○</td></tr>
+  </table>
+
+  <h2>Education &amp; certificates</h2>
+  <table>
+    <tr><td class="period">2016</td><td>BSc Economics, University of Manchester (First Class)</td></tr>
+    <tr><td class="period">2020</td><td>Reforge — Product Strategy</td></tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Anna Berg - CV</title>
+<!-- 01 baseline: one column, serif font. This one should come out perfectly. -->
+<style>
+  @page { size: A4; margin: 18mm 20mm; }
+  body { font-family: "Baskerville", "Georgia", serif; font-size: 11pt; line-height: 1.4; color: #222; }
+  h1 { font-size: 24pt; margin: 0; }
+  .contact { color: #555; margin: 2mm 0 6mm; }
+  h2 { font-size: 13pt; border-bottom: 1px solid #999; margin: 6mm 0 2mm; text-transform: uppercase; letter-spacing: 0.05em; }
+  .job { margin-bottom: 4mm; }
+  .job-head { display: flex; justify-content: space-between; font-weight: bold; }
+  ul { margin: 1mm 0 0; padding-left: 5mm; }
+</style>
+</head>
+<body>
+  <h1>Anna Berg</h1>
+  <div class="contact">Software Engineer · Stockholm, Sweden · anna.berg@example.com · +46 70 123 45 67</div>
+
+  <h2>Summary</h2>
+  <p>Backend-focused software engineer with 6 years of experience building payment and search systems in Python and Go. I enjoy turning slow, fragile services into fast, boring ones.</p>
+
+  <h2>Experience</h2>
+  <div class="job">
+    <div class="job-head"><span>Senior Software Engineer, Klarno</span><span>2022 – present</span></div>
+    <ul>
+      <li>Led the rewrite of the refund service in Go; p95 latency dropped from 900 ms to 120 ms.</li>
+      <li>Introduced contract tests between 14 services, cutting integration incidents by half.</li>
+      <li>Mentored four junior engineers, two of whom were promoted within a year.</li>
+    </ul>
+  </div>
+  <div class="job">
+    <div class="job-head"><span>Software Engineer, Spotifly</span><span>2019 – 2022</span></div>
+    <ul>
+      <li>Built the podcast search indexing pipeline (Python, Kafka, Elasticsearch).</li>
+      <li>Reduced indexing cost by 35% by batching writes and removing duplicate documents.</li>
+    </ul>
+  </div>
+  <div class="job">
+    <div class="job-head"><span>Junior Developer, Nordic Retail AB</span><span>2018 – 2019</span></div>
+    <ul>
+      <li>Maintained a Django web shop with 200k monthly visitors.</li>
+    </ul>
+  </div>
+
+  <h2>Education</h2>
+  <p><b>MSc Computer Science</b>, KTH Royal Institute of Technology, 2018</p>
+
+  <h2>Skills</h2>
+  <p>Python, Go, PostgreSQL, Kafka, Elasticsearch, Docker, Kubernetes, AWS, system design, code review</p>
+</body>
+</html>

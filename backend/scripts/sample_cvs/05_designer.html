@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lena Fischer - CV</title>
+<!-- 05 designer: section titles as rotated vertical text, letter-spaced headings,
+     a header + footer repeated on both pages, text inside an SVG. -->
+<style>
+  @page { size: A4; margin: 24mm 16mm 20mm; }
+  body { font-family: "Gill Sans", "Futura", sans-serif; font-size: 10.5pt; color: #222; }
+  /* position: fixed repeats on every printed page */
+  .header { position: fixed; top: -16mm; left: 0; right: 0; font-size: 8pt; letter-spacing: 0.4em; color: #999; }
+  .footer { position: fixed; bottom: -12mm; left: 0; right: 0; font-size: 8pt; color: #999; text-align: center; }
+  h1 { font-size: 30pt; font-weight: 300; letter-spacing: 0.3em; margin: 0; }
+  .role { letter-spacing: 0.5em; font-size: 9pt; color: #e11d48; margin-bottom: 8mm; }
+  section { display: grid; grid-template-columns: 12mm 1fr; gap: 4mm; margin-bottom: 8mm; break-inside: avoid; }
+  .label { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11pt; letter-spacing: 0.3em; color: #e11d48; text-transform: uppercase; }
+  .item { margin-bottom: 4mm; }
+  .item b { font-size: 11.5pt; }
+  .page-break { break-before: page; }
+</style>
+</head>
+<body>
+  <div class="header">LENA FISCHER — PORTFOLIO: LENAFISCHER.EXAMPLE</div>
+  <div class="footer">Lena Fischer · UX Designer · lena.fischer@example.com · Berlin</div>
+
+  <h1>LENA FISCHER</h1>
+  <div class="role">UX DESIGNER</div>
+
+  <svg width="170mm" height="18mm" viewBox="0 0 170 18">
+    <rect x="0" y="0" width="170" height="18" fill="#fff1f2"/>
+    <text x="4" y="11" font-size="6" fill="#9f1239">8 years · 30+ shipped products · design systems &amp; research</text>
+  </svg>
+
+  <section>
+    <div class="label">Experience</div>
+    <div>
+      <div class="item"><b>Lead UX Designer, Instakilogram</b> (2021 – present)<br>
+        Redesigned the creator onboarding: completion rose from 54% to 78%. Built the research repository used by 60 people.</div>
+      <div class="item"><b>Senior Product Designer, Zalandoo</b> (2018 – 2021)<br>
+        Owned the returns flow and the size advisor; returns fell 9% in two quarters.</div>
+      <div class="item"><b>UX Designer, Agentur Blau</b> (2016 – 2018)<br>
+        Websites and apps for twelve clients, from banks to a zoo.</div>
+    </div>
+  </section>
+
+  <section class="page-break">
+    <div class="label">Skills</div>
+    <div>Interaction design · usability testing · design systems (Figma, tokens) · prototyping (ProtoPie) · workshop facilitation · basic HTML/CSS</div>
+  </section>
+
+  <section>
+    <div class="label">Education</div>
+    <div><b>BA Interaction Design</b>, Universität der Künste Berlin, 2016</div>
+  </section>
+</body>
+</html>

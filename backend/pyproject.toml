@@ -14,6 +14,8 @@ dependencies = [
     "langchain-openrouter>=0.2.9",
     "limits>=5.8.0",
     "pydantic-settings>=2.15.0",
+    "pypdf>=6.19.0",
+    "python-multipart>=0.0.32",
     "uvicorn>=0.54.0",
 ]
 

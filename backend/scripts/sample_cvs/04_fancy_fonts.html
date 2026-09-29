@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>José Müller-Łukasz - CV</title>
+<!-- 04 fancy fonts: script font name, ligatures (fi, fl, ffi), accents, smart quotes,
+     em dashes, symbol bullets and emoji. Tests special characters. -->
+<style>
+  @page { size: A4; margin: 16mm 18mm; }
+  body { font-family: "Hoefler Text", "Palatino", serif; font-size: 11pt; line-height: 1.45; color: #2b2118;
+         font-variant-ligatures: common-ligatures discretionary-ligatures; }
+  h1 { font-family: "Zapfino", "Snell Roundhand", cursive; font-size: 22pt; font-weight: normal; margin: 0 0 4mm; }
+  .contact { font-family: "Didot", serif; font-size: 10pt; }
+  h2 { font-family: "Didot", serif; font-size: 14pt; font-style: italic; margin: 6mm 0 2mm; }
+  ul { list-style: none; padding-left: 0; margin: 1mm 0; }
+  li::before { content: "▸ "; color: #b45309; }
+  .check li::before { content: "✓ "; color: #15803d; }
+  .smallcaps { font-variant: small-caps; letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+  <h1>José Müller-Łukasz</h1>
+  <div class="contact">📧 jose.muller@example.com · 📍 Zürich → São Paulo · 🚀 Frontend Developer · ☎ +41 79 555 01 23</div>
+
+  <h2>“About me”</h2>
+  <p>Frontend developer — ﬁve years in React &amp; TypeScript — who enjoys the unﬂashy details: accessible forms, eﬃcient bundles and ﬂuid animations. I’m “the person who reads the spec” and I don’t mind a naïve question if it saves a week.</p>
+
+  <h2>Experience</h2>
+  <p class="smallcaps"><b>Netflux</b> — Senior Frontend Engineer — 2022–present</p>
+  <ul>
+    <li>Rebuilt the profile ﬁlter UI; time-to-interactive fell by 41 % on low-end TVs.</li>
+    <li>Owned the design-system migration (≈ 180 components) with zero visual regressions.</li>
+  </ul>
+  <p class="smallcaps"><b>Guugle</b> — Frontend Engineer — 2020–2022</p>
+  <ul>
+    <li>Built offline-first maps sharing for 12 languages, incl. right-to-left.</li>
+    <li>Wrote the team’s “ﬁrst ﬁve days” onboarding guide.</li>
+  </ul>
+
+  <h2>Education</h2>
+  <p>B.Sc. Informatik, ETH Zürich, 2020 — Note 5.4 / 6</p>
+
+  <h2>Skills</h2>
+  <ul class="check">
+    <li>React, Next.js, TypeScript, CSS (Grid, container queries)</li>
+    <li>Accessibility (WCAG 2.2 AA), performance budgets, Playwright</li>
+    <li>Languages: Deutsch, Español, Português, English</li>
+  </ul>
+</body>
+</html>
