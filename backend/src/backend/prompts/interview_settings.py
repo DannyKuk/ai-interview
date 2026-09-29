@@ -19,3 +19,9 @@ PERSONA = {
     "neutral": "Professional and matter-of-fact.",
     "strict": "Formal and demanding. Short sentences, no small talk.",
 }
+
+PLAN_DIFFICULTY = {
+    "easy": "Foundational questions a beginner in the role can answer.",
+    "medium": "Typical questions for the role, with a mix of broad and specific ones.",
+    "hard": "In-depth questions about trade-offs, edge cases and hard decisions.",
+}
