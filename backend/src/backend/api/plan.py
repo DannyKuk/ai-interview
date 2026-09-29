@@ -8,7 +8,8 @@ from backend.api.rate_limit import chat_rate_limit
 from backend.chains.plan import make_plan, profile_text
 from backend.guard.jev import check_document, check_input
 from backend.guard.plan_signature import sign_plan
-from backend.schemas.plan import PlanRequest, SignedPlan
+from backend.schemas.chat import PlanRequest
+from backend.schemas.plan import SignedPlan
 
 logger = logging.getLogger(__name__)
 

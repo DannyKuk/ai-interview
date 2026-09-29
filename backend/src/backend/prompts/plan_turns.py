@@ -43,10 +43,10 @@ def ask(plan: InterviewPlan, index: int, template: str) -> PlanTurn:
 
 
 def plan_turn(
-        plan: InterviewPlan,
-        progress: PlanProgress | None,
-        verdict: GuardVerdict,
-        hint: HintName | None,
+    plan: InterviewPlan,
+    progress: PlanProgress | None,
+    verdict: GuardVerdict,
+    hint: HintName | None,
 ) -> PlanTurn:
     # progress None = no candidate message yet
     if progress is None:

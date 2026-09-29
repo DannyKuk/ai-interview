@@ -12,7 +12,8 @@ from backend.api.rate_limit import chat_rate_limit
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.guard.canary import leaked
 from backend.guard.jev import check_input
-from backend.prompts.turn_hints import HintName, pick_hint
+from backend.prompts.plan_turns import plan_turn
+from backend.prompts.turn_hints import HINTS, HintName, pick_hint
 from backend.schemas.chat import (
     ChatMessage,
     ChatRequest,
@@ -21,6 +22,7 @@ from backend.schemas.chat import (
     Usage,
 )
 from backend.schemas.guard import BlockReason, GuardVerdict
+from backend.schemas.plan import PlanProgress
 
 # Add rate_limit to the APIRouter
 router = APIRouter(
@@ -80,34 +82,68 @@ class PreparedChat:
     ended: EndReason | None
     chain: Runnable
     chain_input: dict
+    progress: PlanProgress | None = None
     over_cap: bool = False
+
+    def meta(self) -> dict:
+        # what the frontend needs before the reply - hint (dev panel), end, question n of N
+        progress = self.progress.model_dump() if self.progress else None
+        return {"hint": self.hint, "ended": self.ended, "progress": progress}
+
+
+@dataclass
+class TurnPlan:
+    note: str | None
+    hint: HintName | None
+    ended: EndReason | None
+    progress: PlanProgress | None = None
+
+
+def plan_this_turn(request: ChatRequest, verdict: GuardVerdict) -> TurnPlan:
+    hint = pick_hint(verdict)
+    if request.plan is None:
+        # no plan: the LLM picks the questions, only the hint note steers it
+        ended = "candidate_left" if hint == "end" else None
+
+        return TurnPlan(HINTS[hint] if hint else None, hint, ended)
+
+    progress = (request.progress or PlanProgress()) if request.messages else None
+    turn = plan_turn(request.plan.plan, progress, verdict, hint)
+
+    return TurnPlan(turn.note, turn.hint, turn.ended, turn.progress)
 
 
 async def prepare_chat(request: ChatRequest) -> PreparedChat:
+    chain = build_interviewer_chain(
+        request.system_prompt, request.model_settings, with_plan=bool(request.plan)
+    )
+
     if over_cap(request.session_id):
         return PreparedChat(
             verdict=GuardVerdict(),
             hint=None,
             ended="limit_reached",
-            chain=build_interviewer_chain(
-                request.system_prompt, request.model_settings
-            ),
+            chain=chain,
             chain_input={},
             over_cap=True,
         )
 
     verdict = await guard_chat(request)
-    hint = pick_hint(verdict)
-    chain = build_interviewer_chain(request.system_prompt, request.model_settings)
+    turn = plan_this_turn(request, verdict)
     chain_input = build_interviewer_input(
-        request.settings, to_langchain_messages(request.messages), hint
+        request.settings,
+        to_langchain_messages(request.messages),
+        turn.note,
+        request.plan.plan.approach if request.plan else None,
     )
+
     return PreparedChat(
         verdict=verdict,
-        hint=hint,
-        ended="candidate_left" if hint == "end" else None,
+        hint=turn.hint,
+        ended=turn.ended,
         chain=chain,
         chain_input=chain_input,
+        progress=turn.progress,
     )
 
 
@@ -117,16 +153,23 @@ async def chat(request: ChatRequest) -> ChatResponse:
     turn = await prepare_chat(request)
     if turn.over_cap:
         return ChatResponse(reply=OUT_OF_TIME, ended=turn.ended)
+
     if turn.verdict.blocked:
         reason = turn.verdict.blocked
+
         return ChatResponse(reply=REFUSALS[reason], blocked=reason)
 
     result = await turn.chain.ainvoke(turn.chain_input)
     add_cost(request.session_id, result.response_metadata.get("cost"))
+
     if leaked(result.text, turn.chain_input["canary"]):
         return ChatResponse(reply=REFUSALS["leak"], blocked="leak")
+
     return ChatResponse(
-        reply=result.text or FALLBACK_REPLY, hint=turn.hint, ended=turn.ended
+        reply=result.text or FALLBACK_REPLY,
+        hint=turn.hint,
+        ended=turn.ended,
+        progress=turn.progress,
     )
 
 
@@ -135,7 +178,7 @@ async def chat_stream(request: ChatRequest) -> AsyncIterator[ServerSentEvent]:
     turn = await prepare_chat(request)
     if turn.over_cap:
         # same shape as a normal goodbye turn, so the frontend closes the call
-        yield ServerSentEvent(event="meta", data={"hint": None, "ended": turn.ended})
+        yield ServerSentEvent(event="meta", data=turn.meta())
         yield ServerSentEvent(event="token", data={"text": OUT_OF_TIME})
         yield ServerSentEvent(event="done", data={"finish_reason": "limit_reached"})
         return
@@ -145,7 +188,7 @@ async def chat_stream(request: ChatRequest) -> AsyncIterator[ServerSentEvent]:
             yield event
         return
 
-    yield ServerSentEvent(event="meta", data={"hint": turn.hint, "ended": turn.ended})
+    yield ServerSentEvent(event="meta", data=turn.meta())
 
     reply = ""
     finish_reason = None

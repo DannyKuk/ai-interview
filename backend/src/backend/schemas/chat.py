@@ -1,11 +1,21 @@
-from typing import Literal
+from typing import Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic_core import PydanticCustomError
 
 from backend import config
+from backend.guard.plan_signature import is_signed
 from backend.prompts.turn_hints import HintName
+from backend.schemas.cv import CandidateProfile
 from backend.schemas.guard import BlockReason
+from backend.schemas.plan import (
+    MAX_JD_CHARS,
+    MAX_QUESTIONS,
+    MIN_QUESTIONS,
+    PlanProgress,
+    SignedPlan,
+)
 
 MAX_MESSAGE_CHARS = 4000  # we must "speak it", so keep it "short"
 MAX_MESSAGES = 50
@@ -13,8 +23,8 @@ MAX_ROLE_CHARS = 60
 # max_tokens includes the reasoning tokens: below ~500 low effort can use it all up
 MIN_MAX_TOKENS = 500
 MAX_MAX_TOKENS = 4000
-MIN_QUESTIONS = 3
-MAX_QUESTIONS = 8
+# a changed plan, or the server restarted with a new random key
+PLAN_EXPIRED = "This interview has expired. Please start a new one."
 
 
 class ChatMessage(BaseModel):
@@ -89,6 +99,27 @@ class ChatRequest(BaseModel):
     settings: InterviewSettings = Field(default_factory=InterviewSettings)
     system_prompt: Technique = DEFAULT_TECHNIQUE
     model_settings: ModelSettings = Field(default_factory=ModelSettings)
+    plan: SignedPlan | None = None
+    progress: PlanProgress | None = None
+
+    @model_validator(mode="after")
+    def plan_is_ours(self) -> Self:
+        if self.plan is None:
+            return self
+        if not is_signed(self.plan):
+            raise PydanticCustomError("plan_not_signed", PLAN_EXPIRED)
+        if self.progress and self.progress.question >= len(self.plan.plan.questions):
+            raise PydanticCustomError("progress_past_plan", PLAN_EXPIRED)
+        return self
+
+
+class PlanRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    settings: InterviewSettings = Field(default_factory=InterviewSettings)
+    # both optional
+    profile: CandidateProfile | None = None  # from /api/cv/parse
+    job_description: str | None = Field(default=None, max_length=MAX_JD_CHARS)
 
 
 EndReason = Literal["candidate_left", "limit_reached", "completed"]
@@ -99,6 +130,7 @@ class ChatResponse(BaseModel):
     blocked: BlockReason | None = None
     hint: HintName | None = None
     ended: EndReason | None = None  # the frontend ends the call when set
+    progress: PlanProgress | None = None
 
 
 class Usage(BaseModel):

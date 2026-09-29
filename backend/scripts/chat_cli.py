@@ -24,7 +24,7 @@ from backend.chains.interviewer import build_interviewer_chain, build_interviewe
 from backend.config import settings as app_settings
 from backend.guard.canary import leaked
 from backend.guard.jev import check_input
-from backend.prompts.turn_hints import HintName, pick_hint
+from backend.prompts.turn_hints import HINTS, HintName, pick_hint
 from backend.schemas.chat import (
     ChatMessage,
     Effort,
@@ -69,7 +69,7 @@ async def interviewer_turn(
 ) -> str:
     # stream the reply to the terminal, then show usage + cost
     chain_input = build_interviewer_input(
-        settings, to_langchain_messages(history), hint
+        settings, to_langchain_messages(history), HINTS[hint] if hint else None
     )
     start = time.perf_counter()
     first_token = None

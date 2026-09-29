@@ -119,7 +119,7 @@ def test_hint_is_a_system_note_after_the_newest_message():
     prompt = build_interviewer_chain().first
 
     with_hint = prompt.invoke(
-        build_interviewer_input(InterviewSettings(), history, "end")
+        build_interviewer_input(InterviewSettings(), history, HINTS["end"])
     ).to_messages()
     without = prompt.invoke(
         build_interviewer_input(InterviewSettings(), history)
@@ -127,3 +127,27 @@ def test_hint_is_a_system_note_after_the_newest_message():
 
     assert with_hint[-1] == SystemMessage(f"Note for this turn: {HINTS['end']}")
     assert len(without) == 3  # system prompt + 2 history messages, no note
+
+
+APPROACH = "Career changer: focus on motivation and transferable skills"
+
+
+def render_with_plan(technique: Technique) -> str:
+    prompt = build_interviewer_chain(technique, with_plan=True).first
+    chain_input = build_interviewer_input(InterviewSettings(), [], approach=APPROACH)
+    return prompt.invoke(chain_input).to_messages()[0].content
+
+
+@pytest.mark.parametrize("technique", TECHNIQUES)
+def test_the_plan_section_is_filled_into_every_prompt(technique):
+    system_prompt = render_with_plan(technique)
+
+    assert "Interview plan:" in system_prompt
+    assert APPROACH in system_prompt
+    assert "{" not in system_prompt and "}" not in system_prompt
+    # the security rules stay last
+    assert system_prompt.index("Interview plan:") < system_prompt.index("Security:")
+
+
+def test_no_plan_section_without_a_plan():
+    assert "Interview plan:" not in render_system_prompt(InterviewSettings())
