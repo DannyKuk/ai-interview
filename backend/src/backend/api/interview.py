@@ -8,7 +8,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import Runnable
 
 from backend.api.cost_cap import OUT_OF_TIME, add_cost, over_cap
-from backend.api.rate_limit import rate_limit
+from backend.api.rate_limit import chat_rate_limit
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.guard.canary import leaked
 from backend.guard.jev import check_input
@@ -24,7 +24,7 @@ from backend.schemas.guard import BlockReason, GuardVerdict
 
 # Add rate_limit to the APIRouter
 router = APIRouter(
-    prefix="/api/interview", tags=["interview"], dependencies=[Depends(rate_limit)]
+    prefix="/api/interview", tags=["interview"], dependencies=[Depends(chat_rate_limit)]
 )
 
 # sent when the model returns no text (e.g. reasoning used up max_tokens)

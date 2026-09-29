@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.api import config, health, interview
+from backend.api import config, cv, health, interview
 from backend.config import settings
 
 app = FastAPI(title="AI Interview API")
@@ -17,3 +17,4 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(interview.router)
 app.include_router(config.router)
+app.include_router(cv.router)
