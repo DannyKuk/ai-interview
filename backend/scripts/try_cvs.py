@@ -1,15 +1,17 @@
 """Run the CV reader on the sample PDFs and show what comes out.
 
-    uv run python scripts/sample_cvs/make_sample_cvs.py   # build the PDFs first
-    uv run python scripts/try_cvs.py                      # short result per CV
-    uv run python scripts/try_cvs.py --full 02            # whole text of the CVs matching "02"
+uv run python scripts/sample_cvs/make_sample_cvs.py   # build the PDFs first
+uv run python scripts/try_cvs.py                      # short result per CV
+uv run python scripts/try_cvs.py --full 02            # whole text of the CVs matching "02"
 
 """
 
 import argparse
+import asyncio
 import time
 from pathlib import Path
 
+from backend.guard.jev import check_cv
 from backend.services.cv_reader import CvError, read_cv
 
 CVS = Path(__file__).parent / "out" / "cvs"
@@ -43,6 +45,14 @@ def main() -> None:
         shown = lines if args.full else lines[:PREVIEW_LINES] + ["…"] + lines[-2:]
         for line in shown:
             print(f"  | {line}")
+
+        start = time.perf_counter()
+        verdict = asyncio.run(check_cv(text))
+        ms = (time.perf_counter() - start) * 1000
+        print(
+            f"guard: {verdict.blocked or 'passed'} "
+            f"(P(injection) {verdict.injection}, P(is_cv) {verdict.is_cv}, {ms:.0f} ms)"
+        )
 
 
 if __name__ == "__main__":
