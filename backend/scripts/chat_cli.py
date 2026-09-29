@@ -5,6 +5,8 @@ Calls the guard and the interviewer chain directly (no server needed).
     uv run python scripts/chat_cli.py
     uv run python scripts/chat_cli.py --role "Data Scientist" --technique few_shot --persona strict
     uv run python scripts/chat_cli.py --model openai/gpt-5-nano --effort minimal --max-tokens 600
+    uv run python scripts/chat_cli.py --plan scripts/out/plans/lukas_low.json \
+        --role "Junior Software Developer" --company Netflux   # follow a saved plan
 
 Commands while chatting:
     /guard <text>   only ask the guard (cheap, nothing goes to the interviewer)
@@ -15,16 +17,22 @@ Commands while chatting:
 import argparse
 import asyncio
 import time
+from pathlib import Path
 from typing import get_args
 
 from pydantic import ValidationError
 
-from backend.api.interview import FALLBACK_REPLY, to_langchain_messages
+from backend.api.interview import (
+    FALLBACK_REPLY,
+    TurnPlan,
+    plan_this_turn,
+    to_langchain_messages,
+)
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.config import settings as app_settings
 from backend.guard.canary import leaked
 from backend.guard.jev import check_input
-from backend.prompts.turn_hints import HINTS, HintName, pick_hint
+from backend.prompts.turn_hints import pick_hint
 from backend.schemas.chat import (
     ChatMessage,
     Effort,
@@ -33,6 +41,7 @@ from backend.schemas.chat import (
     Technique,
 )
 from backend.schemas.guard import GuardVerdict
+from backend.schemas.plan import InterviewPlan, PlanProgress
 
 DIM, RED, GREEN, CYAN, RESET = "\033[2m", "\033[31m", "\033[32m", "\033[36m", "\033[0m"
 
@@ -61,15 +70,31 @@ def print_verdict(verdict: GuardVerdict, seconds: float) -> None:
         )
 
 
+def print_plan(turn: TurnPlan, plan: InterviewPlan | None) -> None:
+    # what the server decided for this turn (the API sends it as meta.progress)
+    if plan is None or turn.progress is None:
+        return
+    note = turn.note or ""
+    print(
+        f"{DIM}  plan | question {turn.progress.question + 1}/{len(plan.questions)} "
+        f"(+{turn.progress.extra_turns}) | hint {turn.hint} | "
+        f"{note[:90]}{'…' if len(note) > 90 else ''}{RESET}"
+    )
+
+
 async def interviewer_turn(
     chain,
     settings: InterviewSettings,
     history: list[ChatMessage],
-    hint: HintName | None = None,
+    turn: TurnPlan,
+    plan: InterviewPlan | None,
 ) -> str:
     # stream the reply to the terminal, then show usage + cost
     chain_input = build_interviewer_input(
-        settings, to_langchain_messages(history), HINTS[hint] if hint else None
+        settings,
+        to_langchain_messages(history),
+        turn.note,
+        plan.approach if plan else None,
     )
     start = time.perf_counter()
     first_token = None
@@ -106,8 +131,8 @@ async def interviewer_turn(
 
 
 async def start_interview(
-    chain, settings: InterviewSettings
-) -> list[ChatMessage] | None:
+    chain, settings: InterviewSettings, plan: InterviewPlan | None
+) -> tuple[list[ChatMessage], PlanProgress | None] | None:
     # the role goes into the system prompt, so it's checked before the first turn
     start = time.perf_counter()
     verdict = await check_input(settings.role)
@@ -116,9 +141,11 @@ async def start_interview(
         return None
 
     history: list[ChatMessage] = []
-    reply = await interviewer_turn(chain, settings, history)
+    turn = plan_this_turn(plan, None, verdict)
+    print_plan(turn, plan)
+    reply = await interviewer_turn(chain, settings, history, turn, plan)
     history.append(ChatMessage(role="assistant", content=reply))
-    return history
+    return history, turn.progress
 
 
 async def main() -> None:
@@ -131,6 +158,9 @@ async def main() -> None:
     parser.add_argument("--model", choices=app_settings.allowed_models)
     parser.add_argument("--effort", choices=get_args(Effort), default="low")
     parser.add_argument("--max-tokens", type=int, default=1000)
+    parser.add_argument(
+        "--plan", type=Path, help="InterviewPlan JSON, e.g. from scripts/try_plan.py"
+    )
     args = parser.parse_args()
 
     try:
@@ -145,6 +175,11 @@ async def main() -> None:
             reasoning_effort=args.effort,
             max_tokens=args.max_tokens,
         )
+        plan = (
+            InterviewPlan.model_validate_json(args.plan.read_text())
+            if args.plan
+            else None
+        )
     except ValidationError as error:
         # same schema checks as the API (e.g. role pattern / length)
         print(f"{RED}invalid settings:{RESET} {error}")
@@ -154,11 +189,16 @@ async def main() -> None:
         f"{DIM}{settings.model_dump()} | technique {args.technique} | "
         f"{model_settings.model_dump()}{RESET}\n"
     )
-    chain = build_interviewer_chain(args.technique, model_settings)
-    history = await start_interview(chain, settings)
-    if history is None:
+    if plan:
+        print(f"{DIM}plan: {plan.approach} ({len(plan.questions)} questions){RESET}\n")
+    chain = build_interviewer_chain(
+        args.technique, model_settings, with_plan=bool(plan)
+    )
+    started = await start_interview(chain, settings, plan)
+    if started is None:
         print(f"{RED}role blocked, try another --role{RESET}")
         return
+    history, progress = started
 
     while True:
         try:
@@ -171,7 +211,10 @@ async def main() -> None:
             break
         if text == "/reset":
             print()
-            history = await start_interview(chain, settings) or []
+            history, progress = await start_interview(chain, settings, plan) or (
+                [],
+                None,
+            )
             continue
 
         guard_only = text.startswith("/guard ")
@@ -196,13 +239,16 @@ async def main() -> None:
             continue
 
         history.append(message)
-        hint = pick_hint(verdict)
-        reply = await interviewer_turn(chain, settings, history, hint)
+        # same decision as the API: hint note, or the plan's next step
+        turn = plan_this_turn(plan, progress or PlanProgress(), verdict)
+        print_plan(turn, plan)
+        reply = await interviewer_turn(chain, settings, history, turn, plan)
         history.append(ChatMessage(role="assistant", content=reply))
+        progress = turn.progress or progress
 
-        if hint == "end":
-            # the API sends ended="candidate_left"
-            print(f"\n{DIM}  interviewer has left the meeting{RESET}")
+        if turn.ended:
+            # the API sends it as ended, the frontend closes the call
+            print(f"\n{DIM}  interview ended ({turn.ended}){RESET}")
             break
 
 

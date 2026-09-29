@@ -22,7 +22,7 @@ from backend.schemas.chat import (
     Usage,
 )
 from backend.schemas.guard import BlockReason, GuardVerdict
-from backend.schemas.plan import PlanProgress
+from backend.schemas.plan import InterviewPlan, PlanProgress
 
 # Add rate_limit to the APIRouter
 router = APIRouter(
@@ -99,16 +99,18 @@ class TurnPlan:
     progress: PlanProgress | None = None
 
 
-def plan_this_turn(request: ChatRequest, verdict: GuardVerdict) -> TurnPlan:
+def plan_this_turn(
+        plan: InterviewPlan | None, progress: PlanProgress | None, verdict: GuardVerdict
+) -> TurnPlan:
+    # progress None = the interview starts. Also used by scripts/chat_cli.py
     hint = pick_hint(verdict)
-    if request.plan is None:
+    if plan is None:
         # no plan: the LLM picks the questions, only the hint note steers it
         ended = "candidate_left" if hint == "end" else None
 
         return TurnPlan(HINTS[hint] if hint else None, hint, ended)
 
-    progress = (request.progress or PlanProgress()) if request.messages else None
-    turn = plan_turn(request.plan.plan, progress, verdict, hint)
+    turn = plan_turn(plan, progress, verdict, hint)
 
     return TurnPlan(turn.note, turn.hint, turn.ended, turn.progress)
 
@@ -129,7 +131,9 @@ async def prepare_chat(request: ChatRequest) -> PreparedChat:
         )
 
     verdict = await guard_chat(request)
-    turn = plan_this_turn(request, verdict)
+    progress = (request.progress or PlanProgress()) if request.messages else None
+    plan = request.plan.plan if request.plan else None
+    turn = plan_this_turn(plan, progress, verdict)
     chain_input = build_interviewer_input(
         request.settings,
         to_langchain_messages(request.messages),
