@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
+  ApiError,
   errorMessage,
   streamChat,
   type ChatRequest,
   type ChatResponse,
   type ChatStreamEvent,
+  type PlanProgress,
 } from "@/lib/api";
 
 type Usage = Extract<ChatStreamEvent, { event: "usage" }>["data"];
@@ -18,12 +20,16 @@ export type StreamedTurn = {
   ended: NonNullable<ChatResponse["ended"]> | null; // the interviewer said goodbye
   blocked: NonNullable<ChatResponse["blocked"]> | null; // why the guard stopped it
   hint: NonNullable<ChatResponse["hint"]> | null; // the turn note from the guard's signals
+  progress: PlanProgress | null; // the plan question this reply asks
   usage: Usage | null;
 };
 
+// status: the HTTP status, null when the request never got an answer (network)
+export type ChatError = { message: string; status: number | null };
+
 export function useChatStream() {
   const [turn, setTurn] = useState<StreamedTurn | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ChatError | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
 
   // stop the stream when the page is left
@@ -41,6 +47,7 @@ export function useChatStream() {
       ended: null,
       blocked: null,
       hint: null,
+      progress: null,
       usage: null,
     };
 
@@ -63,7 +70,10 @@ export function useChatStream() {
       setTurn({ ...current, streaming: false });
 
       if (!controller.signal.aborted) {
-        setError(errorMessage(error));
+        setError({
+          message: errorMessage(error),
+          status: error instanceof ApiError ? error.status : null,
+        });
       }
 
       return null;
@@ -78,7 +88,12 @@ export function useChatStream() {
 function applyEvent(turn: StreamedTurn, event: ChatStreamEvent): StreamedTurn {
   switch (event.event) {
     case "meta":
-      return { ...turn, ended: event.data.ended ?? null, hint: event.data.hint ?? null };
+      return {
+        ...turn,
+        ended: event.data.ended ?? null,
+        hint: event.data.hint ?? null,
+        progress: event.data.progress ?? null,
+      };
     case "token":
       return { ...turn, reply: turn.reply + event.data.text };
     case "blocked":

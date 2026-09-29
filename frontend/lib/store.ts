@@ -36,6 +36,7 @@ type InterviewState = {
   updateSettings: (patch: Partial<InterviewSettings>) => void;
   startInterview: (plan: SignedPlan) => void;
   addMessage: (message: ChatMessage) => void;
+  setProgress: (progress: PlanProgress) => void;
   endInterview: (reason: EndReason) => void;
   updateDev: (patch: Partial<DevSettings>) => void;
   recordTurn: (turn: TurnInfo) => void;
@@ -68,6 +69,7 @@ export const useInterviewStore = create<InterviewState>()(
           sessionCost: 0,
         }),
       addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+      setProgress: (progress) => set({ progress }),
       endInterview: (reason) => set({ ended: reason }),
       // kept across interviews (not cleared by startInterview): it's the experiment setup
       updateDev: (patch) => set((state) => ({ dev: { ...state.dev, ...patch } as DevSettings })),

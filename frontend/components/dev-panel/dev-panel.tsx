@@ -137,6 +137,8 @@ const usd = (value: number) => `$${value.toFixed(4)}`;
 function SessionInfo() {
   const sessionCost = useInterviewStore((state) => state.sessionCost);
   const lastTurn = useInterviewStore((state) => state.lastTurn);
+  const plan = useInterviewStore((state) => state.plan);
+  const progress = useInterviewStore((state) => state.progress);
 
   return (
     <section className="flex flex-col gap-2 border-t pt-4">
@@ -144,6 +146,17 @@ function SessionInfo() {
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
         <dt className="text-muted-foreground">Session cost</dt>
         <dd>{usd(sessionCost)}</dd>
+        <dt className="text-muted-foreground">Plan</dt>
+        <dd>{plan ? plan.plan.approach : "none"}</dd>
+        {plan && progress && (
+          <>
+            <dt className="text-muted-foreground">Progress</dt>
+            <dd>
+              question {progress.question + 1} of {plan.plan.questions.length}
+              {progress.extra_turns > 0 && `, ${progress.extra_turns} extra turn(s)`}
+            </dd>
+          </>
+        )}
         {lastTurn ? (
           <>
             <dt className="text-muted-foreground">Last turn</dt>
