@@ -1,9 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { Transcript } from "@/components/interview/transcript";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { useFeedback } from "@/hooks/use-feedback";
 import { answersFrom } from "@/lib/answers";
 import { useInterviewStore, useStoreHydrated } from "@/lib/store";
 
@@ -14,7 +17,12 @@ export function ResultsView() {
   const hydrated = useStoreHydrated();
   const messages = useInterviewStore((state) => state.messages);
   const ended = useInterviewStore((state) => state.ended);
+  const plan = useInterviewStore((state) => state.plan);
   const router = useRouter();
+
+  const answers = answersFrom(messages, ended).length;
+  const scored = answers >= MIN_ANSWERS;
+  const { feedback, loading, error, retry } = useFeedback(hydrated && scored && !!ended && !!plan);
 
   // nothing to show without an interview
   useEffect(() => {
@@ -27,15 +35,32 @@ export function ResultsView() {
     return <p>Loading…</p>;
   }
 
-  // answered plan questions, not messages: a follow-up or "I'd like to stop" isn't one
-  const answers = answersFrom(messages, ended).length;
-
   return (
     <div className="flex flex-col gap-6">
-      {answers < MIN_ANSWERS ? (
+      {!scored ? (
         <p>Interview ended early. Answer at least {MIN_ANSWERS} questions to get a score.</p>
+      ) : feedback ? (
+        <p>
+          Overall: {feedback.scorecard.overall.toFixed(1)} / 5 ({feedback.scorecard.answered} of{" "}
+          {feedback.scorecard.total} questions answered)
+        </p>
+      ) : error ? (
+        <div className="flex flex-col items-start gap-3">
+          <p className="text-destructive">{error.message}</p>
+          {error.final ? (
+            <Link href="/" className={buttonVariants()}>
+              Start a new interview
+            </Link>
+          ) : (
+            <Button onClick={retry}>Try again</Button>
+          )}
+        </div>
       ) : (
-        <p className="text-muted-foreground">Your scored feedback will show up here soon.</p>
+        loading && (
+          <p className="text-muted-foreground">
+            Scoring your answers and writing your feedback. This takes about 20 seconds…
+          </p>
+        )
       )}
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-medium">Transcript</h2>

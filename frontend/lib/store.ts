@@ -7,6 +7,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import type {
   ChatMessage,
   ChatResponse,
+  FeedbackResponse,
   InterviewSettings,
   ModelSettings,
   PlanProgress,
@@ -35,6 +36,7 @@ type InterviewState = {
   progress: PlanProgress | null; // where we are in the plan, from the last turn's meta
   messages: TranscriptMessage[]; // the transcript, sent as history on every turn
   ended: EndReason | null; // set once the interviewer has said goodbye
+  feedback: FeedbackResponse | null; // kept, so a reload of /results doesn't recall the API
   dev: DevSettings | null; // null until the setup page fills in the backend defaults
   lastTurn: TurnInfo | null;
   sessionCost: number; // USD, sum of every turn's usage.cost
@@ -43,6 +45,7 @@ type InterviewState = {
   addMessage: (message: TranscriptMessage) => void;
   setProgress: (progress: PlanProgress) => void;
   endInterview: (reason: EndReason) => void;
+  setFeedback: (feedback: FeedbackResponse) => void;
   updateDev: (patch: Partial<DevSettings>) => void;
   recordTurn: (turn: TurnInfo) => void;
   reset: () => void;
@@ -57,6 +60,7 @@ export const useInterviewStore = create<InterviewState>()(
       progress: null,
       messages: [],
       ended: null,
+      feedback: null,
       dev: null,
       lastTurn: null,
       sessionCost: 0,
@@ -70,12 +74,14 @@ export const useInterviewStore = create<InterviewState>()(
           progress: null,
           messages: [],
           ended: null,
+          feedback: null,
           lastTurn: null,
           sessionCost: 0,
         }),
       addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
       setProgress: (progress) => set({ progress }),
       endInterview: (reason) => set({ ended: reason }),
+      setFeedback: (feedback) => set({ feedback }),
       // kept across interviews (not cleared by startInterview): it's the experiment setup
       updateDev: (patch) => set((state) => ({ dev: { ...state.dev, ...patch } as DevSettings })),
       recordTurn: ({ blocked, hint, ended, usage }) =>
@@ -91,6 +97,7 @@ export const useInterviewStore = create<InterviewState>()(
           progress: null,
           messages: [],
           ended: null,
+          feedback: null,
           dev: null,
           lastTurn: null,
           sessionCost: 0,
