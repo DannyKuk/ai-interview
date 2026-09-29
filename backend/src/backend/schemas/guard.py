@@ -11,13 +11,15 @@ BLOCKED_CATEGORIES: tuple[GuardCategory, ...] = ("injection", "abuse")
 # leak -> canary leak - stop response
 BlockReason = Literal["message", "role", "guard_error", "leak"]
 
-CvBlockReason = Literal["injection", "not_a_cv", "guard_error"]
+DocumentKind = Literal["cv", "job_description"]
+
+DocumentBlockReason = Literal["injection", "wrong_kind", "guard_error"]
 
 
-class CvVerdict(BaseModel):
+class DocumentVerdict(BaseModel):
     injection: float | None = None  # P(the text tries to instruct or manipulate an AI)
-    is_cv: float | None = None  # P(the text is a CV at all)
-    blocked: CvBlockReason | None = None  # None = allowed
+    is_document: float | None = None  # P(it's the kind of document we asked for)
+    blocked: DocumentBlockReason | None = None  # None = allowed
 
 
 class GuardVerdict(BaseModel):

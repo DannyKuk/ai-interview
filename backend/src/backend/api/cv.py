@@ -5,9 +5,9 @@ from fastapi.concurrency import run_in_threadpool
 
 from backend.api.rate_limit import cv_rate_limit
 from backend.chains.cv_profile import extract_profile
-from backend.guard.jev import check_cv
+from backend.guard.jev import check_document
 from backend.schemas.cv import CandidateProfile
-from backend.schemas.guard import CvBlockReason
+from backend.schemas.guard import DocumentBlockReason
 from backend.services.cv_reader import MAX_CV_BYTES, CvError, read_cv
 
 logger = logging.getLogger(__name__)
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/cv", tags=["cv"], dependencies=[Depends(cv_rate_limit)])
 
 # 422 = "fix your file", 503 = "not your fault, try again"
-CV_REFUSALS: dict[CvBlockReason, tuple[int, str]] = {
+CV_REFUSALS: dict[DocumentBlockReason, tuple[int, str]] = {
     "injection": (
         422,
         (
@@ -23,7 +23,7 @@ CV_REFUSALS: dict[CvBlockReason, tuple[int, str]] = {
             "Please upload a version without it."
         ),
     ),
-    "not_a_cv": (422, "This doesn't look like a CV. Please upload your CV as a PDF."),
+    "wrong_kind": (422, "This doesn't look like a CV. Please upload your CV as a PDF."),
     "guard_error": (503, "We couldn't check your CV right now. Please try again."),
 }
 PROFILE_FAILED = "We couldn't read your CV right now. Please try again."
@@ -41,7 +41,7 @@ async def parse_cv(file: UploadFile) -> CandidateProfile:
     except CvError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
 
-    verdict = await check_cv(text)
+    verdict = await check_document("cv", text)
     if verdict.blocked:
         status_code, detail = CV_REFUSALS[verdict.blocked]
         raise HTTPException(status_code=status_code, detail=detail)

@@ -31,8 +31,8 @@ class Settings(BaseSettings):
     off_topic_threshold: float = 0.7
     not_answered_threshold: float = 0.3
 
-    # reject when P(it's a CV) is below this
-    cv_min_is_cv: float = 0.5
+    # reject a CV / job description when P(kind of document) is below this
+    document_min_match: float = 0.5
 
     # per client IP, shared by both chat endpoints ("limits" syntax)
     chat_rate_limit: str = "20/minute"
