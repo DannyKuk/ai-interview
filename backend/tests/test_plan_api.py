@@ -4,9 +4,10 @@ from fastapi.testclient import TestClient
 from backend.api import plan as plan_api
 from backend.api import rate_limit
 from backend.api.plan import PLAN_FAILED, PLAN_REFUSALS, PROFILE_TOO_LONG
+from backend.guard.plan_signature import is_signed
 from backend.main import app
 from backend.schemas.guard import DocumentVerdict, GuardVerdict
-from backend.schemas.plan import MAX_JD_CHARS
+from backend.schemas.plan import MAX_JD_CHARS, SignedPlan
 from tests.test_plan import PLAN, PROFILE
 
 client = TestClient(app)
@@ -58,7 +59,9 @@ def full_body():
 def test_returns_the_plan_and_checks_everything(fakes):
     response = post_plan(**full_body())
     assert response.status_code == 200
-    assert response.json() == PLAN.model_dump()
+    signed = SignedPlan.model_validate(response.json())
+    assert signed.plan == PLAN
+    assert is_signed(signed)
     assert sorted(fakes.guard) == ["cv", "job_description", "role"]
     _, profile, job_description = fakes.plan[0]
     assert (profile, job_description) == (PROFILE, JD)
