@@ -5,6 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
 from backend.chains.llm import get_chat_model
+from backend.config import settings as app_settings
 from backend.guard.delimiters import wrap
 from backend.prompts import load_prompt
 from backend.schemas.chat import InterviewSettings
@@ -23,14 +24,16 @@ def build_feedback_chain() -> Runnable:
         ]
     )
     # include_raw: the raw message carries the cost, the session's cost cap counts it.
-    llm = get_chat_model(max_tokens=6000, effort="low").with_structured_output(
+    llm = get_chat_model(
+        max_tokens=6000, effort="low", timeout_ms=app_settings.feedback_timeout_ms
+    ).with_structured_output(
         FeedbackText, method="function_calling", strict=True, include_raw=True
     )
     return prompt | llm
 
 
 def format_question(
-        plan: InterviewPlan, answer: AnsweredQuestion, scored: ScoredAnswer
+    plan: InterviewPlan, answer: AnsweredQuestion, scored: ScoredAnswer
 ) -> str:
     # our own texts (plan, scores) as they are; everything from the browser in tags
     planned = plan.questions[answer.question]
@@ -56,11 +59,11 @@ class WrittenFeedback:
 
 
 async def write_feedback(
-        settings: InterviewSettings,
-        plan: InterviewPlan,
-        answers: list[AnsweredQuestion],
-        scores: list[ScoredAnswer],
-        weakest: int,
+    settings: InterviewSettings,
+    plan: InterviewPlan,
+    answers: list[AnsweredQuestion],
+    scores: list[ScoredAnswer],
+    weakest: int,
 ) -> WrittenFeedback:
     # scores[i] belongs to answers[i]. weakest: the plan index the sample answer is for
     interview = "\n\n".join(
@@ -83,7 +86,7 @@ async def write_feedback(
     text: FeedbackText = result["parsed"]
     shown = {answer.question + 1 for answer in answers}
     written = {entry.number for entry in text.questions}
-    
+
     if written != shown:
         logger.warning("feedback for %s, asked for %s", sorted(written), sorted(shown))
 

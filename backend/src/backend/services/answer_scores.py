@@ -25,6 +25,12 @@ FIXED_CRITERIA: dict[QuestionType, str] = {
     "situational": "Answers clearly and to the point",
 }
 
+# on every question: without it vague but relevant answers scored ~3.5 of 5
+SPECIFIC_CRITERION = (
+    "Gives concrete specifics, such as an example, a detail, a number or a name, "
+    "instead of only general statements"
+)
+
 # the history comes from the browser: the interviewer's lines could be edited too
 INJECTION_QUESTION = {
     "type": "noul",
@@ -73,7 +79,7 @@ class ScoredAnswer:
 async def score_answer(
         planned: PlannedQuestion, exchanges: list[Exchange]
 ) -> ScoredAnswer:
-    criteria = [*planned.rubric, FIXED_CRITERIA[planned.type]]
+    criteria = [*planned.rubric, FIXED_CRITERIA[planned.type], SPECIFIC_CRITERION]
     questions = {"injection": INJECTION_QUESTION} | {
         f"criterion_{i}": criterion_question(text) for i, text in enumerate(criteria)
     }

@@ -27,6 +27,7 @@ SESSION_ID = "6f1c2b1e-8a47-4a8e-9a55-3f0d7c1e2b90"
 
 # Jev's score per plan question (0-based), by the answer text
 SCORE_BY_ANSWER = {"good": 4.5, "weak": 1.5, "okay": 3.0}
+# what the LLM writes: 1-based numbers as shown in its prompt (the API is 0-based)
 TEXT = FeedbackText(
     analysis="…",
     questions=[

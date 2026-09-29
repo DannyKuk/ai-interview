@@ -6,6 +6,7 @@ from langchain_core.runnables import RunnableLambda
 
 from backend.chains import feedback as feedback_chain
 from backend.chains.feedback import write_feedback
+from backend.config import settings as app_settings
 from backend.schemas.chat import InterviewSettings
 from backend.schemas.feedback import (
     AnsweredQuestion,
@@ -76,7 +77,11 @@ class FakeStructuredModel:
 
 
 def use_model(monkeypatch, model: FakeStructuredModel) -> FakeStructuredModel:
-    monkeypatch.setattr(feedback_chain, "get_chat_model", lambda **_: model)
+    def get_chat_model(**kwargs):
+        model.llm_kwargs = kwargs
+        return model
+
+    monkeypatch.setattr(feedback_chain, "get_chat_model", get_chat_model)
     return model
 
 
@@ -98,6 +103,8 @@ async def test_returns_the_text_and_the_cost(monkeypatch):
         "strict": True,
         "include_raw": True,
     }
+    # its own, longer timeout: 10-21 s seen for 8 questions, the chat keeps 30 s
+    assert model.llm_kwargs["timeout_ms"] == app_settings.feedback_timeout_ms
 
 
 @pytest.mark.anyio

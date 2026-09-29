@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     default_model: str = "openai/gpt-5-mini"
     allowed_models: list[str] = ["openai/gpt-5-mini", "openai/gpt-5-nano"]
     llm_timeout_ms: int = 30_000
+    # one bigger call behind a loading screen: 10-21 s seen for 8 questions
+    feedback_timeout_ms: int = 60_000
     models_timeout_ms: int = 5_000
 
     # GUARD model
