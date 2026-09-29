@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Priya Nair - CV</title>
+<!-- 10 clean, one column like 01. Preset for Tesler (Hardware / Embedded Engineer). Fictional person and employers. -->
+<style>
+  @page { size: A4; margin: 18mm 20mm; }
+  body { font-family: "Baskerville", "Georgia", serif; font-size: 11pt; line-height: 1.4; color: #222; }
+  h1 { font-size: 24pt; margin: 0; }
+  .contact { color: #555; margin: 2mm 0 6mm; }
+  h2 { font-size: 13pt; border-bottom: 1px solid #999; margin: 6mm 0 2mm; text-transform: uppercase; letter-spacing: 0.05em; }
+  .job { margin-bottom: 4mm; }
+  .job-head { display: flex; justify-content: space-between; font-weight: bold; }
+  ul { margin: 1mm 0 0; padding-left: 5mm; }
+</style>
+</head>
+<body>
+  <h1>Priya Nair</h1>
+  <div class="contact">Embedded Software Engineer · Munich, Germany · priya.nair@example.com · +49 151 2345 6789</div>
+
+  <h2>Summary</h2>
+  <p>Embedded engineer with 5 years of experience in C and C++ on automotive and industrial controllers. I like hardware that behaves the same on the bench and in the field.</p>
+
+  <h2>Experience</h2>
+  <div class="job">
+    <div class="job-head"><span>Embedded Software Engineer, Boschwerk Automotive</span><span>2022 – present</span></div>
+    <ul>
+      <li>Wrote the CAN bus driver and diagnostics (UDS) for a battery management controller on an STM32 with FreeRTOS.</li>
+      <li>Found a race condition in the cell-voltage sampling with a logic analyser; field resets dropped from 40 to 2 per month.</li>
+      <li>Set up hardware-in-the-loop tests in CI, so every merge runs on a real board.</li>
+    </ul>
+  </div>
+  <div class="job">
+    <div class="job-head"><span>Firmware Developer, Kuka-Robo Systems</span><span>2020 – 2022</span></div>
+    <ul>
+      <li>Ported motor-control firmware from bare metal to Zephyr RTOS.</li>
+      <li>Cut boot time from 3.1 s to 0.8 s by lazy-initialising peripherals.</li>
+    </ul>
+  </div>
+
+  <h2>Education</h2>
+  <p><b>BSc Electrical Engineering</b>, Technical University of Munich, 2020</p>
+
+  <h2>Skills</h2>
+  <p>C, C++, FreeRTOS, Zephyr, STM32, CAN, UDS, SPI, I2C, oscilloscope, logic analyser, Python for test tooling, Git</p>
+</body>
+</html>

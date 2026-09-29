@@ -38,7 +38,7 @@ def main() -> None:
         (HERE / "07_scan_source.html").as_uri(),
     )
 
-    for html in sorted(HERE.glob("0*.html")):
+    for html in sorted(HERE.glob("[0-9]*.html")):
         if html.stem == "07_scan_source":
             continue
         pdf = OUT / f"{html.stem}.pdf"
