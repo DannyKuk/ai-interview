@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 
 from backend.chains.cv_profile import extract_profile
-from backend.guard.jev import check_cv
+from backend.guard.jev import check_document
 from backend.services.cv_reader import CvError, read_cv
 
 CVS = Path(__file__).parent / "out" / "cvs"
@@ -53,11 +53,11 @@ def main() -> None:
             print(f"  | {line}")
 
         start = time.perf_counter()
-        verdict = asyncio.run(check_cv(text))
+        verdict = asyncio.run(check_document("cv", text))
         ms = (time.perf_counter() - start) * 1000
         print(
             f"guard: {verdict.blocked or 'passed'} "
-            f"(P(injection) {verdict.injection}, P(is_cv) {verdict.is_cv}, {ms:.0f} ms)"
+            f"(P(injection) {verdict.injection}, P(is_cv) {verdict.is_document}, {ms:.0f} ms)"
         )
 
         # like the endpoint will: a blocked CV never reaches the LLM

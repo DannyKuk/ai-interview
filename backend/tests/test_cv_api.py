@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from backend.api import cv, rate_limit
 from backend.api.cv import CV_REFUSALS, PROFILE_FAILED
 from backend.main import app
-from backend.schemas.guard import CvVerdict
+from backend.schemas.guard import DocumentVerdict
 from tests.test_cv_profile import PROFILE
 from tests.test_cv_reader import make_pdf
 
@@ -30,23 +30,23 @@ def fresh_rate_limit():
 def fakes(monkeypatch):
     calls = Calls()
 
-    async def guard_passes(_text):
-        return CvVerdict(injection=0.01, is_cv=0.99)
+    async def guard_passes(_kind, _text):
+        return DocumentVerdict(injection=0.01, is_document=0.99)
 
     async def fake_profile(_text):
         calls.profile += 1
         return PROFILE
 
-    monkeypatch.setattr(cv, "check_cv", guard_passes)
+    monkeypatch.setattr(cv, "check_document", guard_passes)
     monkeypatch.setattr(cv, "extract_profile", fake_profile)
     return calls
 
 
 def block_with(monkeypatch, reason):
-    async def guard_blocks(_text):
-        return CvVerdict(blocked=reason)
+    async def guard_blocks(_kind, _text):
+        return DocumentVerdict(blocked=reason)
 
-    monkeypatch.setattr(cv, "check_cv", guard_blocks)
+    monkeypatch.setattr(cv, "check_document", guard_blocks)
 
 
 def test_returns_the_profile():
@@ -67,7 +67,7 @@ def test_a_scan_gets_the_reader_message():
     assert "Is it a scan?" in response.json()["detail"]
 
 
-@pytest.mark.parametrize("reason", ["injection", "not_a_cv", "guard_error"])
+@pytest.mark.parametrize("reason", ["injection", "wrong_kind", "guard_error"])
 def test_a_blocked_cv_never_reaches_the_llm(monkeypatch, fakes, reason):
     block_with(monkeypatch, reason)
     response = upload(make_pdf("Anna Berg"))
