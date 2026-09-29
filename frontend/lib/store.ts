@@ -50,6 +50,7 @@ type InterviewState = {
   clearCandidate: () => void;
   setJobDescription: (jobDescription: string) => void;
   setProfile: (profile: CandidateProfile) => void;
+  updateProfile: (patch: Partial<CandidateProfile>) => void;
   startInterview: (plan: SignedPlan) => void;
   addMessage: (message: TranscriptMessage) => void;
   setProgress: (progress: PlanProgress) => void;
@@ -91,6 +92,9 @@ export const useInterviewStore = create<InterviewState>()(
       setJobDescription: (jobDescription) => set({ jobDescription }),
       // an uploaded CV replaces the preset candidate; company, role and JD stay
       setProfile: (profile) => set({ presetId: null, profile }),
+      // the candidate's own fixes - /plan checks the profile again
+      updateProfile: (patch) =>
+        set((state) => (state.profile ? { profile: { ...state.profile, ...patch } } : {})),
       startInterview: (plan) =>
         set({
           sessionId: crypto.randomUUID(),

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { CvUpload } from "@/components/interview/cv-upload";
 import { PresetPicker } from "@/components/interview/preset-picker";
+import { ProfileOverview } from "@/components/interview/profile-overview";
 import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ export function SetupForm() {
   const settings = useInterviewStore((state) => state.settings);
   const updateSettings = useInterviewStore((state) => state.updateSettings);
   const jobDescription = useInterviewStore((state) => state.jobDescription);
+  const presetId = useInterviewStore((state) => state.presetId);
   const setJobDescription = useInterviewStore((state) => state.setJobDescription);
   const dev = useInterviewStore((state) => state.dev);
   const updateDev = useInterviewStore((state) => state.updateDev);
@@ -102,6 +104,7 @@ export function SetupForm() {
       <fieldset disabled={starting || uploading} className="flex flex-col gap-4">
         <PresetPicker presets={presets} />
         <CvUpload locked={starting || uploading} onUploadingChange={setUploading} />
+        <ProfileOverview defaultOpen={!presetId} />
         <OptionSelect
           id="company"
           label="Company"
