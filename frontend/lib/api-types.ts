@@ -123,6 +123,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/presets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Presets */
+        get: operations["get_presets_api_presets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -445,6 +462,17 @@ export interface components {
              */
             rubric: string[];
         };
+        /** Preset */
+        Preset: {
+            /** Id */
+            id: string;
+            settings: components["schemas"]["InterviewSettings"];
+            /** Job Description */
+            job_description: string;
+            profile: components["schemas"]["CandidateProfile"];
+            /** Cv File */
+            cv_file: string;
+        };
         /** Scorecard */
         Scorecard: {
             /** Overall */
@@ -697,6 +725,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_presets_api_presets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Preset"][];
                 };
             };
         };

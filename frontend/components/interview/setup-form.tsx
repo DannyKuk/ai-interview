@@ -3,15 +3,24 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { PresetPicker } from "@/components/interview/preset-picker";
 import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createPlan, errorMessage, getConfig, type AppConfig } from "@/lib/api";
+import {
+  createPlan,
+  errorMessage,
+  getConfig,
+  getPresets,
+  type AppConfig,
+  type Preset,
+} from "@/lib/api";
 import { useInterviewStore, useStoreHydrated } from "@/lib/store";
 
 export function SetupForm() {
   const [config, setConfig] = useState<AppConfig | null>(null);
+  const [presets, setPresets] = useState<Preset[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
@@ -27,7 +36,9 @@ export function SetupForm() {
   useEffect(() => {
     async function loadConfig() {
       try {
-        setConfig(await getConfig());
+        const [config, presets] = await Promise.all([getConfig(), getPresets()]);
+        setConfig(config);
+        setPresets(presets);
       } catch (error) {
         setError(errorMessage(error, "Could not reach the server."));
       }
@@ -52,7 +63,7 @@ export function SetupForm() {
     return <p>{error}</p>;
   }
 
-  if (!hydrated || !config || !settings || !dev) {
+  if (!hydrated || !config || !presets || !settings || !dev) {
     return <p>Loading…</p>;
   }
 
@@ -66,7 +77,12 @@ export function SetupForm() {
     setStarting(true);
     setStartError(null);
     try {
-      const plan = await createPlan({ settings: useInterviewStore.getState().settings! });
+      const { settings, profile, jobDescription } = useInterviewStore.getState();
+      const plan = await createPlan({
+        settings: settings!,
+        profile,
+        job_description: jobDescription || null,
+      });
       startInterview(plan);
       router.push("/interview"); // stays "starting" until the page changes
     } catch (error) {
@@ -78,6 +94,7 @@ export function SetupForm() {
   return (
     <form onSubmit={handleSubmit}>
       <fieldset disabled={starting} className="flex flex-col gap-4">
+        <PresetPicker presets={presets} />
         <OptionSelect
           id="company"
           label="Company"

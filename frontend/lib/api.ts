@@ -15,6 +15,8 @@ export type SignedPlan = components["schemas"]["SignedPlan-Output"];
 export type AnsweredQuestion = components["schemas"]["AnsweredQuestion"];
 export type FeedbackRequest = components["schemas"]["FeedbackRequest"];
 export type FeedbackResponse = components["schemas"]["FeedbackResponse"];
+export type CandidateProfile = components["schemas"]["CandidateProfile"];
+export type Preset = components["schemas"]["Preset"];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -86,6 +88,11 @@ function post<T>(path: string, body: unknown): Promise<T> {
 
 export function getConfig(): Promise<AppConfig> {
   return request<AppConfig>("/api/config");
+}
+
+// ready-made candidates (settings + profile + sample JD), static data
+export function getPresets(): Promise<Preset[]> {
+  return request<Preset[]>("/api/presets");
 }
 
 // the question list for one interview (~6 s: guard + one LLM call).

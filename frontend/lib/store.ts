@@ -5,12 +5,14 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import type {
+  CandidateProfile,
   ChatMessage,
   ChatResponse,
   FeedbackResponse,
   InterviewSettings,
   ModelSettings,
   PlanProgress,
+  Preset,
   SignedPlan,
   Technique,
 } from "@/lib/api";
@@ -31,6 +33,9 @@ export type TurnInfo = Pick<StreamedTurn, "blocked" | "hint" | "ended" | "usage"
 
 type InterviewState = {
   settings: InterviewSettings | null; // null until the setup page fills in the backend defaults
+  presetId: string | null; // the picked preset card, null = none
+  profile: CandidateProfile | null; // null = no CV: the plan works from role + company
+  jobDescription: string; // "" = none
   sessionId: string | null; // one per interview, the backend's cost cap counts per session
   plan: SignedPlan | null; // the question list, sent back unchanged on every turn (signed)
   progress: PlanProgress | null; // where we are in the plan, from the last turn's meta
@@ -41,6 +46,8 @@ type InterviewState = {
   lastTurn: TurnInfo | null;
   sessionCost: number; // USD, sum of every turn's usage.cost
   updateSettings: (patch: Partial<InterviewSettings>) => void;
+  choosePreset: (preset: Preset) => void;
+  clearCandidate: () => void;
   startInterview: (plan: SignedPlan) => void;
   addMessage: (message: TranscriptMessage) => void;
   setProgress: (progress: PlanProgress) => void;
@@ -55,6 +62,9 @@ export const useInterviewStore = create<InterviewState>()(
   persist(
     (set) => ({
       settings: null,
+      presetId: null,
+      profile: null,
+      jobDescription: "",
       sessionId: null,
       plan: null,
       progress: null,
@@ -67,6 +77,15 @@ export const useInterviewStore = create<InterviewState>()(
 
       updateSettings: (patch) =>
         set((state) => ({ settings: { ...state.settings, ...patch } as InterviewSettings })),
+      // the preset is the candidate + the job; difficulty and question count stay as picked
+      choosePreset: ({ id, settings: { company, role, persona }, profile, job_description }) =>
+        set((state) => ({
+          presetId: id,
+          profile,
+          jobDescription: job_description,
+          settings: { ...state.settings, company, role, persona } as InterviewSettings,
+        })),
+      clearCandidate: () => set({ presetId: null, profile: null, jobDescription: "" }),
       startInterview: (plan) =>
         set({
           sessionId: crypto.randomUUID(),
@@ -92,6 +111,9 @@ export const useInterviewStore = create<InterviewState>()(
       reset: () =>
         set({
           settings: null,
+          presetId: null,
+          profile: null,
+          jobDescription: "",
           sessionId: null,
           plan: null,
           progress: null,
