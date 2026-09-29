@@ -48,6 +48,7 @@ type InterviewState = {
   updateSettings: (patch: Partial<InterviewSettings>) => void;
   choosePreset: (preset: Preset) => void;
   clearCandidate: () => void;
+  setJobDescription: (jobDescription: string) => void;
   startInterview: (plan: SignedPlan) => void;
   addMessage: (message: TranscriptMessage) => void;
   setProgress: (progress: PlanProgress) => void;
@@ -86,6 +87,7 @@ export const useInterviewStore = create<InterviewState>()(
           settings: { ...state.settings, company, role, persona } as InterviewSettings,
         })),
       clearCandidate: () => set({ presetId: null, profile: null, jobDescription: "" }),
+      setJobDescription: (jobDescription) => set({ jobDescription }),
       startInterview: (plan) =>
         set({
           sessionId: crypto.randomUUID(),

@@ -8,11 +8,13 @@ import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   createPlan,
   errorMessage,
   getConfig,
   getPresets,
+  MAX_JD_CHARS,
   type AppConfig,
   type Preset,
 } from "@/lib/api";
@@ -27,6 +29,8 @@ export function SetupForm() {
   const hydrated = useStoreHydrated();
   const settings = useInterviewStore((state) => state.settings);
   const updateSettings = useInterviewStore((state) => state.updateSettings);
+  const jobDescription = useInterviewStore((state) => state.jobDescription);
+  const setJobDescription = useInterviewStore((state) => state.setJobDescription);
   const dev = useInterviewStore((state) => state.dev);
   const updateDev = useInterviewStore((state) => state.updateDev);
   const startInterview = useInterviewStore((state) => state.startInterview);
@@ -109,6 +113,20 @@ export function SetupForm() {
             value={settings.role}
             onChange={(event) => updateSettings({ role: event.target.value })}
           />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="job_description">Job description (optional)</Label>
+          <Textarea
+            id="job_description"
+            rows={8}
+            maxLength={MAX_JD_CHARS}
+            placeholder="Paste the job ad: the questions will fit what it asks for."
+            value={jobDescription}
+            onChange={(event) => setJobDescription(event.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            {jobDescription.length} / {MAX_JD_CHARS} characters
+          </p>
         </div>
         <OptionSelect
           id="difficulty"

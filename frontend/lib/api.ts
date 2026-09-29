@@ -23,6 +23,8 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000
 // same as MAX_MESSAGE_CHARS in backend.
 // backend enforces it, but keep the text field limited
 export const MAX_MESSAGE_CHARS = 4000;
+// same as MAX_JD_CHARS in the backend (plan request)
+export const MAX_JD_CHARS = 8000;
 
 export class ApiError extends Error {
   status: number;
