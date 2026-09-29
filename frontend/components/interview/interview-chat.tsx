@@ -18,7 +18,8 @@ function buildRequest(messages: ChatMessage[]): ChatRequest {
   const { sessionId, settings, dev, plan, progress } = useInterviewStore.getState();
   return {
     session_id: sessionId!,
-    messages,
+    // without our question tags: the backend rejects unknown fields
+    messages: messages.map(({ role, content }) => ({ role, content })),
     settings: settings!,
     system_prompt: dev!.technique,
     model_settings: dev!.modelSettings,
@@ -48,10 +49,12 @@ export function InterviewChat() {
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<string | null>(null);
 
-  // a reply that got through: into the transcript, and the plan moves on
+  // a reply that got through: into the transcript (tagged with the question it asks,
+  // except the goodbye), and the plan moves on
   const keepReply = useCallback(
     (finished: StreamedTurn) => {
-      addMessage({ role: "assistant", content: finished.reply });
+      const question = finished.ended ? undefined : finished.progress?.question;
+      addMessage({ role: "assistant", content: finished.reply, question });
       if (finished.progress) {
         setProgress(finished.progress);
       }

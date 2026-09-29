@@ -12,6 +12,9 @@ export type PlanRequest = components["schemas"]["PlanRequest"];
 export type PlanProgress = components["schemas"]["PlanProgress"];
 // FastAPI lists it twice (request + response body), both have the same shape
 export type SignedPlan = components["schemas"]["SignedPlan-Output"];
+export type AnsweredQuestion = components["schemas"]["AnsweredQuestion"];
+export type FeedbackRequest = components["schemas"]["FeedbackRequest"];
+export type FeedbackResponse = components["schemas"]["FeedbackResponse"];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -89,6 +92,11 @@ export function getConfig(): Promise<AppConfig> {
 // Send it back unchanged with every chat turn: it's signed
 export function createPlan(body: PlanRequest): Promise<SignedPlan> {
   return post<SignedPlan>("/api/interview/plan", body);
+}
+
+// scores (Jev) + written feedback (LLM) for the answered questions, ~10-20 s
+export function createFeedback(body: FeedbackRequest): Promise<FeedbackResponse> {
+  return post<FeedbackResponse>("/api/interview/feedback", body);
 }
 
 // one whole interviewer turn as JSON (not streamed!)

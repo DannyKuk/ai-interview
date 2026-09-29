@@ -17,6 +17,11 @@ import type { StreamedTurn } from "@/hooks/use-chat-stream";
 
 export type EndReason = NonNullable<ChatResponse["ended"]>;
 
+// a transcript line. An interviewer line also keeps which plan question it asks
+// (0-based, from its turn's meta.progress), so /results can group the answers per
+// question. The goodbye has none. Only for us: the backend's ChatMessage has no such field
+export type TranscriptMessage = ChatMessage & { question?: number };
+
 // what the dev panel changes: the prompt technique + the model call
 export type DevSettings = { technique: Technique; modelSettings: ModelSettings };
 
@@ -28,14 +33,14 @@ type InterviewState = {
   sessionId: string | null; // one per interview, the backend's cost cap counts per session
   plan: SignedPlan | null; // the question list, sent back unchanged on every turn (signed)
   progress: PlanProgress | null; // where we are in the plan, from the last turn's meta
-  messages: ChatMessage[]; // the transcript, sent as history on every turn
+  messages: TranscriptMessage[]; // the transcript, sent as history on every turn
   ended: EndReason | null; // set once the interviewer has said goodbye
   dev: DevSettings | null; // null until the setup page fills in the backend defaults
   lastTurn: TurnInfo | null;
   sessionCost: number; // USD, sum of every turn's usage.cost
   updateSettings: (patch: Partial<InterviewSettings>) => void;
   startInterview: (plan: SignedPlan) => void;
-  addMessage: (message: ChatMessage) => void;
+  addMessage: (message: TranscriptMessage) => void;
   setProgress: (progress: PlanProgress) => void;
   endInterview: (reason: EndReason) => void;
   updateDev: (patch: Partial<DevSettings>) => void;

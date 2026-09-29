@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { Transcript } from "@/components/interview/transcript";
+import { answersFrom } from "@/lib/answers";
 import { useInterviewStore, useStoreHydrated } from "@/lib/store";
 
 // fewer answers than this → no score, "ended early"
@@ -12,6 +13,7 @@ const MIN_ANSWERS = 2;
 export function ResultsView() {
   const hydrated = useStoreHydrated();
   const messages = useInterviewStore((state) => state.messages);
+  const ended = useInterviewStore((state) => state.ended);
   const router = useRouter();
 
   // nothing to show without an interview
@@ -25,7 +27,8 @@ export function ResultsView() {
     return <p>Loading…</p>;
   }
 
-  const answers = messages.filter((message) => message.role === "user").length;
+  // answered plan questions, not messages: a follow-up or "I'd like to stop" isn't one
+  const answers = answersFrom(messages, ended).length;
 
   return (
     <div className="flex flex-col gap-6">

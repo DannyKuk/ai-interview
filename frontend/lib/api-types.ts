@@ -106,10 +106,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/interview/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Feedback */
+        post: operations["create_feedback_api_interview_feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AnswerEvaluation */
+        AnswerEvaluation: {
+            /** Question */
+            question: number;
+            /** Topic */
+            topic: string;
+            /** Asked */
+            asked: string;
+            /** Criteria */
+            criteria: components["schemas"]["CriterionScore"][];
+            /** Score */
+            score: number;
+            /** Feedback */
+            feedback: string;
+        };
+        /** AnsweredQuestion */
+        AnsweredQuestion: {
+            /** Question */
+            question: number;
+            /** Exchanges */
+            exchanges: components["schemas"]["Exchange"][];
+        };
         /** AppConfig */
         AppConfig: {
             /** Models */
@@ -227,6 +266,22 @@ export interface components {
             ended?: ("candidate_left" | "limit_reached" | "completed") | null;
             progress?: components["schemas"]["PlanProgress"] | null;
         };
+        /** CriterionScore */
+        CriterionScore: {
+            /** Criterion */
+            criterion: string;
+            /** Met */
+            met: number;
+            /** Score */
+            score: number;
+        };
+        /** Exchange */
+        Exchange: {
+            /** Interviewer */
+            interviewer: string;
+            /** Candidate */
+            candidate: string;
+        };
         /** Experience */
         Experience: {
             /**
@@ -246,6 +301,24 @@ export interface components {
              * @description Up to 3 short achievements, only facts from the CV
              */
             highlights: string[];
+        };
+        /** FeedbackRequest */
+        FeedbackRequest: {
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+            settings: components["schemas"]["InterviewSettings"];
+            plan: components["schemas"]["SignedPlan-Input"];
+            /** Answers */
+            answers: components["schemas"]["AnsweredQuestion"][];
+        };
+        /** FeedbackResponse */
+        FeedbackResponse: {
+            /** Evaluations */
+            evaluations: components["schemas"]["AnswerEvaluation"][];
+            scorecard: components["schemas"]["Scorecard"];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -371,6 +444,23 @@ export interface components {
              * @description Yes/no statements a good answer meets, e.g. "Gives a concrete example"
              */
             rubric: string[];
+        };
+        /** Scorecard */
+        Scorecard: {
+            /** Overall */
+            overall: number;
+            /** Answered */
+            answered: number;
+            /** Total */
+            total: number;
+            /** Strengths */
+            strengths: string[];
+            /** Improvements */
+            improvements: string[];
+            /** Weakest Question */
+            weakest_question: number;
+            /** Sample Answer */
+            sample_answer: string;
         };
         /** SignedPlan */
         "SignedPlan-Input": {
@@ -565,6 +655,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SignedPlan-Output"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_feedback_api_interview_feedback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedbackResponse"];
                 };
             };
             /** @description Validation Error */
