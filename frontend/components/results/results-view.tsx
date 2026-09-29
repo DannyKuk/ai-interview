@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { Transcript } from "@/components/interview/transcript";
+import { Scorecard } from "@/components/results/scorecard";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useFeedback } from "@/hooks/use-feedback";
 import { answersFrom } from "@/lib/answers";
@@ -40,10 +41,7 @@ export function ResultsView() {
       {!scored ? (
         <p>Interview ended early. Answer at least {MIN_ANSWERS} questions to get a score.</p>
       ) : feedback ? (
-        <p>
-          Overall: {feedback.scorecard.overall.toFixed(1)} / 5 ({feedback.scorecard.answered} of{" "}
-          {feedback.scorecard.total} questions answered)
-        </p>
+        <Scorecard feedback={feedback} />
       ) : error ? (
         <div className="flex flex-col items-start gap-3">
           <p className="text-destructive">{error.message}</p>
