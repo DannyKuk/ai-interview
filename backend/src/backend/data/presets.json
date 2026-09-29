@@ -1,0 +1,500 @@
+[
+  {
+    "id": "anna-guugle",
+    "settings": {
+      "company": "Guugle",
+      "role": "Software Engineer",
+      "difficulty": "medium",
+      "persona": "friendly",
+      "question_count": 5
+    },
+    "job_description": "Software Engineer, Search Infrastructure (Guugle, Stockholm)\n\nGuugle Search answers billions of questions a day, and most of them should come back in under 200 ms. You'll join the team that keeps the indexing and serving backends fast and reliable.\n\nWhat you'll do:\n- Design, build and run backend services in Go and Python\n- Find and fix performance bottlenecks across services, from queries to caches\n- Improve testing and deployment so changes ship safely several times a day\n- Review code and help less experienced engineers grow\n\nWhat we're looking for:\n- 4+ years building backend systems in production\n- Solid knowledge of databases, messaging (e.g. Kafka) and distributed systems\n- Experience with Docker, Kubernetes and a public cloud\n- You measure before you optimise, and you explain trade-offs clearly\n\nNice to have: search or ranking systems, on-call experience.",
+    "profile": {
+      "first_name": "Anna",
+      "headline": "Software Engineer, 6 years, backend-focused on payments and search systems",
+      "seniority": "senior",
+      "years_experience": 6,
+      "skills": [
+        "Python",
+        "Go",
+        "PostgreSQL",
+        "Kafka",
+        "Elasticsearch",
+        "Docker",
+        "Kubernetes",
+        "AWS",
+        "system design",
+        "code review"
+      ],
+      "experience": [
+        {
+          "title": "Senior Software Engineer",
+          "company": "Klarno",
+          "period": "2022 – present",
+          "highlights": [
+            "Led rewrite of refund service in Go; p95 latency dropped from 900 ms to 120 ms",
+            "Introduced contract tests between 14 services, cutting integration incidents by half",
+            "Mentored four junior engineers (two promoted within a year)"
+          ]
+        },
+        {
+          "title": "Software Engineer",
+          "company": "Spotifly",
+          "period": "2019 – 2022",
+          "highlights": [
+            "Built podcast search indexing pipeline (Python, Kafka, Elasticsearch)",
+            "Reduced indexing cost by 35% by batching writes and removing duplicate documents"
+          ]
+        },
+        {
+          "title": "Junior Developer",
+          "company": "Nordic Retail AB",
+          "period": "2018 – 2019",
+          "highlights": [
+            "Maintained a Django web shop with 200k monthly visitors"
+          ]
+        }
+      ],
+      "education": [
+        "MSc Computer Science, KTH Royal Institute of Technology, 2018"
+      ],
+      "interview_topics": [
+        "Rewrite of refund service in Go and latency reduction (900 ms → 120 ms)",
+        "Introducing contract tests across 14 services and impact on incidents",
+        "Podcast search indexing pipeline: design and cost reduction (35%)",
+        "Mentoring juniors and promotions",
+        "Maintaining a high-traffic Django web shop (200k monthly visitors)"
+      ]
+    },
+    "cv_file": "/cvs/anna-guugle.pdf"
+  },
+  {
+    "id": "lukas-headbook",
+    "settings": {
+      "company": "HeadBook",
+      "role": "Junior Web Developer",
+      "difficulty": "medium",
+      "persona": "neutral",
+      "question_count": 5
+    },
+    "job_description": "Junior Web Developer (HeadBook, Hamburg)\n\nHeadBook connects small businesses with their neighbourhoods. Our Local Pages team builds the tools bakeries, cafés and shops use to show opening hours, menus and offers. We're looking for a junior developer who wants to learn fast.\n\nWhat you'll do:\n- Build and improve pages and forms with HTML, CSS and JavaScript\n- Work on small backend features in Python (Flask) with a senior developer\n- Fix bugs reported by business owners and write tests for your fixes\n- Take part in code reviews and our weekly demo\n\nWhat we're looking for:\n- A first project you built yourself (a course project or a side project is fine)\n- Basic HTML, CSS and one programming language, plus Git basics\n- Curiosity and the patience to ask good questions\n- Career changers are very welcome: tell us what you bring from your old job\n\nNice to have: JavaScript or React, experience working with customers.",
+    "profile": {
+      "first_name": "Lukas",
+      "headline": "Head Baker, 9 years, learning software development",
+      "seniority": "senior",
+      "years_experience": 9,
+      "skills": [
+        "Python (beginner)",
+        "Flask",
+        "HTML",
+        "CSS",
+        "Git basics",
+        "spreadsheets",
+        "team leadership",
+        "planning under time pressure"
+      ],
+      "experience": [
+        {
+          "title": "Head Baker",
+          "company": "Bäckerei Sonnenkorn",
+          "period": "2019 – present",
+          "highlights": [
+            "Run night production for three shops: 1,200 rolls and 150 loaves before 6 am",
+            "Lead a team of five bakers and two apprentices; wrote the shift plan and recipe cards",
+            "Cut flour waste by 18% by tracking daily sales against production in a spreadsheet"
+          ]
+        },
+        {
+          "title": "Baker",
+          "company": "Hansen Brot",
+          "period": "2016 – 2019",
+          "highlights": [
+            "Sourdough and pastry production",
+            "Trained new colleagues on the dough machines"
+          ]
+        }
+      ],
+      "education": [
+        "Online course \"Python for Everybody\" (University of Michigan, 2024)",
+        "Master Baker certificate (Meisterbrief), Handwerkskammer Hamburg, 2019",
+        "Apprenticeship as a baker, 2013 – 2016"
+      ],
+      "interview_topics": [
+        "Bakery stock tracker web app (2025) that replaced the flour spreadsheet",
+        "Reducing flour waste by 18% through sales-vs-production tracking",
+        "Running night production: 1,200 rolls and 150 loaves before 6 am",
+        "Self-taught programming and Python for Everybody course (2024) — personal website and JavaScript first steps"
+      ]
+    },
+    "cv_file": "/cvs/lukas-headbook.pdf"
+  },
+  {
+    "id": "priya-tesler",
+    "settings": {
+      "company": "Tesler",
+      "role": "Embedded Software Engineer",
+      "difficulty": "medium",
+      "persona": "strict",
+      "question_count": 5
+    },
+    "job_description": "Embedded Software Engineer, Battery Systems (Tesler, Munich)\n\nTesler's battery packs are only as safe as the firmware that watches them. You'll write and test the software on our battery management controllers, from drivers to diagnostics.\n\nWhat you'll do:\n- Develop firmware in C and C++ for ARM Cortex-M controllers running an RTOS\n- Implement and debug communication over CAN, SPI and I2C\n- Build hardware-in-the-loop tests and keep them running in CI\n- Analyse field failures together with the hardware team\n\nWhat we're looking for:\n- 3+ years of embedded development in C or C++\n- Hands-on experience with an RTOS (FreeRTOS, Zephyr or similar)\n- Confident with an oscilloscope and a logic analyser\n- Careful work: you know why timing and memory matter on small devices\n\nNice to have: automotive diagnostics (UDS), functional safety (ISO 26262), Python for test tools.",
+    "profile": {
+      "first_name": "Priya",
+      "headline": "Embedded Software Engineer, 5 years, automotive & industrial controllers",
+      "seniority": "mid",
+      "years_experience": 5,
+      "skills": [
+        "C",
+        "C++",
+        "FreeRTOS",
+        "Zephyr",
+        "STM32",
+        "CAN",
+        "UDS",
+        "SPI",
+        "I2C",
+        "oscilloscope",
+        "logic analyser",
+        "Python for test tooling",
+        "Git"
+      ],
+      "experience": [
+        {
+          "title": "Embedded Software Engineer",
+          "company": "Boschwerk Automotive",
+          "period": "2022 – present",
+          "highlights": [
+            "Wrote the CAN bus driver and diagnostics (UDS) for a battery management controller on an STM32 with FreeRTOS",
+            "Found a race condition in cell-voltage sampling with a logic analyser; field resets dropped from 40 to 2 per month",
+            "Set up hardware-in-the-loop tests in CI so every merge runs on a real board"
+          ]
+        },
+        {
+          "title": "Firmware Developer",
+          "company": "Kuka-Robo Systems",
+          "period": "2020 – 2022",
+          "highlights": [
+            "Ported motor-control firmware from bare metal to Zephyr RTOS",
+            "Cut boot time from 3.1 s to 0.8 s by lazy-initialising peripherals"
+          ]
+        }
+      ],
+      "education": [
+        "BSc Electrical Engineering, Technical University of Munich, 2020"
+      ],
+      "interview_topics": [
+        "CAN bus driver and UDS diagnostics on STM32",
+        "Race condition in cell-voltage sampling and field reset reduction",
+        "Hardware-in-the-loop CI setup",
+        "Porting firmware to Zephyr and boot time optimisation",
+        "Use of FreeRTOS and STM32 in battery management controller"
+      ]
+    },
+    "cv_file": "/cvs/priya-tesler.pdf"
+  },
+  {
+    "id": "chloe-instakilogram",
+    "settings": {
+      "company": "Instakilogram",
+      "role": "Social Media Manager",
+      "difficulty": "medium",
+      "persona": "friendly",
+      "question_count": 5
+    },
+    "job_description": "Social Media Manager, Brand (Instakilogram, Paris)\n\nInstakilogram's own brand accounts show people what the app can do. We're looking for someone who can make our channels fun, useful and measurably bigger.\n\nWhat you'll do:\n- Plan and publish content for Instakilogram's brand accounts, with a focus on short video\n- Work with creators on campaigns, from the brief to the results\n- Manage a paid social budget and report what worked and what didn't\n- Keep an eye on trends and turn the good ones into ideas quickly\n\nWhat we're looking for:\n- 3+ years managing social media for a brand or agency\n- Examples of content you made and the numbers behind it (reach, engagement, growth)\n- Experience with ads managers and analytics tools\n- A clear, friendly writing voice and a sense of humour\n\nNice to have: video editing, community management, French and English.",
+    "profile": {
+      "first_name": "Chloé",
+      "headline": "Social Media Manager, 4 years, short video & creator partnerships",
+      "seniority": "mid",
+      "years_experience": 4,
+      "skills": [
+        "Instagram",
+        "TikTok",
+        "Reels editing (CapCut, Premiere Rush)",
+        "Meta Ads Manager",
+        "Canva",
+        "Later",
+        "Google Analytics",
+        "copywriting",
+        "creator partnerships"
+      ],
+      "experience": [
+        {
+          "title": "Social Media Manager",
+          "company": "Zalandoo",
+          "period": "2023 – present",
+          "highlights": [
+            "Run the brand's Instagram and TikTok channels (1.2M followers) with a team of two creators",
+            "Launched a weekly behind-the-scenes Reels series; average engagement rose from 2.1% to 4.8% in six months",
+            "Manage a €40k monthly paid social budget and report results to the marketing lead"
+          ]
+        },
+        {
+          "title": "Community Manager",
+          "company": "Petit Café Chain",
+          "period": "2021 – 2023",
+          "highlights": [
+            "Grew Instagram from 8k to 45k followers with local creator collaborations",
+            "Answered customer messages within 2 hours on average",
+            "Wrote the tone-of-voice guide"
+          ]
+        }
+      ],
+      "education": [
+        "BA Communication and Media, Université Lumière Lyon 2, 2021"
+      ],
+      "interview_topics": [
+        "Managing Instagram & TikTok accounts with 1.2M followers",
+        "Weekly Reels series that doubled engagement (2.1% → 4.8%)",
+        "Managing a €40k monthly paid social budget",
+        "Growing Petit Café Chain Instagram from 8k to 45k via creator collaborations",
+        "Community management: response time and tone-of-voice guide"
+      ]
+    },
+    "cv_file": "/cvs/chloe-instakilogram.pdf"
+  },
+  {
+    "id": "tomasz-netflux",
+    "settings": {
+      "company": "Netflux",
+      "role": "Data Analyst",
+      "difficulty": "medium",
+      "persona": "strict",
+      "question_count": 5
+    },
+    "job_description": "Data Analyst, Viewer Engagement (Netflux, Warsaw)\n\nWhy do some viewers binge a series and others stop after one episode? Our engagement team answers questions like this for the product and content teams.\n\nWhat you'll do:\n- Write SQL to explore viewing and subscription data\n- Build and maintain dashboards the product teams use every week\n- Analyse A/B tests and explain the results in plain language\n- Automate recurring reports and keep data definitions consistent\n\nWhat we're looking for:\n- 1–3 years in a data analyst role, or a strong internship\n- Very good SQL and working knowledge of Python (pandas)\n- Experience with a BI tool such as Tableau or Looker\n- You can say what a number means, and when it doesn't mean much\n\nNice to have: dbt, experiment design, streaming or e-commerce data.",
+    "profile": {
+      "first_name": "Tomasz",
+      "headline": "Data Analyst, 2 years, focus on SQL, Python and dashboards",
+      "seniority": "junior",
+      "years_experience": 2,
+      "skills": [
+        "SQL (PostgreSQL, BigQuery)",
+        "Python (pandas, matplotlib)",
+        "dbt",
+        "Tableau",
+        "Excel",
+        "A/B testing",
+        "basic statistics"
+      ],
+      "experience": [
+        {
+          "title": "Data Analyst",
+          "company": "Deliveroom",
+          "period": "2023 – present",
+          "highlights": [
+            "Built the weekly retention dashboard in Tableau on top of a dbt model of 30M order events",
+            "Analysed an A/B test of delivery-fee display; winning variant raised checkout conversion by 3.2%",
+            "Automated a manual Excel report with Python and SQL, saving the ops team about 6 hours a week"
+          ]
+        },
+        {
+          "title": "Data Analytics Intern",
+          "company": "PolBank Digital",
+          "period": "2022 – 2023",
+          "highlights": [
+            "Cleaned and joined customer survey data in pandas for the churn analysis",
+            "Wrote SQL queries for the monthly KPI report"
+          ]
+        }
+      ],
+      "education": [
+        "MSc Quantitative Methods in Economics, University of Warsaw, 2023"
+      ],
+      "interview_topics": [
+        "Weekly retention dashboard built on dbt model of 30M order events",
+        "A/B test of delivery-fee display and 3.2% conversion uplift",
+        "Automation of Excel report with Python and SQL (saved ~6 hours/week)",
+        "Customer churn analysis: cleaning and joining survey data in pandas",
+        "Experience with dbt + Tableau pipeline"
+      ]
+    },
+    "cv_file": "/cvs/tomasz-netflux.pdf"
+  },
+  {
+    "id": "aisha-amazin",
+    "settings": {
+      "company": "Amazin",
+      "role": "Senior Product Manager",
+      "difficulty": "medium",
+      "persona": "strict",
+      "question_count": 5
+    },
+    "job_description": "Senior Product Manager, Checkout (Amazin', London)\n\nEvery order on Amazin' ends in checkout, so small improvements here are worth a lot. You'll own the checkout experience for our European marketplaces.\n\nWhat you'll do:\n- Set the checkout strategy and roadmap together with engineering and design\n- Find customer problems through research and data, and decide what to solve first\n- Run experiments and turn the results into decisions\n- Work with payments, legal and support teams across several countries\n\nWhat we're looking for:\n- 5+ years of product management, some of it on e-commerce or payments products\n- A track record of launches with measurable results\n- Comfortable with data: you can read an experiment and write basic SQL\n- You write clearly and can say no with good reasons\n\nNice to have: experience leading several teams, fintech or banking background.",
+    "profile": {
+      "first_name": "Aisha",
+      "headline": "Senior Product Manager, 8 years, checkout & payments focus",
+      "seniority": "senior",
+      "years_experience": 8,
+      "skills": [
+        "Product discovery",
+        "Roadmapping",
+        "User research",
+        "A/B testing",
+        "SQL basics",
+        "Amplitude",
+        "Jira",
+        "Stakeholder management",
+        "Payments"
+      ],
+      "experience": [
+        {
+          "title": "Senior Product Manager",
+          "company": "Airbnbee",
+          "period": "2021 – present",
+          "highlights": [
+            "Owned checkout experience for 12 markets with two engineering teams (11 engineers)",
+            "Led move to one-page checkout; booking conversion rose by 7% and payment support tickets fell by 30%",
+            "Introduced quarterly customer interviews and a shared opportunity backlog for design and engineering"
+          ]
+        },
+        {
+          "title": "Product Manager",
+          "company": "Monzoo Bank",
+          "period": "2018 – 2021",
+          "highlights": [
+            "Launched savings pots used by 400k customers in the first year",
+            "Wrote product specs and ran beta with 2,000 users"
+          ]
+        },
+        {
+          "title": "Business Analyst",
+          "company": "Deloyte Consulting",
+          "period": "2016 – 2018",
+          "highlights": [
+            "Mapped processes and requirements for retail banking clients"
+          ]
+        }
+      ],
+      "education": [
+        "BSc Economics, University of Manchester, 2016"
+      ],
+      "interview_topics": [
+        "Owning checkout across 12 markets and coordinating two engineering teams",
+        "One-page checkout migration and its impact (7% conversion lift; 30% fewer payment support tickets)",
+        "Launching savings pots (400k users first year) and beta with 2,000 users",
+        "Setting up quarterly customer interviews and an opportunity backlog"
+      ]
+    },
+    "cv_file": "/cvs/aisha-amazin.pdf"
+  },
+  {
+    "id": "jonas-goldman-sax",
+    "settings": {
+      "company": "Goldman Sax",
+      "role": "Financial Analyst",
+      "difficulty": "medium",
+      "persona": "strict",
+      "question_count": 5
+    },
+    "job_description": "Financial Analyst, Mergers & Acquisitions (Goldman Sax, Frankfurt)\n\nOur M&A team advises mid-sized industrial companies on acquisitions and sales. As an analyst you'll build the models and materials behind every deal.\n\nWhat you'll do:\n- Build financial models, DCF valuations and comparable company analyses\n- Prepare pitch books, investment memos and board presentations\n- Research industries and companies, and check the numbers carefully\n- Support due diligence together with clients, lawyers and auditors\n\nWhat we're looking for:\n- 2–4 years in investment banking, corporate finance, audit or consulting\n- Very strong Excel and financial modelling skills\n- A solid understanding of accounting (IFRS or US GAAP)\n- Precise work under time pressure, and clear written English\n\nNice to have: CFA progress, Bloomberg or Capital IQ, experience with industrial companies.",
+    "profile": {
+      "first_name": "Jonas",
+      "headline": "Financial Analyst, 3 years, company valuation and financial modelling",
+      "seniority": "mid",
+      "years_experience": 3,
+      "skills": [
+        "Financial modelling",
+        "DCF",
+        "Comparable companies analysis",
+        "Excel (advanced)",
+        "PowerPoint",
+        "Bloomberg",
+        "IFRS",
+        "Basic Python"
+      ],
+      "experience": [
+        {
+          "title": "Financial Analyst",
+          "company": "Mainhattan Capital Partners",
+          "period": "2022 – present",
+          "highlights": [
+            "Built three-statement models and DCF valuations for M&A deals between €50M and €300M",
+            "Prepared valuation and investment memo for acquisition of a packaging company (€120M enterprise value)",
+            "Rebuilt team model template reducing review time per model from two days to half a day"
+          ]
+        },
+        {
+          "title": "Audit Associate",
+          "company": "KPMJ",
+          "period": "2021 – 2022",
+          "highlights": [
+            "Audited financial statements of manufacturing clients under IFRS",
+            "Tested revenue recognition and inventory valuation"
+          ]
+        }
+      ],
+      "education": [
+        "MSc Finance, Frankfurt School of Finance & Management, 2021",
+        "CFA Level II candidate, 2025"
+      ],
+      "interview_topics": [
+        "Rebuilding the team's Excel model template (efficiency gains)",
+        "Valuation and investment memo for €120M packaging company acquisition",
+        "Three-statement modelling and DCFs for €50M–€300M M&A deals",
+        "Audit work on revenue recognition and inventory valuation under IFRS"
+      ]
+    },
+    "cv_file": "/cvs/jonas-goldman-sax.pdf"
+  },
+  {
+    "id": "sofia-starbacks",
+    "settings": {
+      "company": "Starbacks",
+      "role": "Barista",
+      "difficulty": "medium",
+      "persona": "friendly",
+      "question_count": 5
+    },
+    "job_description": "Barista (Starbacks, Porto Ribeira)\n\nOur new riverside store opens in spring, and we're looking for baristas who make great coffee and make guests feel welcome, even in the morning rush.\n\nWhat you'll do:\n- Prepare espresso drinks, filter coffee and seasonal specials to our recipes\n- Welcome guests, take orders and handle payments\n- Keep the bar clean and follow food safety rules\n- Help new team members learn the machines and routines\n\nWhat we're looking for:\n- Experience as a barista or in a busy café or restaurant\n- Friendly, calm and reliable, also when the queue is long\n- Able to work early mornings and weekends\n- Good English; Portuguese is a plus\n\nNice to have: latte art, a barista certificate, ideas for making service faster.",
+    "profile": {
+      "first_name": "Sofia",
+      "headline": "Barista, 2 years, specialty coffee & customer service",
+      "seniority": "junior",
+      "years_experience": 2,
+      "skills": [
+        "Espresso and milk texturing",
+        "Latte art",
+        "Pour-over",
+        "Cash register and card payments",
+        "Food hygiene",
+        "Customer service",
+        "English",
+        "Portuguese"
+      ],
+      "experience": [
+        {
+          "title": "Barista",
+          "company": "Café Grão",
+          "period": "2023 – present",
+          "highlights": [
+            "Prepare espresso drinks and pour-overs for up to 400 customers on a Saturday",
+            "Trained three new baristas on the espresso machine and milk texturing",
+            "Suggested a pre-order board that reduced the morning queue by about 5 minutes"
+          ]
+        },
+        {
+          "title": "Waitress (summer job)",
+          "company": "Restaurante Ribeira",
+          "period": "2022",
+          "highlights": [
+            "Served tables on a busy riverside terrace",
+            "Handled cash at closing"
+          ]
+        }
+      ],
+      "education": [
+        "BA Tourism Management (part-time, in progress), University of Porto, expected 2026",
+        "Barista Skills Foundation certificate, 2023"
+      ],
+      "interview_topics": [
+        "Training three new baristas",
+        "Implementing the pre-order board and queue reduction",
+        "Serving up to 400 customers on a Saturday",
+        "Studying BA Tourism Management part-time",
+        "Barista Skills Foundation certificate (2023)"
+      ]
+    },
+    "cv_file": "/cvs/sofia-starbacks.pdf"
+  }
+]
