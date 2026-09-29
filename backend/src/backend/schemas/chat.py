@@ -91,7 +91,7 @@ class ChatRequest(BaseModel):
     model_settings: ModelSettings = Field(default_factory=ModelSettings)
 
 
-EndReason = Literal["candidate_left", "limit_reached"]
+EndReason = Literal["candidate_left", "limit_reached", "completed"]
 
 
 class ChatResponse(BaseModel):

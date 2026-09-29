@@ -6,6 +6,8 @@ from backend.schemas.chat import MAX_QUESTIONS, MIN_QUESTIONS, InterviewSettings
 from backend.schemas.cv import CandidateProfile
 
 MAX_JD_CHARS = 8000
+# turns the interviewer may stay on one question (follow-up, steering back), then it moves on
+MAX_EXTRA_TURNS = 2
 
 QuestionType = Literal[
     "motivation", "experience", "behavioural", "technical", "situational"
@@ -56,3 +58,13 @@ class SignedPlan(BaseModel):
     plan: InterviewPlan
     # hex SHA-256. The pattern also keeps compare_digest happy: it needs ASCII strings
     signature: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class PlanProgress(BaseModel):
+    # sent back by the browser every turn. Changing it only skips your own questions
+    model_config = ConfigDict(extra="forbid")
+
+    # 0-based: the question being asked
+    question: int = Field(default=0, ge=0, lt=MAX_QUESTIONS)
+    # follow-ups and steering back spent on this question
+    extra_turns: int = Field(default=0, ge=0, le=MAX_EXTRA_TURNS)
