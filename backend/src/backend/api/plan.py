@@ -7,7 +7,8 @@ from backend.api.interview import REFUSALS as CHAT_REFUSALS
 from backend.api.rate_limit import chat_rate_limit
 from backend.chains.plan import make_plan, profile_text
 from backend.guard.jev import check_document, check_input
-from backend.schemas.plan import InterviewPlan, PlanRequest
+from backend.guard.plan_signature import sign_plan
+from backend.schemas.plan import PlanRequest, SignedPlan
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ async def guard_plan(request: PlanRequest) -> None:
 
 
 @router.post("/plan")
-async def create_plan(request: PlanRequest) -> InterviewPlan:
+async def create_plan(request: PlanRequest) -> SignedPlan:
     if request.profile and len(profile_text(request.profile)) > MAX_PROFILE_CHARS:
         raise HTTPException(status_code=422, detail=PROFILE_TOO_LONG)
     # "" or only spaces (stripped by the schema) = no job description
@@ -74,9 +75,11 @@ async def create_plan(request: PlanRequest) -> InterviewPlan:
     await guard_plan(request)
 
     try:
-        return await make_plan(
+        plan = await make_plan(
             request.settings, request.profile, request.job_description
         )
     except Exception as error:
         logger.warning("plan failed: %s", type(error).__name__)
         raise HTTPException(status_code=503, detail=PLAN_FAILED) from error
+    # the chat only accepts the plan back with this signature
+    return sign_plan(plan)

@@ -1,6 +1,7 @@
+import secrets
 from pathlib import Path
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # The .env file is in the repo root: 4 folders up from this file
@@ -41,6 +42,11 @@ class Settings(BaseSettings):
     session_cost_cap_usd: float = 0.10
 
     cors_origins: list[str] = ["http://localhost:3000"]
+
+    # signs the interview plan: it goes through the browser and into the chat prompt.
+    plan_signing_key: SecretStr = Field(
+        default_factory=lambda: SecretStr(secrets.token_urlsafe(32)), min_length=32
+    )
 
 
 # Created once when the app starts. Import it wherever you need config.

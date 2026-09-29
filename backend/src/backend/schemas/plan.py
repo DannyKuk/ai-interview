@@ -50,3 +50,11 @@ class PlanRequest(BaseModel):
         None  # from /api/cv/parse
     )
     job_description: str | None = Field(default=None, max_length=MAX_JD_CHARS)
+
+
+class SignedPlan(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    plan: InterviewPlan
+    # hex SHA-256. The pattern also keeps compare_digest happy: it needs ASCII strings
+    signature: str = Field(pattern=r"^[0-9a-f]{64}$")
