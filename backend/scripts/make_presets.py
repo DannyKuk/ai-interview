@@ -14,15 +14,14 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
-import backend
 from backend.chains.cv_profile import extract_profile
 from backend.guard.jev import check_document
 from backend.schemas.chat import InterviewSettings
 from backend.schemas.presets import Preset
 from backend.services.cv_reader import read_cv
+from backend.services.presets import PRESETS_FILE
 
 CVS = Path(__file__).parent / "out" / "cvs"
-DATA = Path(backend.__file__).parent / "data" / "presets.json"
 PUBLIC_CVS = Path(__file__).parents[2] / "frontend" / "public" / "cvs"
 
 
@@ -250,8 +249,8 @@ async def build(spec: Spec) -> Preset:
 async def main() -> None:
     presets = await asyncio.gather(*(build(spec) for spec in SPECS))
 
-    DATA.parent.mkdir(parents=True, exist_ok=True)
-    DATA.write_text(
+    PRESETS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    PRESETS_FILE.write_text(
         json.dumps(
             [preset.model_dump(mode="json") for preset in presets],
             indent=2,
@@ -270,7 +269,7 @@ async def main() -> None:
             f"{preset.id:22} {p.first_name}, {p.seniority}, {p.years_experience} y, "
             f"{len(p.skills)} skills, {len(p.experience)} jobs | {p.headline}"
         )
-    print(f"\n{len(presets)} presets → {DATA}")
+    print(f"\n{len(presets)} presets → {PRESETS_FILE}")
 
 
 if __name__ == "__main__":
