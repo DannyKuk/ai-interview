@@ -2,8 +2,10 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-MIN_QUESTIONS = 3
-MAX_QUESTIONS = 8
+from backend.schemas.chat import MAX_QUESTIONS, MIN_QUESTIONS, InterviewSettings
+from backend.schemas.cv import CandidateProfile
+
+MAX_JD_CHARS = 8000
 
 QuestionType = Literal[
     "motivation", "experience", "behavioural", "technical", "situational"
@@ -37,3 +39,14 @@ class InterviewPlan(BaseModel):
     questions: list[PlannedQuestion] = Field(
         min_length=MIN_QUESTIONS, max_length=MAX_QUESTIONS
     )
+
+
+class PlanRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    settings: InterviewSettings = Field(default_factory=InterviewSettings)
+    # both optional
+    profile: CandidateProfile | None = (
+        None  # from /api/cv/parse
+    )
+    job_description: str | None = Field(default=None, max_length=MAX_JD_CHARS)

@@ -28,11 +28,15 @@ def build_plan_chain(effort: Effort = "low") -> Runnable:
     return prompt | llm
 
 
+def profile_text(profile: CandidateProfile) -> str:
+    return profile.model_dump_json(indent=2)
+
+
 def format_documents(
         profile: CandidateProfile | None, job_description: str | None
 ) -> str:
     parts = [
-        wrap("cv_profile", profile.model_dump_json(indent=2))
+        wrap("cv_profile", profile_text(profile))
         if profile
         else "No CV profile given.",
         wrap("job_description", job_description)

@@ -6,7 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from backend import config
 from backend.prompts.turn_hints import HintName
 from backend.schemas.guard import BlockReason
-from backend.schemas.plan import MAX_QUESTIONS, MIN_QUESTIONS
 
 MAX_MESSAGE_CHARS = 4000  # we must "speak it", so keep it "short"
 MAX_MESSAGES = 50
@@ -14,6 +13,8 @@ MAX_ROLE_CHARS = 60
 # max_tokens includes the reasoning tokens: below ~500 low effort can use it all up
 MIN_MAX_TOKENS = 500
 MAX_MAX_TOKENS = 4000
+MIN_QUESTIONS = 3
+MAX_QUESTIONS = 8
 
 
 class ChatMessage(BaseModel):
