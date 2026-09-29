@@ -9,6 +9,8 @@ import type {
   ChatResponse,
   InterviewSettings,
   ModelSettings,
+  PlanProgress,
+  SignedPlan,
   Technique,
 } from "@/lib/api";
 import type { StreamedTurn } from "@/hooks/use-chat-stream";
@@ -24,13 +26,15 @@ export type TurnInfo = Pick<StreamedTurn, "blocked" | "hint" | "ended" | "usage"
 type InterviewState = {
   settings: InterviewSettings | null; // null until the setup page fills in the backend defaults
   sessionId: string | null; // one per interview, the backend's cost cap counts per session
+  plan: SignedPlan | null; // the question list, sent back unchanged on every turn (signed)
+  progress: PlanProgress | null; // where we are in the plan, from the last turn's meta
   messages: ChatMessage[]; // the transcript, sent as history on every turn
   ended: EndReason | null; // set once the interviewer has said goodbye
   dev: DevSettings | null; // null until the setup page fills in the backend defaults
   lastTurn: TurnInfo | null;
   sessionCost: number; // USD, sum of every turn's usage.cost
   updateSettings: (patch: Partial<InterviewSettings>) => void;
-  startInterview: () => void;
+  startInterview: (plan: SignedPlan) => void;
   addMessage: (message: ChatMessage) => void;
   endInterview: (reason: EndReason) => void;
   updateDev: (patch: Partial<DevSettings>) => void;
@@ -43,6 +47,8 @@ export const useInterviewStore = create<InterviewState>()(
     (set) => ({
       settings: null,
       sessionId: null,
+      plan: null,
+      progress: null,
       messages: [],
       ended: null,
       dev: null,
@@ -51,9 +57,11 @@ export const useInterviewStore = create<InterviewState>()(
 
       updateSettings: (patch) =>
         set((state) => ({ settings: { ...state.settings, ...patch } as InterviewSettings })),
-      startInterview: () =>
+      startInterview: (plan) =>
         set({
           sessionId: crypto.randomUUID(),
+          plan,
+          progress: null,
           messages: [],
           ended: null,
           lastTurn: null,
@@ -72,6 +80,8 @@ export const useInterviewStore = create<InterviewState>()(
         set({
           settings: null,
           sessionId: null,
+          plan: null,
+          progress: null,
           messages: [],
           ended: null,
           dev: null,

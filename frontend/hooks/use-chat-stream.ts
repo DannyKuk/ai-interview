@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
-  ApiError,
+  errorMessage,
   streamChat,
   type ChatRequest,
   type ChatResponse,
@@ -88,15 +88,4 @@ function applyEvent(turn: StreamedTurn, event: ChatStreamEvent): StreamedTurn {
     case "done":
       return { ...turn, streaming: false };
   }
-}
-
-function errorMessage(error: unknown): string {
-  if (!(error instanceof ApiError)) {
-    return "Connection lost. Please try again.";
-  }
-  // 429: the backend says how long to wait in Retry-After
-  if (error.retryAfter) {
-    return `${error.message} (about ${error.retryAfter}s)`;
-  }
-  return error.message;
 }

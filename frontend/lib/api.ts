@@ -31,6 +31,20 @@ export class ApiError extends Error {
   }
 }
 
+export function errorMessage(
+  error: unknown,
+  offline = "Connection lost. Please try again.",
+): string {
+  if (!(error instanceof ApiError)) {
+    return offline; // fetch failed: backend down or no network
+  }
+  // 429: the backend says how long to wait in Retry-After
+  if (error.retryAfter) {
+    return `${error.message} (about ${error.retryAfter}s)`;
+  }
+  return error.message;
+}
+
 async function toApiError(response: Response): Promise<ApiError> {
   let message = `Request failed (${response.status})`;
   try {
