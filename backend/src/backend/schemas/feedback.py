@@ -78,3 +78,27 @@ class Scorecard(BaseModel):
 class FeedbackResponse(BaseModel):
     evaluations: list[AnswerEvaluation]
     scorecard: Scorecard
+
+
+class QuestionFeedback(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    number: int = Field(description="The question's number as shown, e.g. 2")
+    feedback: str = Field(
+        description="2-3 sentences to the candidate: what worked, what to do better"
+    )
+
+
+class FeedbackText(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # first, so the model reasons before it writes (FR-14). Not shown to the candidate
+    analysis: str = Field(
+        description="Per question: what the answer covered and missed, given the scores"
+    )
+    questions: list[QuestionFeedback] = Field(min_length=1, max_length=MAX_QUESTIONS)
+    strengths: list[str] = Field(min_length=1, max_length=3)
+    improvements: list[str] = Field(min_length=1, max_length=3)
+    sample_answer: str = Field(
+        description="A stronger answer to the weakest question, in the candidate's voice"
+    )
