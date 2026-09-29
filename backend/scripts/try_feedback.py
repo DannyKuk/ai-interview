@@ -1,8 +1,9 @@
 """Score a whole interview: a simulated candidate answers every planned question, then
 the real feedback endpoint code scores it (Jev) and writes the feedback (LLM).
 
-uv run python scripts/try_feedback.py                    # strong + weak, 8 questions
+uv run python scripts/try_feedback.py                    # every style, 8 questions
 uv run python scripts/try_feedback.py weak --runs 3      # one style, three runs (latency)
+uv run python scripts/try_feedback.py no_example         # no story to tell: invented details?
 uv run python scripts/try_feedback.py --questions 5
 
 Needs the cached profile from try_plan.py (out/profiles/09_career_changer.json). The plan is
@@ -38,6 +39,12 @@ STYLES = {
     "weak": (
         "Answer like an unprepared, nervous candidate: one or two vague sentences, no "
         "example, no numbers, stay general."
+    ),
+    # a real candidate often has no story for a question (the user's first run, Sep 29)
+    "no_example": (
+        "Answer honestly in two or three sentences. If the question asks about a past "
+        "situation or something you haven't done in your background, say so and "
+        "describe only in general what you would do, without making up an example."
     ),
 }
 
