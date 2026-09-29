@@ -33,7 +33,7 @@ def profile_text(profile: CandidateProfile) -> str:
 
 
 def format_documents(
-        profile: CandidateProfile | None, job_description: str | None
+    profile: CandidateProfile | None, job_description: str | None
 ) -> str:
     parts = [
         wrap("cv_profile", profile_text(profile))
@@ -47,10 +47,10 @@ def format_documents(
 
 
 async def make_plan(
-        settings: InterviewSettings,
-        profile: CandidateProfile | None = None,
-        job_description: str | None = None,
-        effort: Effort = "low",
+    settings: InterviewSettings,
+    profile: CandidateProfile | None = None,
+    job_description: str | None = None,
+    effort: Effort = "low",
 ) -> InterviewPlan:
     plan = await build_plan_chain(effort).ainvoke(
         {

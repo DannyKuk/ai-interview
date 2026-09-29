@@ -56,7 +56,7 @@ def print_verdict(verdict: GuardVerdict, seconds: float) -> None:
     if verdict.answered is not None or verdict.wants_to_end is not None:
         hint = pick_hint(verdict)
         print(
-            f"{DIM}  signals | answered {verdict.answered} | "
+            f"{DIM}  signals | answered {verdict.answered} | vague {verdict.vague} | "
             f"wants_to_end {verdict.wants_to_end} | hint {hint}{RESET}"
         )
 

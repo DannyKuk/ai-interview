@@ -30,4 +30,5 @@ class GuardVerdict(BaseModel):
 
     # turn signals from the same Jev call (not used for blocking, see prompts/turn_hints.py)
     answered: float | None = None  # P(the message responds to the last question)
+    vague: float | None = None  # P(the answer is too thin, worth one follow-up)
     wants_to_end: float | None = None  # P(the candidate wants to stop the interview)

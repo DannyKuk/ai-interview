@@ -50,6 +50,20 @@ ANSWERED_QUESTION = {
     ),
 }
 
+VAGUE_QUESTION = {
+    "type": "noul",
+    "instructions": (
+        "This is one turn of a job interview. Most answers are fine as they are. "
+        "Is the answer in <candidate_message> to the <interviewer_question> so vague "
+        "that a good interviewer would have to ask a follow-up about it before "
+        "moving on? Only say yes when the answer stays general (claims like 'I'm a "
+        "team player' without a concrete example), says nothing about what the "
+        "candidate did themselves, or leaves out an important part of the question. "
+        "An answer with a concrete example, details or a clear explanation is fine, "
+        "even if it's short. An honest 'I don't know' is also fine."
+    ),
+}
+
 WANTS_TO_END_QUESTION = {
     "type": "noul",
     "instructions": (
@@ -186,20 +200,22 @@ def decide(answers: dict, threshold: float) -> GuardVerdict:
         role_injection=role_injection,
         blocked=blocked,
         answered=answers.get("answered", {}).get("noul"),
+        vague=answers.get("vague", {}).get("noul"),
         wants_to_end=answers.get("wants_to_end", {}).get("noul"),
     )
 
 
 async def check_input(
-        role: str, last_question: str | None = None, message: str | None = None
+    role: str, last_question: str | None = None, message: str | None = None
 ) -> GuardVerdict:
     # the role is checked on every turn: it's in the system prompt from the start
     questions = {"role_injection": ROLE_QUESTION}
     if message:
         questions["category"] = CATEGORY_QUESTION
         questions["wants_to_end"] = WANTS_TO_END_QUESTION
-        if last_question:  # "answered" needs a question to compare with
+        if last_question:  # both need a question to compare with
             questions["answered"] = ANSWERED_QUESTION
+            questions["vague"] = VAGUE_QUESTION
 
     try:
         answers = await ask_jev(build_state(role, last_question, message), questions)

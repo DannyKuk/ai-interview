@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     end_threshold: float = 0.7
     off_topic_threshold: float = 0.7
     not_answered_threshold: float = 0.3
+    # interview plan: ask one follow-up when P(vague) >= this
+    follow_up_threshold: float = 0.5
 
     # reject a CV / job description when P(kind of document) is below this
     document_min_match: float = 0.5

@@ -46,9 +46,7 @@ class PlanRequest(BaseModel):
 
     settings: InterviewSettings = Field(default_factory=InterviewSettings)
     # both optional
-    profile: CandidateProfile | None = (
-        None  # from /api/cv/parse
-    )
+    profile: CandidateProfile | None = None  # from /api/cv/parse
     job_description: str | None = Field(default=None, max_length=MAX_JD_CHARS)
 
 
