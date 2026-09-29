@@ -1,5 +1,6 @@
 import logging
 import re
+from datetime import UTC, datetime
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
@@ -13,6 +14,11 @@ logger = logging.getLogger(__name__)
 
 # control characters (except newline / tab) = a broken escape in the model's JSON
 CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b-\x1f]")
+
+
+def this_month() -> str:
+    # "September 2026": what "present" in a CV means
+    return datetime.now(UTC).strftime("%B %Y")
 
 
 def build_profile_chain() -> Runnable:
@@ -31,8 +37,11 @@ def build_profile_chain() -> Runnable:
 
 
 async def extract_profile(cv_text: str) -> CandidateProfile:
-    # the CV is untrusted: escaped and in <cv> tags, declared as data in the prompt
-    profile = await build_profile_chain().ainvoke({"cv": wrap("cv", cv_text)})
+    # the CV is untrusted: escaped and in <cv> tags, declared as data in the prompt.
+    # today: the model doesn't know the date, so "2020 – present" came out 1-2 years short
+    profile = await build_profile_chain().ainvoke(
+        {"cv": wrap("cv", cv_text), "today": this_month()}
+    )
     if has_control_chars(profile.model_dump()):
         # safety net for the json_schema bug above. Only the fact is logged, no CV data
         logger.warning("cv profile contains control characters")

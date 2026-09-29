@@ -26,7 +26,7 @@ class CandidateProfile(BaseModel):
         description="Level in the candidate's own field, not in the job they apply for"
     )
     years_experience: int | None = Field(
-        description="Total years of work experience, null if unclear"
+        description="Total years of work experience, from the job periods. Null only if no dates"
     )
     skills: list[str] = Field(max_length=15)
     experience: list[Experience] = Field(max_length=5, description="Newest first")
