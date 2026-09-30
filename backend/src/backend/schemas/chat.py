@@ -80,7 +80,7 @@ class ModelSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     model: str | None = None  # None = default_model from config
-    reasoning_effort: Effort = "low"
+    reasoning_effort: Effort = "minimal"
     max_tokens: int = Field(default=1000, ge=MIN_MAX_TOKENS, le=MAX_MAX_TOKENS)
 
     @field_validator("model")

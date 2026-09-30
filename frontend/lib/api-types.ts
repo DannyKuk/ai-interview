@@ -475,7 +475,7 @@ export interface components {
             model?: string | null;
             /**
              * Reasoning Effort
-             * @default low
+             * @default minimal
              * @enum {string}
              */
             reasoning_effort: "minimal" | "low" | "medium" | "high";

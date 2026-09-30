@@ -144,7 +144,7 @@ def test_model_settings_default_to_the_server_model():
     ).model_settings
 
     assert model_settings.model is None  # get_chat_model uses default_model
-    assert model_settings.reasoning_effort == "low"
+    assert model_settings.reasoning_effort == "minimal"
 
 
 @pytest.mark.parametrize(
