@@ -1,6 +1,7 @@
 # Private planning notes
 REQUIREMENTS.md
 CLAUDE.md
+docs/
 
 # Secrets
 .env
