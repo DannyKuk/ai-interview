@@ -113,6 +113,23 @@ class ChatRequest(BaseModel):
         return self
 
 
+class SystemPromptRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    settings: InterviewSettings = Field(default_factory=InterviewSettings)
+    system_prompt: Technique = DEFAULT_TECHNIQUE
+    plan: SignedPlan | None = None
+
+    @model_validator(mode="after")
+    def plan_is_ours(self) -> Self:
+        if self.plan is not None and not is_signed(self.plan):
+            raise PydanticCustomError("plan_not_signed", PLAN_EXPIRED)
+        return self
+
+
+class SystemPromptResponse(BaseModel):
+    prompt: str
+
+
 class PlanRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 

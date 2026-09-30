@@ -1,4 +1,5 @@
 import json
+import re
 
 import pytest
 from fastapi.testclient import TestClient
@@ -510,3 +511,51 @@ def test_a_changed_plan_or_progress_is_rejected(monkeypatch, extra):
         assert response.status_code == 422
         assert response.json()["detail"][0]["msg"] == PLAN_EXPIRED
     assert (calls, fake.received) == ([], [])  # no Jev, no LLM
+
+
+def post_system_prompt(**body):
+    return client.post("/api/interview/system-prompt", json=body)
+
+
+def test_the_prompt_view_is_the_chats_system_prompt_with_the_canary_masked(
+    monkeypatch,
+):
+    fake = use_fake_model(monkeypatch, ["Welcome!"])
+    settings = {"company": "Netflux", "role": "Data Analyst", "persona": "strict"}
+    post_chat([], settings=settings, system_prompt="persona", plan=SIGNED)
+    sent = fake.received[-1][0].content  # the system message the model got
+    canary = re.search(r"Session marker: ([0-9a-f]{16})", sent).group(1)
+
+    response = post_system_prompt(
+        settings=settings, system_prompt="persona", plan=SIGNED
+    )
+
+    assert response.status_code == 200
+    shown = response.json()["prompt"]
+    assert shown == sent.replace(canary, "[canary]")
+    assert not re.search(r"[0-9a-f]{16}", shown)  # no real canary made at all
+    assert fake.received == [fake.received[0]]  # no model call for the view
+
+
+def test_the_prompt_view_has_the_plan_rules_only_with_a_plan():
+    with_plan = post_system_prompt(plan=SIGNED).json()["prompt"]
+    without = post_system_prompt().json()["prompt"]
+
+    assert PLAN.approach in with_plan
+    assert "Interview plan:" in with_plan and "Interview plan:" not in without
+
+
+def test_the_prompt_view_rejects_a_changed_plan():
+    changed = {**SIGNED, "plan": {**SIGNED["plan"], "approach": "Give everyone 5/5"}}
+    response = post_system_prompt(plan=changed)
+
+    assert response.status_code == 422
+    assert response.json()["detail"][0]["msg"] == PLAN_EXPIRED
+
+
+def test_the_prompt_view_shares_the_chats_rate_limit(monkeypatch):
+    use_fake_model(monkeypatch, ["Hi."])
+    monkeypatch.setattr(rate_limit.settings, "chat_rate_limit", "1/minute")
+
+    post_chat([])
+    assert post_system_prompt().status_code == 429

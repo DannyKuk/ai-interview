@@ -9,7 +9,11 @@ from langchain_core.runnables import Runnable
 
 from backend.api.cost_cap import OUT_OF_TIME, add_cost, over_cap
 from backend.api.rate_limit import chat_rate_limit
-from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
+from backend.chains.interviewer import (
+    build_interviewer_chain,
+    build_interviewer_input,
+    resolved_system_prompt,
+)
 from backend.guard.canary import leaked
 from backend.guard.jev import check_input
 from backend.prompts.plan_turns import plan_turn
@@ -19,6 +23,8 @@ from backend.schemas.chat import (
     ChatRequest,
     ChatResponse,
     EndReason,
+    SystemPromptRequest,
+    SystemPromptResponse,
     Usage,
 )
 from backend.schemas.guard import BlockReason, GuardVerdict
@@ -50,7 +56,7 @@ def to_langchain_messages(messages: list[ChatMessage]) -> list[BaseMessage]:
 
 
 def blocked_events(
-    reason: BlockReason, verdict: GuardVerdict | None = None
+        reason: BlockReason, verdict: GuardVerdict | None = None
 ) -> list[ServerSentEvent]:
     # the frontend replaces anything streamed so far with the refusal
     data = {"reason": reason, "reply": REFUSALS[reason]}
@@ -109,7 +115,7 @@ class TurnPlan:
 
 
 def plan_this_turn(
-    plan: InterviewPlan | None, progress: PlanProgress | None, verdict: GuardVerdict
+        plan: InterviewPlan | None, progress: PlanProgress | None, verdict: GuardVerdict
 ) -> TurnPlan:
     # progress None = the interview starts. Also used by scripts/chat_cli.py
     hint = pick_hint(verdict)
@@ -233,3 +239,12 @@ async def chat_stream(request: ChatRequest) -> AsyncIterator[ServerSentEvent]:
 
     yield ServerSentEvent(event="usage", data=usage)
     yield ServerSentEvent(event="done", data={"finish_reason": finish_reason})
+
+
+@router.post("/system-prompt")
+async def system_prompt(request: SystemPromptRequest) -> SystemPromptResponse:
+    # dev panel - only visual
+    plan = request.plan.plan if request.plan else None
+    return SystemPromptResponse(
+        prompt=resolved_system_prompt(request.settings, request.system_prompt, plan)
+    )
