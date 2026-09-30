@@ -29,7 +29,11 @@ export function Scorecard({ feedback }: { feedback: FeedbackResponse }) {
       </Card>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Points title="What went well" points={scorecard.strengths} />
+        <Points
+          title="What went well"
+          points={scorecard.strengths}
+          empty="Nothing to build on yet. Start with the points under “What to work on”."
+        />
         <Points title="What to work on" points={scorecard.improvements} />
       </div>
 
@@ -63,18 +67,22 @@ export function Scorecard({ feedback }: { feedback: FeedbackResponse }) {
   );
 }
 
-function Points({ title, points }: { title: string; points: string[] }) {
+function Points({ title, points, empty }: { title: string; points: string[]; empty?: string }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <ul className="flex list-disc flex-col gap-2 pl-5">
-          {points.map((point) => (
-            <li key={point}>{point}</li>
-          ))}
-        </ul>
+        {points.length === 0 ? (
+          <p className="text-muted-foreground">{empty}</p>
+        ) : (
+          <ul className="flex list-disc flex-col gap-2 pl-5">
+            {points.map((point) => (
+              <li key={point}>{point}</li>
+            ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
   );
