@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/interview/system-prompt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** System Prompt */
+        post: operations["system_prompt_api_interview_system_prompt_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/config": {
         parameters: {
             query?: never;
@@ -522,6 +539,22 @@ export interface components {
             /** Signature */
             signature: string;
         };
+        /** SystemPromptRequest */
+        SystemPromptRequest: {
+            settings?: components["schemas"]["InterviewSettings"];
+            /**
+             * System Prompt
+             * @default zero_shot
+             * @enum {string}
+             */
+            system_prompt: "zero_shot" | "few_shot" | "chain_of_thought" | "persona" | "self_critique";
+            plan?: components["schemas"]["SignedPlan-Input"] | null;
+        };
+        /** SystemPromptResponse */
+        SystemPromptResponse: {
+            /** Prompt */
+            prompt: string;
+        };
         /** ValidationError */
         ValidationError: {
             /** Location */
@@ -617,6 +650,39 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    system_prompt_api_interview_system_prompt_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SystemPromptRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemPromptResponse"];
                 };
             };
             /** @description Validation Error */

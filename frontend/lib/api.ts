@@ -18,6 +18,8 @@ export type FeedbackResponse = components["schemas"]["FeedbackResponse"];
 export type CandidateProfile = components["schemas"]["CandidateProfile"];
 export type Preset = components["schemas"]["Preset"];
 export type GuardVerdict = components["schemas"]["GuardVerdict"];
+export type SystemPromptRequest = components["schemas"]["SystemPromptRequest"];
+export type SystemPromptResponse = components["schemas"]["SystemPromptResponse"];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -136,6 +138,12 @@ export function createPlan(body: PlanRequest): Promise<Priced<SignedPlan>> {
 // scores (Jev) + written feedback (LLM) for the answered questions, ~10-20 s
 export function createFeedback(body: FeedbackRequest): Promise<Priced<FeedbackResponse>> {
   return requestPriced<FeedbackResponse>("/api/interview/feedback", jsonPost(body));
+}
+
+// the interviewer's system prompt as the chat builds it, canary masked. No LLM call,
+// but it counts toward the chat's rate limit
+export function getSystemPrompt(body: SystemPromptRequest): Promise<SystemPromptResponse> {
+  return post<SystemPromptResponse>("/api/interview/system-prompt", body);
 }
 
 // one whole interviewer turn as JSON (not streamed!)

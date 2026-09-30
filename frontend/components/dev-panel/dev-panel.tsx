@@ -18,10 +18,13 @@ import {
 } from "@/components/ui/sheet";
 import {
   ApiError,
+  errorMessage,
   getConfig,
+  getSystemPrompt,
   type AppConfig,
   type GuardVerdict,
   type ModelSettings,
+  type SystemPromptRequest,
 } from "@/lib/api";
 import { useInterviewStore, useStoreHydrated, type TurnLogEntry } from "@/lib/store";
 
@@ -132,10 +135,65 @@ function DevSettingsForm({ config }: { config: AppConfig }) {
         onChange={(max_tokens) => updateModel({ max_tokens })}
         disabled={!supports("max_tokens")}
       />
+      <PromptView />
       <SessionInfo />
       <CostBreakdown />
       <GuardLog />
     </>
+  );
+}
+
+// the system prompt the next turn gets. Loaded on click, not on every change:
+// each load counts toward the chat's rate limit
+function PromptView() {
+  const settings = useInterviewStore((state) => state.settings);
+  const technique = useInterviewStore((state) => state.dev?.technique);
+  const plan = useInterviewStore((state) => state.plan);
+  const [shown, setShown] = useState<{ key: string; prompt: string } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!settings || !technique) {
+    return null;
+  }
+
+  const body: SystemPromptRequest = { settings, system_prompt: technique, plan };
+  // everything the prompt is made from: when it changes, the shown prompt is out of date
+  const key = JSON.stringify(body);
+
+  async function load() {
+    setLoading(true);
+    setError(null);
+    try {
+      const { prompt } = await getSystemPrompt(body);
+      setShown({ key, prompt });
+    } catch (error) {
+      setError(errorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section className="flex flex-col gap-2 border-t pt-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-medium">System prompt</h3>
+        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+          {loading ? "Loading…" : shown ? "Reload" : "Show"}
+        </Button>
+      </div>
+      {error && <p className="text-destructive">{error}</p>}
+      {shown && shown.key !== key && (
+        <p className="text-muted-foreground">The settings changed: reload to see the new prompt.</p>
+      )}
+      {shown && (
+        <pre className="max-h-96 overflow-auto text-xs whitespace-pre-wrap">{shown.prompt}</pre>
+      )}
+      <p className="text-xs text-muted-foreground">
+        {plan ? "With this interview's plan" : "Without a plan"}, the canary masked. Each turn also
+        gets a note of its own (what to ask now), not shown here.
+      </p>
+    </section>
   );
 }
 
