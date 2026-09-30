@@ -18,7 +18,8 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
-      start_period: 5s
+      # the STT model loads before the backend answers (~1 s native, slower in the VM)
+      start_period: 30s
 
   frontend:
     build:
