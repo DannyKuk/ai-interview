@@ -1,4 +1,5 @@
 import pytest
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableLambda
 
 from backend.chains import cv_profile
@@ -24,16 +25,25 @@ PROFILE = CandidateProfile(
 )
 
 
+COST = 0.0008
+
+
 class FakeStructuredModel:
     # stands in for ChatOpenRouter: keeps the messages it got, answers with self.reply
     reply = PROFILE
+    parsing_error = None
 
     def with_structured_output(self, schema, **kwargs):
         self.schema, self.kwargs = schema, kwargs
 
         def answer(prompt_value):
             self.messages = prompt_value.to_messages()
-            return self.reply
+            # what include_raw=True returns: the raw message carries the cost
+            return {
+                "raw": AIMessage(content="", response_metadata={"cost": COST}),
+                "parsed": self.reply,
+                "parsing_error": self.parsing_error,
+            }
 
         return RunnableLambda(answer)
 
@@ -46,10 +56,22 @@ def fake_model(monkeypatch):
 
 
 @pytest.mark.anyio
-async def test_extract_profile_returns_the_structured_reply(fake_model):
-    assert await extract_profile("Anna Berg, engineer") == PROFILE
+async def test_extract_profile_returns_the_structured_reply_and_its_cost(fake_model):
+    profile = await extract_profile("Anna Berg, engineer")
+    assert (profile.value, profile.cost) == (PROFILE, COST)
     assert fake_model.schema is CandidateProfile
-    assert fake_model.kwargs == {"method": "function_calling", "strict": True}
+    assert fake_model.kwargs == {
+        "method": "function_calling",
+        "strict": True,
+        "include_raw": True,
+    }
+
+
+@pytest.mark.anyio
+async def test_a_profile_that_did_not_parse_raises(fake_model):
+    fake_model.reply, fake_model.parsing_error = None, "bad json"
+    with pytest.raises(ValueError):
+        await extract_profile("Anna Berg")
 
 
 @pytest.mark.anyio

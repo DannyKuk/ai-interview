@@ -15,6 +15,7 @@ import asyncio
 import time
 import uuid
 
+from fastapi import Response
 from langchain_core.prompts import ChatPromptTemplate
 from try_plan import JUNIOR_JD, PLANS, load_profile
 
@@ -68,7 +69,7 @@ async def load_plan(settings: InterviewSettings) -> InterviewPlan:
     if cached.exists():
         return InterviewPlan.model_validate_json(cached.read_text())
     profile = await load_profile("09_career_changer.pdf", fresh=False)
-    plan = await make_plan(settings, profile, JUNIOR_JD)
+    plan = (await make_plan(settings, profile, JUNIOR_JD)).value
     cached.write_text(plan.model_dump_json(indent=2))
     return plan
 
@@ -122,7 +123,7 @@ async def run(style: str, run_number: int, questions: int) -> None:
         answers=answers,
     )
     start = time.perf_counter()
-    result = await feedback_api.create_feedback(request)
+    result = await feedback_api.create_feedback(request, Response())
     total = time.perf_counter() - start
     feedback_api.write_feedback = write_feedback
 

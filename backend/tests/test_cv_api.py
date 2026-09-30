@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 
 from backend.api import cv, rate_limit
 from backend.api.cv import CV_REFUSALS, PROFILE_FAILED
+from backend.chains.llm import Priced
 from backend.main import app
 from backend.schemas.guard import DocumentVerdict
 from tests.test_cv_profile import PROFILE
@@ -35,7 +36,7 @@ def fakes(monkeypatch):
 
     async def fake_profile(_text):
         calls.profile += 1
-        return PROFILE
+        return Priced(value=PROFILE, cost=0.0008)
 
     monkeypatch.setattr(cv, "check_document", guard_passes)
     monkeypatch.setattr(cv, "extract_profile", fake_profile)
@@ -49,10 +50,22 @@ def block_with(monkeypatch, reason):
     monkeypatch.setattr(cv, "check_document", guard_blocks)
 
 
-def test_returns_the_profile():
+def test_returns_the_profile_and_its_cost():
     response = upload(make_pdf("Anna Berg, backend engineer"))
     assert response.status_code == 200
     assert response.json() == PROFILE.model_dump()
+    assert response.headers["X-Cost"] == "0.0008"  # the dev panel's cost breakdown
+
+
+def test_no_cost_header_when_openrouter_sent_none(monkeypatch):
+    # missing != free: the panel shows "unknown" instead of $0
+    async def unpriced_profile(_text):
+        return Priced(value=PROFILE, cost=None)
+
+    monkeypatch.setattr(cv, "extract_profile", unpriced_profile)
+    response = upload(make_pdf("Anna Berg"))
+    assert response.status_code == 200
+    assert "X-Cost" not in response.headers
 
 
 def test_the_file_is_checked_by_content_not_name():

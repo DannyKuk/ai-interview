@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from backend.api import plan as plan_api
 from backend.api import rate_limit
 from backend.api.plan import PLAN_FAILED, PLAN_REFUSALS, PROFILE_TOO_LONG
+from backend.chains.llm import Priced
 from backend.guard.plan_signature import is_signed
 from backend.main import app
 from backend.schemas.guard import DocumentVerdict, GuardVerdict
@@ -40,7 +41,7 @@ def fakes(monkeypatch):
 
     async def fake_plan(settings, profile, job_description):
         calls.plan.append((settings, profile, job_description))
-        return PLAN
+        return Priced(value=PLAN, cost=0.0012)
 
     monkeypatch.setattr(plan_api, "check_input", role_passes)
     monkeypatch.setattr(plan_api, "check_document", document_passes)
@@ -62,6 +63,7 @@ def test_returns_the_plan_and_checks_everything(fakes):
     signed = SignedPlan.model_validate(response.json())
     assert signed.plan == PLAN
     assert is_signed(signed)
+    assert response.headers["X-Cost"] == "0.0012"
     assert sorted(fakes.guard) == ["cv", "job_description", "role"]
     _, profile, job_description = fakes.plan[0]
     assert (profile, job_description) == (PROFILE, JD)

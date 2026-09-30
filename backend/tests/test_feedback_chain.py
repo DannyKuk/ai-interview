@@ -96,7 +96,7 @@ async def test_returns_the_text_and_the_cost(monkeypatch):
     model = use_model(monkeypatch, FakeStructuredModel())
     written = await run()
 
-    assert (written.text, written.cost) == (TEXT, 0.0021)
+    assert (written.value, written.cost) == (TEXT, 0.0021)
     assert model.schema is FeedbackText
     assert model.kwargs == {
         "method": "function_calling",

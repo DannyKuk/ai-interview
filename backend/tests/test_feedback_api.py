@@ -12,7 +12,7 @@ from backend.api.feedback import (
     OVER_BUDGET,
 )
 from backend.api.interview import REFUSALS
-from backend.chains.feedback import WrittenFeedback
+from backend.chains.llm import Priced
 from backend.guard.plan_signature import sign_plan
 from backend.main import app
 from backend.schemas.chat import PLAN_EXPIRED
@@ -70,7 +70,7 @@ def fakes(monkeypatch) -> Calls:
 
     async def fake_write(settings, plan, answers, scores, weakest):
         calls.written.append((answers, scores, weakest))
-        return WrittenFeedback(text=TEXT, cost=0.002)
+        return Priced(value=TEXT, cost=0.002)
 
     monkeypatch.setattr(feedback_api, "check_input", role_passes)
     monkeypatch.setattr(feedback_api, "score_answer", fake_score)
@@ -129,9 +129,10 @@ def test_a_question_without_written_feedback_gets_a_fallback(fakes):
     assert body["evaluations"][1]["score"] == 3.0  # the score still counts
 
 
-def test_the_cost_counts_for_the_session(fakes):
-    post_feedback()
+def test_the_cost_counts_for_the_session_and_goes_to_the_browser(fakes):
+    response = post_feedback()
     assert cost_cap.spent[UUID(SESSION_ID)] == 0.002
+    assert response.headers["X-Cost"] == "0.002"
 
 
 def test_over_the_budget_nothing_is_called(fakes, monkeypatch):

@@ -74,7 +74,7 @@ async def load_profile(cv: str, fresh: bool) -> CandidateProfile:
     cached = PROFILES / f"{Path(cv).stem}.json"
     if cached.exists() and not fresh:
         return CandidateProfile.model_validate_json(cached.read_text())
-    profile = await extract_profile(read_cv((CVS / cv).read_bytes()))
+    profile = (await extract_profile(read_cv((CVS / cv).read_bytes()))).value
     PROFILES.mkdir(parents=True, exist_ok=True)
     cached.write_text(profile.model_dump_json(indent=2))
     return profile
@@ -85,7 +85,9 @@ async def run(case: Case, effort: str, fresh: bool) -> None:
 
     start = time.perf_counter()
     with get_usage_metadata_callback() as usage:
-        plan = await make_plan(case.settings, profile, case.job_description, effort)
+        plan = (
+            await make_plan(case.settings, profile, case.job_description, effort)
+        ).value
     seconds = time.perf_counter() - start
 
     # {model: {input_tokens, output_tokens, output_token_details: {reasoning}}}

@@ -63,7 +63,7 @@ def main() -> None:
         # like the endpoint will: a blocked CV never reaches the LLM
         if args.profile and not verdict.blocked:
             start = time.perf_counter()
-            profile = asyncio.run(extract_profile(text))
+            profile = asyncio.run(extract_profile(text)).value
             print(f"profile ({time.perf_counter() - start:.1f} s):")
             print(json.dumps(profile.model_dump(), indent=2, ensure_ascii=False))
 
