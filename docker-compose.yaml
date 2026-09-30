@@ -45,6 +45,7 @@ services:
         # inlined into the JS at build time. The browser calls it, so it's the host URL
         # (localhost:8000), not http://backend:8000. ${...} is read from the root .env
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+        NEXT_PUBLIC_HEADTTS_URL: ${NEXT_PUBLIC_HEADTTS_URL:-http://localhost:8882}
     ports:
       - "3000:3000"
     depends_on:

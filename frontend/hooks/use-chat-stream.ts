@@ -29,10 +29,19 @@ export type StreamedTurn = {
 // status: the HTTP status, null when the request never got an answer (network)
 export type ChatError = { message: string; status: number | null };
 
-export function useChatStream() {
+type ChatStreamOptions = {
+  // every event as it arrives, e.g. for speaking the reply while it streams
+  onEvent?: (event: ChatStreamEvent) => void;
+};
+
+export function useChatStream({ onEvent }: ChatStreamOptions = {}) {
   const [turn, setTurn] = useState<StreamedTurn | null>(null);
   const [error, setError] = useState<ChatError | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
+  const onEventRef = useRef(onEvent);
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  });
 
   // stop the stream when the page is left
   useEffect(() => () => controllerRef.current?.abort(), []);
@@ -61,6 +70,7 @@ export function useChatStream() {
       for await (const event of streamChat(request, controller.signal)) {
         current = applyEvent(current, event);
         setTurn(current);
+        onEventRef.current?.(event);
       }
 
       return current;

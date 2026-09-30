@@ -9,6 +9,7 @@ import { AnswerInput } from "@/components/interview/answer-input";
 import { Transcript, TranscriptLine } from "@/components/interview/transcript";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useChatStream, type StreamedTurn } from "@/hooks/use-chat-stream";
+import { useSpeech } from "@/hooks/use-speech";
 import type { ChatMessage, ChatRequest } from "@/lib/api";
 import { useInterviewStore, useStoreHydrated, type EndReason } from "@/lib/store";
 
@@ -44,7 +45,9 @@ export function InterviewChat() {
   const setProgress = useInterviewStore((state) => state.setProgress);
   const plan = useInterviewStore((state) => state.plan);
   const progress = useInterviewStore((state) => state.progress);
-  const { turn, error, send, stop } = useChatStream();
+  // the interviewer's replies are spoken while they stream (HeadTTS)
+  const speech = useSpeech();
+  const { turn, error, send, stop } = useChatStream({ onEvent: speech.handleEvent });
   const router = useRouter();
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<string | null>(null);
@@ -117,6 +120,7 @@ export function InterviewChat() {
 
   function leave() {
     stop();
+    speech.stop();
     endInterview("candidate_left");
     router.push("/results");
   }
