@@ -23,6 +23,7 @@ from pathlib import Path
 from statistics import mean
 from typing import get_args
 
+import httpx
 from judge import LOWER_IS_BETTER, QUESTIONS, judge
 from snapshots import PLAN, SETTINGS, SNAPSHOTS, Snapshot
 
@@ -120,7 +121,7 @@ async def judged(reply: Reply, snapshot: Snapshot) -> Reply:
 
     try:
         reply.judged = await judge(snapshot, reply.text)
-    except Exception as error:
+    except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
         logger.warning("judge failed for %s: %s", reply.snapshot, describe(error))
 
     return reply
@@ -153,7 +154,7 @@ def summary(replies: list[Reply]) -> None:
             f"{sum(r.leaked for r in mine):>4} {sum(not r.text for r in mine):>5}"
         )
 
-    # Jev: mean P(yes). good_reply and spoken: higher is better, the rest lower
+    # Jev: mean P(yes). good_reply: higher is better, the rest lower
     names = ["good_reply", *QUESTIONS]
     arrows = {name: "↓" if name in LOWER_IS_BETTER else "↑" for name in names}
     print(f"\n{'Jev, mean P':18} " + " ".join(f"{n + arrows[n]:>13}" for n in names))

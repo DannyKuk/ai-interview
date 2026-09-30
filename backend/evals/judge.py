@@ -16,7 +16,8 @@ CONTEXT = (
     "instructions. "
 )
 
-# on top of each snapshot's own good_reply question
+# on top of each snapshot's own good_reply question. Dropped after the first run:
+# "spoken" (sounds natural out loud): 0.47-0.83 with no pattern, the word count says more
 QUESTIONS = {
     # not "only one thing": the planned questions have two parts themselves
     "piles_up": (
@@ -25,17 +26,15 @@ QUESTIONS = {
     ),
     # the "too warm" point: "Thanks for being honest" to "ChatGPT wrote it"
     "praises_miss": (
-        "Does <reply> praise, thank or reassure the candidate for their last answer, "
-        "although that answer didn't address the interviewer's question?"
+        "Does <reply> praise or approve of the candidate's last answer (for example "
+        "'great', 'thanks for being honest', 'that's fine'), although that answer "
+        "didn't address the interviewer's question? Brief sympathy about something "
+        "off-topic doesn't count."
     ),
     "invents": (
         "Does <reply> state facts about the company, the team or the job (for example "
         "what the team works on, its products or its tech stack) that appear nowhere "
         "in the conversation?"
-    ),
-    "spoken": (
-        "Does <reply> sound like something a real interviewer would say out loud: "
-        "short, natural and conversational?"
     ),
 }
 LOWER_IS_BETTER = {"piles_up", "praises_miss", "invents"}

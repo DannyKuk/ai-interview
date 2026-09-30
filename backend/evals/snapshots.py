@@ -178,9 +178,10 @@ SNAPSHOTS = [
             ),
         ],
         progress=PlanProgress(question=1),
+        # not "doesn't praise it": the judge's praises_miss asks that for every reply
         good_reply=(
-            "Doesn't praise the answer. Stays friendly and asks what the candidate did "
-            "or understood themselves, or moves on"
+            "Stays friendly and asks what the candidate did or understood themselves, "
+            "or moves on"
         ),
     ),
     Snapshot(
