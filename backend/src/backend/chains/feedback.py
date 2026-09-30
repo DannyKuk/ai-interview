@@ -14,11 +14,14 @@ from backend.services.answer_scores import ScoredAnswer
 
 logger = logging.getLogger(__name__)
 
+# v1 stays for the prompt comparison (evals/, scripts/try_feedback.py --prompt)
+FEEDBACK_PROMPT = "feedback/zero_shot_v1"
+
 
 def build_feedback_chain() -> Runnable:
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", load_prompt("feedback/zero_shot_v1")),
+            ("system", load_prompt(FEEDBACK_PROMPT)),
             ("human", "{interview}"),
         ]
     )
