@@ -10,6 +10,7 @@ import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   createPlan,
@@ -28,6 +29,8 @@ export function SetupForm() {
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const cloudVoice = useInterviewStore((state) => state.cloudVoice);
+  const setCloudVoice = useInterviewStore((state) => state.setCloudVoice);
   const [startError, setStartError] = useState<string | null>(null);
   const hydrated = useStoreHydrated();
   const settings = useInterviewStore((state) => state.settings);
@@ -155,9 +158,20 @@ export function SetupForm() {
           value={settings.persona}
           onChange={(persona) => updateSettings({ persona })}
         />
-        <Button type="submit" size="lg" className="self-start">
-          {starting ? "Preparing your interview…" : "Start interview"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-4">
+          <Button type="submit" size="lg">
+            {starting ? "Preparing your interview…" : "Start interview"}
+          </Button>
+          <label className="flex items-center gap-2 text-sm">
+            <Switch checked={cloudVoice} onCheckedChange={setCloudVoice} />
+            Cloud voice
+          </label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {cloudVoice
+            ? "Google's Gemini voice: sounds more natural, about $0.03 per interview, and a few seconds more before each reply. Only the interviewer's text goes to Google, never your voice."
+            : "A free voice that runs on this computer. Turn on the cloud voice for a more natural one."}
+        </p>
         {startError && <p className="text-sm text-destructive">{startError}</p>}
       </fieldset>
     </form>

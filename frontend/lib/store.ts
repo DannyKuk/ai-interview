@@ -33,7 +33,12 @@ export type DevSettings = { technique: Technique; modelSettings: ModelSettings }
 export type TurnLogEntry = Pick<StreamedTurn, "guard" | "blocked" | "hint" | "ended" | "usage">;
 
 // USD of the paid calls outside the chat, for the cost breakdown.
-export type Costs = { cv?: number | null; plan?: number | null; feedback?: number | null };
+export type Costs = {
+  cv?: number | null;
+  plan?: number | null;
+  feedback?: number | null;
+  voice?: number; // the Gemini voice's sentences added up (estimated by the backend)
+};
 
 type InterviewState = {
   settings: InterviewSettings | null; // null until the setup page fills in the backend defaults
@@ -52,6 +57,9 @@ type InterviewState = {
   // voice answers: false = stop sends the answer, true = it goes into the text field to
   // edit first. A preference: reset() keeps it
   reviewBeforeSending: boolean;
+  // the TTS switch: false = HeadTTS (local, free, the default), true = Gemini (cloud).
+  // A preference: reset() keeps it
+  cloudVoice: boolean;
   updateSettings: (patch: Partial<InterviewSettings>) => void;
   choosePreset: (preset: Preset) => void;
   clearCandidate: () => void;
@@ -66,6 +74,8 @@ type InterviewState = {
   updateDev: (patch: Partial<DevSettings>) => void;
   recordTurn: (turn: StreamedTurn) => void;
   setReviewBeforeSending: (review: boolean) => void;
+  setCloudVoice: (cloudVoice: boolean) => void;
+  addVoiceCost: (cost: number | null) => void;
   reset: () => void;
 };
 
@@ -86,6 +96,7 @@ export const useInterviewStore = create<InterviewState>()(
       turnLog: [],
       costs: {},
       reviewBeforeSending: false,
+      cloudVoice: false,
 
       updateSettings: (patch) =>
         set((state) => ({ settings: { ...state.settings, ...patch } as InterviewSettings })),
@@ -126,6 +137,11 @@ export const useInterviewStore = create<InterviewState>()(
       recordTurn: ({ guard, blocked, hint, ended, usage }) =>
         set((state) => ({ turnLog: [...state.turnLog, { guard, blocked, hint, ended, usage }] })),
       setReviewBeforeSending: (reviewBeforeSending) => set({ reviewBeforeSending }),
+      setCloudVoice: (cloudVoice) => set({ cloudVoice }),
+      addVoiceCost: (cost) =>
+        set((state) => ({
+          costs: { ...state.costs, voice: (state.costs.voice ?? 0) + (cost ?? 0) },
+        })),
       reset: () =>
         set({
           settings: null,

@@ -258,6 +258,8 @@ function CostBreakdown() {
       cost: entry.usage ? entry.usage.cost : undefined,
       noCall: "no model call",
     })),
+    // Gemini's sentences added up; HeadTTS is local and free
+    { label: "Voice", cost: costs.voice, noCall: "local voice (free)" },
     { label: "Feedback", cost: costs.feedback, noCall: "not yet" },
   ];
   const known = rows.map((row) => row.cost).filter((cost) => typeof cost === "number");
@@ -287,7 +289,8 @@ function CostBreakdown() {
         </dd>
       </dl>
       <p className="text-xs text-muted-foreground">
-        LLM calls only, Jev&apos;s checks aren&apos;t in it
+        LLM calls and the cloud voice (its cost estimated by the backend); Jev&apos;s checks
+        aren&apos;t in it
       </p>
     </section>
   );

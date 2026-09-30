@@ -21,6 +21,7 @@ export type GuardVerdict = components["schemas"]["GuardVerdict"];
 export type SystemPromptRequest = components["schemas"]["SystemPromptRequest"];
 export type SystemPromptResponse = components["schemas"]["SystemPromptResponse"];
 export type TranscriptResponse = components["schemas"]["TranscriptResponse"];
+export type SpeakRequest = components["schemas"]["SpeakRequest"];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -95,10 +96,14 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export type Priced<T> = { value: T; cost: number | null };
 
 // for CV, plan and feedback
+function costOf(response: Response): number | null {
+  const cost = response.headers.get("X-Cost");
+  return cost === null ? null : Number(cost);
+}
+
 async function requestPriced<T>(path: string, init?: RequestInit): Promise<Priced<T>> {
   const response = await send(path, init);
-  const cost = response.headers.get("X-Cost");
-  return { value: (await response.json()) as T, cost: cost === null ? null : Number(cost) };
+  return { value: (await response.json()) as T, cost: costOf(response) };
 }
 
 function jsonPost(body: unknown): RequestInit {
@@ -161,6 +166,16 @@ export async function transcribe(
     signal,
   });
   return text;
+}
+
+// one sentence in Gemini's voice (the TTS switch "on"): raw PCM, 24 kHz mono 16-bit.
+// 1.4-3.8 s per sentence; the cost counts toward the session's cost cap
+export async function speak(
+  body: SpeakRequest,
+  signal?: AbortSignal,
+): Promise<Priced<ArrayBuffer>> {
+  const response = await send("/api/voice/speak", { ...jsonPost(body), signal });
+  return { value: await response.arrayBuffer(), cost: costOf(response) };
 }
 
 // one whole interviewer turn as JSON (not streamed!)
