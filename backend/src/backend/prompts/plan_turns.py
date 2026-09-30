@@ -14,9 +14,13 @@ NEXT = (
     "React to the answer in one short sentence, then ask question {number} of "
     "{total} in your own words: {question}"
 )
+# without the last sentence all 5 prompts thanked or reassured the vague answer
+# ("Thanks for being honest — that happens a lot", prompt comparison Sep 30)
 FOLLOW_UP = (
-    "The answer stayed vague. Don't move on yet: ask one specific follow-up about it, "
-    "for example for a concrete example or what the candidate did themselves."
+    "The answer stayed vague. Don't move on yet: react in a few neutral words, "
+    "without thanks, praise or reassurance, then ask one short follow-up question "
+    "about one thing, for example a concrete example or what the candidate did "
+    "themselves."
 )
 DONE = (
     "That was the last question. Thank the candidate, tell them the interview is "
