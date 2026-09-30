@@ -1,5 +1,6 @@
 "use client";
 
+import { Volume2, VolumeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -45,6 +46,8 @@ export function InterviewChat() {
   const setProgress = useInterviewStore((state) => state.setProgress);
   const plan = useInterviewStore((state) => state.plan);
   const progress = useInterviewStore((state) => state.progress);
+  const muted = useInterviewStore((state) => state.muted);
+  const setMuted = useInterviewStore((state) => state.setMuted);
   // the interviewer's replies are spoken while they stream (HeadTTS)
   const speech = useSpeech();
   const { turn, error, send, stop } = useChatStream({ onEvent: speech.handleEvent });
@@ -97,6 +100,7 @@ export function InterviewChat() {
 
   async function answer(text: string) {
     const answerMessage: ChatMessage = { role: "user", content: text };
+    speech.stop(); // answering while it still talks: it stops
     setPending(text);
     setDraft("");
 
@@ -139,11 +143,24 @@ export function InterviewChat() {
 
   return (
     <div className="flex flex-col gap-4">
-      {plan && shownProgress && !ended && (
+      <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
-          Question {shownProgress.question + 1} of {plan.plan.questions.length}
+          {plan &&
+            shownProgress &&
+            !ended &&
+            `Question ${shownProgress.question + 1} of ${plan.plan.questions.length}`}
         </p>
-      )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setMuted(!muted)}
+          aria-pressed={muted}
+          title={muted ? "Turn the interviewer's voice on" : "Mute the interviewer"}
+        >
+          {muted ? <VolumeOff /> : <Volume2 />}
+          {muted ? "Unmute" : "Mute"}
+        </Button>
+      </div>
       <Transcript messages={messages}>
         {pending && <TranscriptLine role="user" content={pending} />}
         {(turn?.streaming || turn?.blocked) && (
@@ -170,6 +187,7 @@ export function InterviewChat() {
           onChange={setDraft}
           onSend={answer}
           disabled={messages.length === 0 || !!turn?.streaming}
+          onMicStart={speech.stop}
         />
       )}
       {!ended && (

@@ -64,6 +64,8 @@ export function useSpeech() {
   const queueRef = useRef<SpeechQueue<AudioBuffer> | null>(null);
   const splitterRef = useRef(new SentenceSplitter());
   const warnedRef = useRef(false);
+  // barge-in: quiet for the rest of this turn, even if more of the reply streams in
+  const silencedRef = useRef(false);
   const engineRef = useRef<Engine | null>(null);
   const engine = useCallback((): Engine => {
     engineRef.current ??= useInterviewStore.getState().cloudVoice ? "gemini" : "headtts";
@@ -125,6 +127,11 @@ export function useSpeech() {
     );
     queueRef.current = queue;
 
+    // muting while it talks: quiet at once (a store subscription, not a re-render)
+    const unsubscribe = useInterviewStore.subscribe((state, previous) => {
+      if (state.muted && !previous.muted) queue.stop();
+    });
+
     // browsers only allow sound after a click or key press on the page. Coming from the
     // setup page's Start button that's the case; after a reload, the first click is
     const resume = () => void context.resume();
@@ -132,6 +139,7 @@ export function useSpeech() {
     window.addEventListener("keydown", resume, { once: true });
 
     return () => {
+      unsubscribe();
       queue.stop();
       queueRef.current = null;
       window.removeEventListener("pointerdown", resume);
@@ -146,6 +154,8 @@ export function useSpeech() {
   );
 
   const say = useCallback((sentences: string[]) => {
+    // muted = no TTS call at all (also no Gemini cost). The transcript has the text
+    if (silencedRef.current || useInterviewStore.getState().muted) return;
     sentences.forEach((text) => queueRef.current?.add(text));
   }, []);
 
@@ -154,6 +164,7 @@ export function useSpeech() {
       switch (event.event) {
         case "meta": // a new turn
           queueRef.current?.stop();
+          silencedRef.current = false;
           splitterRef.current = newSplitter();
           break;
         case "token":
@@ -162,6 +173,7 @@ export function useSpeech() {
         case "blocked": {
           // stop at once (a leak: nothing more of that reply), then the in-character refusal
           queueRef.current?.stop();
+          silencedRef.current = false; // a blocked answer gets its own spoken refusal
           const splitter = newSplitter();
           splitterRef.current = splitter;
           say([...splitter.push(event.data.reply), ...splitter.flush()]);
@@ -175,8 +187,11 @@ export function useSpeech() {
     [say, newSplitter],
   );
 
-  // barge-in, leaving the interview: silence now
-  const stop = useCallback(() => queueRef.current?.stop(), []);
+  // barge-in (the mic, sending), leaving: silence now and for the rest of this turn
+  const stop = useCallback(() => {
+    silencedRef.current = true;
+    queueRef.current?.stop();
+  }, []);
 
   return { speaking, sentence, handleEvent, stop };
 }

@@ -15,6 +15,7 @@ type AnswerInputProps = {
   onChange: (value: string) => void;
   onSend: (text: string) => void;
   disabled: boolean;
+  onMicStart?: () => void; // barge-in: the interviewer stops talking
 };
 
 function clock(seconds: number): string {
@@ -26,7 +27,7 @@ function joined(typed: string, spoken: string): string {
   return [typed.trim(), spoken].filter(Boolean).join(" ").slice(0, MAX_MESSAGE_CHARS);
 }
 
-export function AnswerInput({ value, onChange, onSend, disabled }: AnswerInputProps) {
+export function AnswerInput({ value, onChange, onSend, disabled, onMicStart }: AnswerInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const reviewBeforeSending = useInterviewStore((state) => state.reviewBeforeSending);
   const setReviewBeforeSending = useInterviewStore((state) => state.setReviewBeforeSending);
@@ -69,6 +70,7 @@ export function AnswerInput({ value, onChange, onSend, disabled }: AnswerInputPr
     if (recording) {
       void dictation.stop();
     } else if (dictation.status === "idle") {
+      onMicStart?.();
       void dictation.start();
     }
   }
