@@ -69,7 +69,7 @@ class Scorecard(BaseModel):
     overall: float  # 1-5, the average of the answered questions
     answered: int
     total: int  # questions in the plan
-    strengths: list[str]  # LLM, at most 3
+    strengths: list[str]  # LLM, 0-3: empty when nothing worked
     improvements: list[str]  # LLM, at most 3
     weakest_question: int
     sample_answer: str
@@ -85,7 +85,7 @@ class QuestionFeedback(BaseModel):
 
     number: int = Field(description="The question's number as shown, e.g. 2")
     feedback: str = Field(
-        description="2-3 sentences to the candidate: what worked, what to do better"
+        description="2-3 sentences to the candidate: what worked (if anything), what to do better"
     )
 
 
@@ -97,7 +97,10 @@ class FeedbackText(BaseModel):
         description="Per question: what the answer covered and missed, given the scores"
     )
     questions: list[QuestionFeedback] = Field(min_length=1, max_length=MAX_QUESTIONS)
-    strengths: list[str] = Field(min_length=1, max_length=3)
+    # may be empty: with min_length=1 it made one up for nonsense answers
+    strengths: list[str] = Field(
+        max_length=3, description="Only what the candidate did well; may be empty"
+    )
     improvements: list[str] = Field(min_length=1, max_length=3)
     sample_answer: str = Field(
         description="A stronger answer to the weakest question, in the candidate's voice"

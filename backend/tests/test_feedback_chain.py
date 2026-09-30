@@ -153,3 +153,9 @@ def test_every_field_is_required_for_strict_mode():
 def test_analysis_comes_first():
     # the model writes fields in schema order: reason first, then the feedback (FR-14)
     assert next(iter(FeedbackText.model_fields)) == "analysis"
+
+
+def test_strengths_may_be_empty():
+    # nothing worked -> no strength instead of a made-up one
+    empty = FeedbackText.model_validate(TEXT.model_dump() | {"strengths": []})
+    assert empty.strengths == []
