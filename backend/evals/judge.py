@@ -4,7 +4,7 @@ One yes/no question per criterion, Jev answers each with a calibrated P(yes): th
 same way the feedback scores the candidate's answers (services/answer_scores.py).
 """
 
-from snapshots import SETTINGS, Snapshot
+from snapshots import Snapshot
 
 from backend.guard.delimiters import wrap
 from backend.guard.jev import ask_jev
@@ -41,7 +41,8 @@ LOWER_IS_BETTER = {"piles_up", "praises_miss", "invents"}
 
 
 def build_state(snapshot: Snapshot, reply: str) -> str:
-    parts = [wrap("company", SETTINGS.company), wrap("role", SETTINGS.role)]
+    job = snapshot.settings
+    parts = [wrap("company", job.company), wrap("role", job.role)]
     for message in snapshot.messages:
         tag = "interviewer" if message.role == "assistant" else "candidate_message"
         parts.append(wrap(tag, message.content))

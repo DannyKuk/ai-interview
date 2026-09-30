@@ -7,7 +7,7 @@ good next reply does.
 
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from backend.schemas.chat import ChatMessage, InterviewSettings
 from backend.schemas.plan import InterviewPlan, PlanProgress
@@ -15,6 +15,8 @@ from backend.schemas.plan import InterviewPlan, PlanProgress
 SETTINGS = InterviewSettings(
     company="Netflux", role="Junior Software Developer", question_count=3
 )
+# the hard cases: "push back on weak answers" is in the hard difficulty line
+HARD = SETTINGS.model_copy(update={"difficulty": "hard"})
 
 # inline, not from scripts/out/ (git-ignored)
 PLAN = InterviewPlan.model_validate(
@@ -86,6 +88,7 @@ class Snapshot:
     messages: list[ChatMessage]
     progress: PlanProgress | None  # None = the interview starts
     good_reply: str
+    settings: InterviewSettings = field(default_factory=lambda: SETTINGS)
 
     def __post_init__(self):
         if self.messages and self.messages[-1].role != "user":
@@ -218,5 +221,65 @@ SNAPSHOTS = [
             "the candidate instead, then comes back to why they want to move into "
             "software development"
         ),
+    ),
+    # the hard cases (Sep 30, after the settings experiment): each needs a step of
+    # thinking about the content, which effort minimal might skip
+    Snapshot(
+        name="wrong_claim",
+        messages=[
+            Q1,
+            A1,
+            Q2,
+            candidate(
+                "It replaced our paper stock list. I built it in Flask with SQLite, and "
+                "because SQLite handles any number of simultaneous writes without "
+                "locking, all five bakers could save their counts at the same time, so "
+                "I never had to think about concurrency."
+            ),
+        ],
+        progress=PlanProgress(question=1),
+        good_reply=(
+            "Questions or corrects the claim that SQLite handles any number of "
+            "simultaneous writes without locking, for example asks how they handled "
+            "write locking, instead of accepting it"
+        ),
+        settings=HARD,
+    ),
+    Snapshot(
+        name="buzzwords",
+        messages=[
+            Q1,
+            A1,
+            Q2,
+            candidate(
+                "I leveraged a cloud-native microservices architecture with Kubernetes "
+                "and AI to create a scalable, data-driven synergy for the bakery's stock."
+            ),
+        ],
+        progress=PlanProgress(question=1),
+        good_reply=(
+            "Asks what the candidate concretely built themselves, or why one bakery's "
+            "stock list needed microservices, Kubernetes or AI, instead of accepting "
+            "the buzzwords"
+        ),
+        settings=HARD,
+    ),
+    Snapshot(
+        name="contradiction",
+        messages=[
+            Q1,
+            A1,
+            Q2,
+            candidate(
+                "Honestly, I've never written any Python myself. A friend built the "
+                "whole tracker, I only used it at the bakery."
+            ),
+        ],
+        progress=PlanProgress(question=1),
+        good_reply=(
+            "Notices that this contradicts the candidate's earlier answer that they "
+            "taught themselves Python and built the Flask app, and asks about it"
+        ),
+        settings=HARD,
     ),
 ]

@@ -32,7 +32,7 @@ from typing import get_args
 
 import httpx
 from judge import LOWER_IS_BETTER, QUESTIONS, judge
-from snapshots import PLAN, SETTINGS, SNAPSHOTS, Snapshot
+from snapshots import PLAN, SNAPSHOTS, Snapshot
 
 from backend.api.interview import (
     TurnPlan,
@@ -106,7 +106,7 @@ class Reply:
 async def prepare(snapshot: Snapshot) -> TurnPlan:
     # the same guard call as the chat API: its verdict decides the note for this turn
     request = ChatRequest(
-        session_id=uuid.uuid4(), messages=snapshot.messages, settings=SETTINGS
+        session_id=uuid.uuid4(), messages=snapshot.messages, settings=snapshot.settings
     )
     verdict = await guard_chat(request)
 
@@ -123,7 +123,10 @@ async def reply(
         config.technique, config.model_settings(), with_plan=True
     )
     chain_input = build_interviewer_input(
-        SETTINGS, to_langchain_messages(snapshot.messages), turn.note, PLAN.approach
+        snapshot.settings,
+        to_langchain_messages(snapshot.messages),
+        turn.note,
+        PLAN.approach,
     )
     start = time.perf_counter()
     result = await chain.ainvoke(chain_input)
