@@ -9,6 +9,7 @@ import {
   type ChatRequest,
   type ChatResponse,
   type ChatStreamEvent,
+  type GuardVerdict,
   type PlanProgress,
 } from "@/lib/api";
 
@@ -21,6 +22,7 @@ export type StreamedTurn = {
   blocked: NonNullable<ChatResponse["blocked"]> | null; // why the guard stopped it
   hint: NonNullable<ChatResponse["hint"]> | null; // the turn note from the guard's signals
   progress: PlanProgress | null; // the plan question this reply asks
+  guard: GuardVerdict | null;
   usage: Usage | null;
 };
 
@@ -48,6 +50,7 @@ export function useChatStream() {
       blocked: null,
       hint: null,
       progress: null,
+      guard: null,
       usage: null,
     };
 
@@ -93,11 +96,17 @@ function applyEvent(turn: StreamedTurn, event: ChatStreamEvent): StreamedTurn {
         ended: event.data.ended ?? null,
         hint: event.data.hint ?? null,
         progress: event.data.progress ?? null,
+        guard: event.data.guard ?? null,
       };
     case "token":
       return { ...turn, reply: turn.reply + event.data.text };
     case "blocked":
-      return { ...turn, reply: event.data.reply, blocked: event.data.reason };
+      return {
+        ...turn,
+        reply: event.data.reply,
+        blocked: event.data.reason,
+        guard: event.data.guard ?? turn.guard,
+      };
     case "usage":
       return { ...turn, usage: event.data };
     case "done":

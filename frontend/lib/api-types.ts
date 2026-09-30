@@ -223,7 +223,7 @@ export interface components {
             seniority: "junior" | "mid" | "senior" | "lead";
             /**
              * Years Experience
-             * @description Total years of work experience, null if unclear
+             * @description Total years of work experience, from the job periods. Null only if no dates
              */
             years_experience: number | null;
             /** Skills */
@@ -282,6 +282,7 @@ export interface components {
             /** Ended */
             ended?: ("candidate_left" | "limit_reached" | "completed") | null;
             progress?: components["schemas"]["PlanProgress"] | null;
+            guard?: components["schemas"]["GuardVerdict"] | null;
         };
         /** CriterionScore */
         CriterionScore: {
@@ -336,6 +337,25 @@ export interface components {
             /** Evaluations */
             evaluations: components["schemas"]["AnswerEvaluation"][];
             scorecard: components["schemas"]["Scorecard"];
+        };
+        /** GuardVerdict */
+        GuardVerdict: {
+            /** Category */
+            category?: ("ok" | "off_topic" | "injection" | "abuse") | null;
+            /** Probabilities */
+            probabilities?: {
+                [key: string]: number;
+            };
+            /** Role Injection */
+            role_injection?: number | null;
+            /** Blocked */
+            blocked?: ("message" | "role" | "guard_error" | "leak") | null;
+            /** Answered */
+            answered?: number | null;
+            /** Vague */
+            vague?: number | null;
+            /** Wants To End */
+            wants_to_end?: number | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {

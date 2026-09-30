@@ -16,8 +16,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { ApiError, getConfig, type AppConfig, type ModelSettings } from "@/lib/api";
-import { useInterviewStore, useStoreHydrated } from "@/lib/store";
+import {
+  ApiError,
+  getConfig,
+  type AppConfig,
+  type GuardVerdict,
+  type ModelSettings,
+} from "@/lib/api";
+import { useInterviewStore, useStoreHydrated, type GuardLogEntry } from "@/lib/store";
 
 type Effort = ModelSettings["reasoning_effort"];
 
@@ -127,13 +133,14 @@ function DevSettingsForm({ config }: { config: AppConfig }) {
         disabled={!supports("max_tokens")}
       />
       <SessionInfo />
+      <GuardLog />
     </>
   );
 }
 
 const usd = (value: number) => `$${value.toFixed(4)}`;
 
-// cost + what happened on the last turn: the guard, its hint, an ending
+// cost, plan progress + the last turn's tokens and ending (the guard has its own log)
 function SessionInfo() {
   const sessionCost = useInterviewStore((state) => state.sessionCost);
   const lastTurn = useInterviewStore((state) => state.lastTurn);
@@ -165,10 +172,6 @@ function SessionInfo() {
                 ? `${lastTurn.usage.input_tokens} in / ${lastTurn.usage.output_tokens} out tokens, ${usd(lastTurn.usage.cost ?? 0)}`
                 : "no model call"}
             </dd>
-            <dt className="text-muted-foreground">Guard</dt>
-            <dd>{lastTurn.blocked ? `blocked (${lastTurn.blocked})` : "passed"}</dd>
-            <dt className="text-muted-foreground">Hint</dt>
-            <dd>{lastTurn.hint ?? "none"}</dd>
             <dt className="text-muted-foreground">Ended</dt>
             <dd>{lastTurn.ended ?? "no"}</dd>
           </>
@@ -180,6 +183,77 @@ function SessionInfo() {
         )}
       </dl>
     </section>
+  );
+}
+
+const prob = (value: number | null | undefined) => (value == null ? "–" : value.toFixed(2));
+
+// the two most likely categories, e.g. "ok 0.98 · off_topic 0.02"
+function topProbabilities(probabilities: GuardVerdict["probabilities"]): string {
+  return Object.entries(probabilities ?? {})
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 2)
+    .map(([category, p]) => `${category} ${prob(p)}`)
+    .join(" · ");
+}
+
+function guardLabel(guard: GuardVerdict | null, blocked: GuardLogEntry["blocked"]): string {
+  if (!guard) return "no Jev call (cost cap)";
+  if (guard.category) return guard.category;
+  return blocked === "guard_error" ? "no answer from Jev" : "opening";
+}
+
+function GuardLog() {
+  const guardLog = useInterviewStore((state) => state.guardLog);
+
+  return (
+    <section className="flex flex-col gap-2 border-t pt-4">
+      <h3 className="font-medium">Guard log</h3>
+      {guardLog.length === 0 ? (
+        <p className="text-muted-foreground">No turns yet</p>
+      ) : (
+        <ol className="flex flex-col gap-3">
+          {guardLog
+            .map((entry, index) => <GuardLogRow key={index} turn={index + 1} entry={entry} />)
+            .reverse()}
+        </ol>
+      )}
+    </section>
+  );
+}
+
+function GuardLogRow({
+  turn,
+  entry: { guard, blocked, hint },
+}: {
+  turn: number;
+  entry: GuardLogEntry;
+}) {
+  return (
+    <li className="flex flex-col gap-0.5">
+      <p>
+        <span className="font-medium">Turn {turn}</span>
+        {" · "}
+        {guardLabel(guard, blocked)}
+        {blocked ? (
+          <span className="text-destructive"> · blocked ({blocked})</span>
+        ) : (
+          hint && ` · hint: ${hint}`
+        )}
+      </p>
+      {guard?.category && (
+        <p className="text-muted-foreground">{topProbabilities(guard.probabilities)}</p>
+      )}
+      {guard?.role_injection != null && (
+        <p className="text-muted-foreground">role injection {prob(guard.role_injection)}</p>
+      )}
+      {guard?.category && (
+        <p className="text-muted-foreground">
+          answered {prob(guard.answered)} · vague {prob(guard.vague)} · wants to end{" "}
+          {prob(guard.wants_to_end)}
+        </p>
+      )}
+    </li>
   );
 }
 

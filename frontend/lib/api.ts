@@ -17,6 +17,7 @@ export type FeedbackRequest = components["schemas"]["FeedbackRequest"];
 export type FeedbackResponse = components["schemas"]["FeedbackResponse"];
 export type CandidateProfile = components["schemas"]["CandidateProfile"];
 export type Preset = components["schemas"]["Preset"];
+export type GuardVerdict = components["schemas"]["GuardVerdict"];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -125,10 +126,13 @@ export function chat(body: ChatRequest): Promise<ChatResponse> {
 
 // stream events
 export type ChatStreamEvent =
-  | { event: "meta"; data: Pick<ChatResponse, "hint" | "ended" | "progress"> }
+  | { event: "meta"; data: Pick<ChatResponse, "hint" | "ended" | "progress" | "guard"> }
   | { event: "token"; data: { text: string } }
   | { event: "usage"; data: { input_tokens: number; output_tokens: number; cost: number | null } }
-  | { event: "blocked"; data: { reason: NonNullable<ChatResponse["blocked"]>; reply: string } }
+  | {
+      event: "blocked";
+      data: { reason: NonNullable<ChatResponse["blocked"]>; reply: string; guard?: GuardVerdict };
+    }
   | { event: "done"; data: { finish_reason: string | null } };
 
 // one interviewer turn, streamed - yields each event as it arrives.

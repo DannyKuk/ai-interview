@@ -29,7 +29,10 @@ export type TranscriptMessage = ChatMessage & { question?: number };
 export type DevSettings = { technique: Technique; modelSettings: ModelSettings };
 
 // what the dev panel shows about the last finished turn
-export type TurnInfo = Pick<StreamedTurn, "blocked" | "hint" | "ended" | "usage">;
+export type TurnInfo = Pick<StreamedTurn, "ended" | "usage">;
+
+// one row of the dev panel's guard log: what Jev said about one turn, blocked ones too
+export type GuardLogEntry = Pick<StreamedTurn, "guard" | "blocked" | "hint">;
 
 type InterviewState = {
   settings: InterviewSettings | null; // null until the setup page fills in the backend defaults
@@ -44,6 +47,7 @@ type InterviewState = {
   feedback: FeedbackResponse | null; // kept, so a reload of /results doesn't recall the API
   dev: DevSettings | null; // null until the setup page fills in the backend defaults
   lastTurn: TurnInfo | null;
+  guardLog: GuardLogEntry[]; // oldest first
   sessionCost: number; // USD, sum of every turn's usage.cost
   updateSettings: (patch: Partial<InterviewSettings>) => void;
   choosePreset: (preset: Preset) => void;
@@ -57,7 +61,7 @@ type InterviewState = {
   endInterview: (reason: EndReason) => void;
   setFeedback: (feedback: FeedbackResponse) => void;
   updateDev: (patch: Partial<DevSettings>) => void;
-  recordTurn: (turn: TurnInfo) => void;
+  recordTurn: (turn: StreamedTurn) => void;
   reset: () => void;
 };
 
@@ -76,6 +80,7 @@ export const useInterviewStore = create<InterviewState>()(
       feedback: null,
       dev: null,
       lastTurn: null,
+      guardLog: [],
       sessionCost: 0,
 
       updateSettings: (patch) =>
@@ -104,6 +109,7 @@ export const useInterviewStore = create<InterviewState>()(
           ended: null,
           feedback: null,
           lastTurn: null,
+          guardLog: [],
           sessionCost: 0,
         }),
       addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
@@ -112,9 +118,10 @@ export const useInterviewStore = create<InterviewState>()(
       setFeedback: (feedback) => set({ feedback }),
       // kept across interviews (not cleared by startInterview): it's the experiment setup
       updateDev: (patch) => set((state) => ({ dev: { ...state.dev, ...patch } as DevSettings })),
-      recordTurn: ({ blocked, hint, ended, usage }) =>
+      recordTurn: ({ ended, usage, guard, blocked, hint }) =>
         set((state) => ({
-          lastTurn: { blocked, hint, ended, usage },
+          lastTurn: { ended, usage },
+          guardLog: [...state.guardLog, { guard, blocked, hint }],
           sessionCost: state.sessionCost + (usage?.cost ?? 0),
         })),
       reset: () =>
@@ -131,6 +138,7 @@ export const useInterviewStore = create<InterviewState>()(
           feedback: null,
           dev: null,
           lastTurn: null,
+          guardLog: [],
           sessionCost: 0,
         }),
     }),
