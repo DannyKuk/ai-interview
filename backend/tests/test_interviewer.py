@@ -145,7 +145,7 @@ def test_the_plan_section_is_filled_into_every_prompt(technique):
     assert "Interview plan:" in system_prompt
     assert APPROACH in system_prompt
     # without this rule the model wrote its own "Next: ask question 2 of 5…" note
-    # into 5 of 8 replies (see REQUIREMENTS "Interview plan findings")
+    # into 5 of 8 replies (tested Sep 29)
     assert "hidden from the candidate" in system_prompt
     assert "{" not in system_prompt and "}" not in system_prompt
     # the security rules stay last

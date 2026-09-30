@@ -15,10 +15,14 @@ HINTS: dict[HintName, str] = {
         "The candidate's last message is off-topic. Reply to it in a few words at "
         "most, then steer back to your last question."
     ),
+    # "answer briefly": all 5 prompts made up the team and its tech stack (15 of 15
+    # replies, prompt comparison Sep 30), the model knows nothing about it. "Answer only
+    # with what the conversation says" fixed that, but got repeated back ("I can only
+    # work from what's been said here"). Keep the focus on them
     "not_answered": (
         "The candidate's reply did not address your last question. If they asked "
-        "something, answer briefly, then bring them back to your question in "
-        "different words."
+        "something, don't answer it: say in a few words that today you'd like to "
+        "focus on them. Then bring them back to your question in different words."
     ),
 }
 

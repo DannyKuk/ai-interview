@@ -202,6 +202,8 @@ SNAPSHOTS = [
             "pull request, without going into the car repair"
         ),
     ),
+    # the interview has no Q&A at the end: deferring "to the end" would be a false
+    # promise, and answering made up the team (all 5 prompts, Sep 30)
     Snapshot(
         name="candidate_question",
         messages=[
@@ -212,9 +214,9 @@ SNAPSHOTS = [
         ],
         progress=PlanProgress(question=0),
         good_reply=(
-            "Answers in a sentence without inventing details about the team, or says "
-            "there's time for questions at the end, then comes back to why they want "
-            "to move into software development"
+            "Doesn't answer with details about the team, politely keeps the focus on "
+            "the candidate instead, then comes back to why they want to move into "
+            "software development"
         ),
     ),
 ]
