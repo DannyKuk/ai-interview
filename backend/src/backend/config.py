@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     # per client IP, shared by both chat endpoints ("limits" syntax)
     chat_rate_limit: str = "20/minute"
     cv_rate_limit: str = "5/minute"  # every CV upload is an LLM call
+    # live captions re-send the answer so far ~1x per second, + the final pass
+    stt_rate_limit: str = "120/minute"
     # per interview (session_id). A normal interview costs about $0.01
     session_cost_cap_usd: float = 0.10
 
