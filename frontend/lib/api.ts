@@ -73,22 +73,41 @@ async function toApiError(response: Response): Promise<ApiError> {
   return new ApiError(response.status, message, retryAfter);
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function send(path: string, init?: RequestInit): Promise<Response> {
   const response = await fetch(`${API_URL}${path}`, init);
 
   if (!response.ok) {
     throw await toApiError(response);
   }
 
+  return response;
+}
+
+export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await send(path, init);
   return response.json() as Promise<T>;
 }
 
-function post<T>(path: string, body: unknown): Promise<T> {
-  return request<T>(path, {
+// a reply + its LLM cost in USD
+export type Priced<T> = { value: T; cost: number | null };
+
+// for CV, plan and feedback
+async function requestPriced<T>(path: string, init?: RequestInit): Promise<Priced<T>> {
+  const response = await send(path, init);
+  const cost = response.headers.get("X-Cost");
+  return { value: (await response.json()) as T, cost: cost === null ? null : Number(cost) };
+}
+
+function jsonPost(body: unknown): RequestInit {
+  return {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
-  });
+  };
+}
+
+function post<T>(path: string, body: unknown): Promise<T> {
+  return request<T>(path, jsonPost(body));
 }
 
 export function getConfig(): Promise<AppConfig> {
@@ -101,22 +120,22 @@ export function getPresets(): Promise<Preset[]> {
 }
 
 // PDF → guarded → CandidateProfile (~7 s: Jev + one LLM call). The CV itself isn't kept
-export function parseCv(file: File): Promise<CandidateProfile> {
+export function parseCv(file: File): Promise<Priced<CandidateProfile>> {
   const body = new FormData();
   body.append("file", file);
   // no Content-Type header: the browser sets multipart/form-data with its boundary
-  return request<CandidateProfile>("/api/cv/parse", { method: "POST", body });
+  return requestPriced<CandidateProfile>("/api/cv/parse", { method: "POST", body });
 }
 
 // the question list for one interview (~6 s: guard + one LLM call).
 // Send it back unchanged with every chat turn: it's signed
-export function createPlan(body: PlanRequest): Promise<SignedPlan> {
-  return post<SignedPlan>("/api/interview/plan", body);
+export function createPlan(body: PlanRequest): Promise<Priced<SignedPlan>> {
+  return requestPriced<SignedPlan>("/api/interview/plan", jsonPost(body));
 }
 
 // scores (Jev) + written feedback (LLM) for the answered questions, ~10-20 s
-export function createFeedback(body: FeedbackRequest): Promise<FeedbackResponse> {
-  return post<FeedbackResponse>("/api/interview/feedback", body);
+export function createFeedback(body: FeedbackRequest): Promise<Priced<FeedbackResponse>> {
+  return requestPriced<FeedbackResponse>("/api/interview/feedback", jsonPost(body));
 }
 
 // one whole interviewer turn as JSON (not streamed!)
