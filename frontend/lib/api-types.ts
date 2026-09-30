@@ -157,6 +157,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/voice/transcribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transcribe Answer */
+        post: operations["transcribe_answer_api_voice_transcribe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/voice/speak": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Speak Sentence */
+        post: operations["speak_sentence_api_voice_speak_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -539,6 +573,21 @@ export interface components {
             /** Signature */
             signature: string;
         };
+        /** SpeakRequest */
+        SpeakRequest: {
+            /** Text */
+            text: string;
+            /**
+             * Voice
+             * @enum {string}
+             */
+            voice: "Kore" | "Charon";
+            /**
+             * Session Id
+             * Format: uuid
+             */
+            session_id: string;
+        };
         /** SystemPromptRequest */
         SystemPromptRequest: {
             settings?: components["schemas"]["InterviewSettings"];
@@ -554,6 +603,11 @@ export interface components {
         SystemPromptResponse: {
             /** Prompt */
             prompt: string;
+        };
+        /** TranscriptResponse */
+        TranscriptResponse: {
+            /** Text */
+            text: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -831,6 +885,64 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Preset"][];
+                };
+            };
+        };
+    };
+    transcribe_answer_api_voice_transcribe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Raw PCM: 16 kHz, mono, 16-bit little-endian, no header */
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscriptResponse"];
+                };
+            };
+        };
+    };
+    speak_sentence_api_voice_speak_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpeakRequest"];
+            };
+        };
+        responses: {
+            /** @description Raw PCM: 24 kHz, mono, 16-bit, no header */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

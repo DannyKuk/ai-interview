@@ -4,6 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 // what the backend's /api/voice/transcribe expects: 16 kHz, mono, 16-bit PCM
 export const RECORDING_SAMPLE_RATE = 16000;
+const CHUNKS_PER_SECOND = 10; // the worklet sends ~100 ms chunks
+
+type RecorderOptions = {
+  maxSeconds?: number;
+  onMaxLength?: () => void; // called when the recording reaches maxSeconds: stop it there
+};
 
 export type RecorderStatus = "idle" | "starting" | "recording";
 
@@ -28,7 +34,7 @@ function micError(error: unknown): string {
 
 // float samples (-1..1) → 16-bit integers. Int16Array uses the machine's byte order,
 // which is little-endian on every desktop and phone, as the backend expects
-function toPcm16(chunks: Float32Array[]): Int16Array {
+function toPcm16(chunks: Float32Array[]): Int16Array<ArrayBuffer> {
   const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
   const pcm = new Int16Array(length);
   let offset = 0;
@@ -42,7 +48,7 @@ function toPcm16(chunks: Float32Array[]): Int16Array {
 }
 
 // records the mic as 16 kHz PCM. The audio stays in memory, in this tab only
-export function useRecorder() {
+export function useRecorder({ maxSeconds = Infinity, onMaxLength }: RecorderOptions = {}) {
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [level, setLevel] = useState(0); // loudness of the last ~100 ms, 0..1
@@ -52,6 +58,11 @@ export function useRecorder() {
   const recordingRef = useRef<Recording | null>(null);
   const chunksRef = useRef<Float32Array[]>([]);
   const samplesRef = useRef(0);
+  // the latest callback, read inside the audio handler
+  const onMaxLengthRef = useRef(onMaxLength);
+  useEffect(() => {
+    onMaxLengthRef.current = onMaxLength;
+  });
 
   const release = useCallback(() => {
     const recording = recordingRef.current;
@@ -93,7 +104,9 @@ export function useRecorder() {
         samplesRef.current += event.data.samples.length;
         // ~10 updates per second: often enough for a meter and a timer
         setLevel(Math.min(1, event.data.rms * 4));
-        setSeconds(samplesRef.current / RECORDING_SAMPLE_RATE);
+        const seconds = samplesRef.current / RECORDING_SAMPLE_RATE;
+        setSeconds(seconds);
+        if (seconds >= maxSeconds && recordingRef.current) onMaxLengthRef.current?.();
       };
       source.connect(node);
       recordingRef.current = { stream, context, node };
@@ -104,13 +117,16 @@ export function useRecorder() {
       setError(micError(error));
       setStatus("idle");
     }
+  }, [maxSeconds]);
+
+  // the answer so far (or only its last seconds), e.g. for live captions. Keeps recording
+  const audioSoFar = useCallback((lastSeconds = Infinity) => {
+    const chunks = chunksRef.current;
+    return toPcm16(chunks.slice(-Math.ceil(lastSeconds * CHUNKS_PER_SECOND)));
   }, []);
 
-  // the answer so far, e.g. for live captions. Keeps recording
-  const audioSoFar = useCallback(() => toPcm16(chunksRef.current), []);
-
   // stops and returns the whole answer
-  const stop = useCallback((): Int16Array => {
+  const stop = useCallback((): Int16Array<ArrayBuffer> => {
     const pcm = toPcm16(chunksRef.current);
     release();
     chunksRef.current = [];

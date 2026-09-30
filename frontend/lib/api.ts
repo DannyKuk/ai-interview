@@ -20,6 +20,7 @@ export type Preset = components["schemas"]["Preset"];
 export type GuardVerdict = components["schemas"]["GuardVerdict"];
 export type SystemPromptRequest = components["schemas"]["SystemPromptRequest"];
 export type SystemPromptResponse = components["schemas"]["SystemPromptResponse"];
+export type TranscriptResponse = components["schemas"]["TranscriptResponse"];
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -144,6 +145,22 @@ export function createFeedback(body: FeedbackRequest): Promise<Priced<FeedbackRe
 // but it counts toward the chat's rate limit
 export function getSystemPrompt(body: SystemPromptRequest): Promise<SystemPromptResponse> {
   return post<SystemPromptResponse>("/api/interview/system-prompt", body);
+}
+
+// 16 kHz mono 16-bit PCM → text, on our backend (Parakeet, local: the voice never leaves
+// the machine). "" = nothing said. ~0.3 s for 15 s of speech
+export async function transcribe(
+  pcm: Int16Array<ArrayBuffer>,
+  signal?: AbortSignal,
+): Promise<string> {
+  const { text } = await request<TranscriptResponse>("/api/voice/transcribe", {
+    method: "POST",
+    headers: { "Content-Type": "application/octet-stream" },
+    // the array itself, not pcm.buffer: for a slice (subarray) that's the whole recording
+    body: pcm,
+    signal,
+  });
+  return text;
 }
 
 // one whole interviewer turn as JSON (not streamed!)
