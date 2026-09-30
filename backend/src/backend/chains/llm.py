@@ -5,10 +5,10 @@ from backend.schemas.chat import Effort
 
 
 def get_chat_model(
-        model: str | None = None,
-        max_tokens: int = 1000,
-        effort: Effort = "low",
-        timeout_ms: int | None = None,
+    model: str | None = None,
+    max_tokens: int = 1000,
+    effort: Effort = "low",
+    timeout_ms: int | None = None,
 ) -> ChatOpenRouter:
     return ChatOpenRouter(
         model=model or settings.default_model,

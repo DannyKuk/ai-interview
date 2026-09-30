@@ -69,7 +69,7 @@ class FakeOpenRouterModel(BaseChatModel):
 
 
 def use_fake_model(
-        monkeypatch, words: list[str], finish_reason="stop"
+    monkeypatch, words: list[str], finish_reason="stop"
 ) -> FakeOpenRouterModel:
     fake = FakeOpenRouterModel(words=words, finish_reason=finish_reason)
     monkeypatch.setattr("backend.chains.interviewer.get_chat_model", lambda **_: fake)

@@ -11,9 +11,9 @@ from backend.schemas.chat import InterviewSettings, ModelSettings, Technique
 
 
 def build_interviewer_chain(
-        technique: Technique = "zero_shot",
-        model_settings: ModelSettings | None = None,
-        with_plan: bool = False,
+    technique: Technique = "zero_shot",
+    model_settings: ModelSettings | None = None,
+    with_plan: bool = False,
 ) -> Runnable:
     parts = [
         load_prompt("interviewer/canary_v1"),  # stop before leaking system prompt
@@ -40,10 +40,10 @@ def build_interviewer_chain(
 
 
 def build_interviewer_input(
-        settings: InterviewSettings,
-        history: list[BaseMessage],
-        note: str | None = None,
-        approach: str | None = None,
+    settings: InterviewSettings,
+    history: list[BaseMessage],
+    note: str | None = None,
+    approach: str | None = None,
 ) -> dict:
     # fills every {placeholder} in the prompt + the history slot.
     # Candidate text is wrapped in tags, so the model sees it as data (see security_v1.md).

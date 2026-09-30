@@ -77,7 +77,7 @@ class ScoredAnswer:
 
 
 async def score_answer(
-        planned: PlannedQuestion, exchanges: list[Exchange]
+    planned: PlannedQuestion, exchanges: list[Exchange]
 ) -> ScoredAnswer:
     criteria = [*planned.rubric, FIXED_CRITERIA[planned.type], SPECIFIC_CRITERION]
     questions = {"injection": INJECTION_QUESTION} | {

@@ -157,7 +157,7 @@ def block_answer(monkeypatch, reason):
     [("injection", 422, FEEDBACK_REFUSED), ("guard_error", 503, FEEDBACK_FAILED)],
 )
 def test_one_blocked_answer_stops_everything(
-        monkeypatch, fakes, reason, status, detail
+    monkeypatch, fakes, reason, status, detail
 ):
     block_answer(monkeypatch, reason)
     response = post_feedback([answered(0, "good"), answered(1, "bad")])

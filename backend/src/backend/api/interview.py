@@ -50,7 +50,7 @@ def to_langchain_messages(messages: list[ChatMessage]) -> list[BaseMessage]:
 
 
 def blocked_events(
-        reason: BlockReason, verdict: GuardVerdict | None = None
+    reason: BlockReason, verdict: GuardVerdict | None = None
 ) -> list[ServerSentEvent]:
     # the frontend replaces anything streamed so far with the refusal
     data = {"reason": reason, "reply": REFUSALS[reason]}
@@ -109,7 +109,7 @@ class TurnPlan:
 
 
 def plan_this_turn(
-        plan: InterviewPlan | None, progress: PlanProgress | None, verdict: GuardVerdict
+    plan: InterviewPlan | None, progress: PlanProgress | None, verdict: GuardVerdict
 ) -> TurnPlan:
     # progress None = the interview starts. Also used by scripts/chat_cli.py
     hint = pick_hint(verdict)
