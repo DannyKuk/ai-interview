@@ -49,12 +49,15 @@ def to_langchain_messages(messages: list[ChatMessage]) -> list[BaseMessage]:
     ]
 
 
-def blocked_events(reason: BlockReason) -> list[ServerSentEvent]:
+def blocked_events(
+        reason: BlockReason, verdict: GuardVerdict | None = None
+) -> list[ServerSentEvent]:
     # the frontend replaces anything streamed so far with the refusal
+    data = {"reason": reason, "reply": REFUSALS[reason]}
+    if verdict:
+        data["guard"] = verdict.model_dump()
     return [
-        ServerSentEvent(
-            event="blocked", data={"reason": reason, "reply": REFUSALS[reason]}
-        ),
+        ServerSentEvent(event="blocked", data=data),
         ServerSentEvent(event="done", data={"finish_reason": "blocked"}),
     ]
 
@@ -86,9 +89,15 @@ class PreparedChat:
     over_cap: bool = False
 
     def meta(self) -> dict:
-        # what the frontend needs before the reply - hint (dev panel), end, question n of N
+        # what the frontend needs before the reply - end, question n of N
         progress = self.progress.model_dump() if self.progress else None
-        return {"hint": self.hint, "ended": self.ended, "progress": progress}
+        guard = None if self.over_cap else self.verdict.model_dump()
+        return {
+            "hint": self.hint,
+            "ended": self.ended,
+            "progress": progress,
+            "guard": guard,
+        }
 
 
 @dataclass
@@ -161,19 +170,20 @@ async def chat(request: ChatRequest) -> ChatResponse:
     if turn.verdict.blocked:
         reason = turn.verdict.blocked
 
-        return ChatResponse(reply=REFUSALS[reason], blocked=reason)
+        return ChatResponse(reply=REFUSALS[reason], blocked=reason, guard=turn.verdict)
 
     result = await turn.chain.ainvoke(turn.chain_input)
     add_cost(request.session_id, result.response_metadata.get("cost"))
 
     if leaked(result.text, turn.chain_input["canary"]):
-        return ChatResponse(reply=REFUSALS["leak"], blocked="leak")
+        return ChatResponse(reply=REFUSALS["leak"], blocked="leak", guard=turn.verdict)
 
     return ChatResponse(
         reply=result.text or FALLBACK_REPLY,
         hint=turn.hint,
         ended=turn.ended,
         progress=turn.progress,
+        guard=turn.verdict,
     )
 
 
@@ -188,7 +198,7 @@ async def chat_stream(request: ChatRequest) -> AsyncIterator[ServerSentEvent]:
         return
     if turn.verdict.blocked:
         # show refusal instead of streamed reply
-        for event in blocked_events(turn.verdict.blocked):
+        for event in blocked_events(turn.verdict.blocked, turn.verdict):
             yield event
         return
 

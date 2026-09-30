@@ -8,7 +8,7 @@ from backend import config
 from backend.guard.plan_signature import is_signed
 from backend.prompts.turn_hints import HintName
 from backend.schemas.cv import CandidateProfile
-from backend.schemas.guard import BlockReason
+from backend.schemas.guard import BlockReason, GuardVerdict
 from backend.schemas.plan import (
     MAX_JD_CHARS,
     MAX_QUESTIONS,
@@ -131,6 +131,7 @@ class ChatResponse(BaseModel):
     hint: HintName | None = None
     ended: EndReason | None = None  # the frontend ends the call when set
     progress: PlanProgress | None = None
+    guard: GuardVerdict | None = None
 
 
 class Usage(BaseModel):

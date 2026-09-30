@@ -106,7 +106,11 @@ def guard_allows_everything(monkeypatch):
     use_fake_guard(monkeypatch)
 
 
-NO_HINT = {"hint": None, "ended": None, "progress": None}
+def verdict(**fields) -> dict:
+    return GuardVerdict(**fields).model_dump()
+
+
+NO_HINT = {"hint": None, "ended": None, "progress": None, "guard": verdict()}
 
 
 def parse_sse(body: str) -> list[tuple[str, dict]]:
@@ -238,6 +242,7 @@ def test_blocked_chat_returns_refusal(monkeypatch, reason):
         "reply": REFUSALS[reason],
         "blocked": reason,
         **NO_HINT,
+        "guard": verdict(blocked=reason),
     }
 
 
@@ -248,7 +253,14 @@ def test_blocked_stream_sends_refusal_and_no_tokens(monkeypatch):
     events = parse_sse(post_chat_stream(HISTORY).text)
 
     assert events == [
-        ("blocked", {"reason": "message", "reply": REFUSALS["message"]}),
+        (
+            "blocked",
+            {
+                "reason": "message",
+                "reply": REFUSALS["message"],
+                "guard": verdict(blocked="message"),
+            },
+        ),
         ("done", {"finish_reason": "blocked"}),
     ]
 
@@ -308,8 +320,35 @@ def test_candidate_leaving_ends_the_interview(monkeypatch):
     assert (body["hint"], body["ended"]) == ("end", "candidate_left")
     assert events[0] == (
         "meta",
-        {"hint": "end", "ended": "candidate_left", "progress": None},
+        {
+            "hint": "end",
+            "ended": "candidate_left",
+            "progress": None,
+            "guard": verdict(answered=0.11, wants_to_end=0.97),
+        },
     )
+
+
+def test_jevs_numbers_reach_the_dev_panel(monkeypatch):
+    use_fake_model(monkeypatch, ["Good. Next one."])
+    numbers = {
+        "category": "ok",
+        "probabilities": {
+            "ok": 0.93,
+            "off_topic": 0.05,
+            "injection": 0.01,
+            "abuse": 0.01,
+        },
+        "answered": 0.96,
+        "vague": 0.08,
+        "wants_to_end": 0.02,
+    }
+    use_fake_guard(monkeypatch, **numbers)
+
+    body = post_chat(HISTORY).json()
+    events = parse_sse(post_chat_stream(HISTORY).text)
+
+    assert body["guard"] == events[0][1]["guard"] == verdict(**numbers)
 
 
 def test_chat_endpoints_share_one_rate_limit_per_ip(monkeypatch):
@@ -343,7 +382,11 @@ def test_session_over_the_cost_cap_ends_without_calling_any_model(monkeypatch):
 
     assert (body["reply"], body["ended"]) == (cost_cap.OUT_OF_TIME, "limit_reached")
     assert events == [
-        ("meta", {"hint": None, "ended": "limit_reached", "progress": None}),
+        # no Jev call over the cap, so no numbers
+        (
+            "meta",
+            {"hint": None, "ended": "limit_reached", "progress": None, "guard": None},
+        ),
         ("token", {"text": cost_cap.OUT_OF_TIME}),
         ("done", {"finish_reason": "limit_reached"}),
     ]
@@ -409,7 +452,7 @@ def test_the_first_turn_asks_the_first_planned_question(monkeypatch):
     events = parse_sse(post_chat_stream([], plan=SIGNED).text)
 
     assert (body["progress"], body["ended"]) == (at(0), None)
-    assert events[0] == ("meta", {"hint": None, "ended": None, "progress": at(0)})
+    assert events[0] == ("meta", {**NO_HINT, "progress": at(0)})
     assert "question 1 of 5" in note_for_this_turn(fake)
     # the plan's rules are in the system prompt
     assert PLAN.approach in fake.received[-1][0].content
