@@ -6,22 +6,24 @@ uv run python evals/compare_prompts.py --techniques zero_shot few_shot --snapsho
 
 Every reply goes through the real turn code (guard verdict -> plan note -> chain), with
 the app's default model settings. The guard runs once per snapshot, so every prompt
-gets the same verdict and note: only the prompt differs. Checks in code for now;
-Everything is saved to evals/out/.
+gets the same verdict and note: only the prompt differs. Checks in code, then Jev
+judges each reply (evals/judge.py). Everything is saved to evals/out/.
 """
 
 import argparse
 import asyncio
 import json
+import logging
 import re
 import time
 import uuid
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from statistics import mean
 from typing import get_args
 
+from judge import LOWER_IS_BETTER, QUESTIONS, judge
 from snapshots import PLAN, SETTINGS, SNAPSHOTS, Snapshot
 
 from backend.api.interview import (
@@ -32,7 +34,10 @@ from backend.api.interview import (
 )
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.guard.canary import leaked
+from backend.guard.jev import describe
 from backend.schemas.chat import ChatRequest, ModelSettings, Technique
+
+logger = logging.getLogger(__name__)
 
 OUT = Path(__file__).parent / "out"
 TECHNIQUES: list[Technique] = list(get_args(Technique))
@@ -61,6 +66,8 @@ class Reply:
     markdown: bool
     shows_steps: bool
     leaked: bool
+    # Jev: P(yes) per question (judge.py), {} = no judgment (empty reply, Jev failed)
+    judged: dict[str, float] = field(default_factory=dict)
 
 
 async def prepare(snapshot: Snapshot) -> TurnPlan:
@@ -69,8 +76,10 @@ async def prepare(snapshot: Snapshot) -> TurnPlan:
         session_id=uuid.uuid4(), messages=snapshot.messages, settings=SETTINGS
     )
     verdict = await guard_chat(request)
+
     if verdict.blocked:
         raise RuntimeError(f"{snapshot.name}: blocked by the guard ({verdict.blocked})")
+
     return plan_this_turn(PLAN, snapshot.progress, verdict)
 
 
@@ -105,6 +114,23 @@ async def reply(
     )
 
 
+async def judged(reply: Reply, snapshot: Snapshot) -> Reply:
+    if not reply.text:
+        return reply
+
+    try:
+        reply.judged = await judge(snapshot, reply.text)
+    except Exception as error:
+        logger.warning("judge failed for %s: %s", reply.snapshot, describe(error))
+
+    return reply
+
+
+def average(replies: list[Reply], name: str) -> str:
+    values = [r.judged[name] for r in replies if name in r.judged]
+    return f"{mean(values):.2f}" if values else "-"
+
+
 def summary(replies: list[Reply]) -> None:
     print(
         f"\n{'technique':18} {'n':>3} {'1 question':>10} {'words':>6} {'s':>5} "
@@ -112,10 +138,13 @@ def summary(replies: list[Reply]) -> None:
     )
     for technique in TECHNIQUES:
         mine = [r for r in replies if r.technique == technique]
+
         if not mine:
             continue
+
         one = sum(r.questions == 1 for r in mine)
         cost = sum(r.cost or 0 for r in mine)
+
         print(
             f"{technique:18} {len(mine):>3} {one:>6}/{len(mine):<3} "
             f"{mean(r.words for r in mine):>6.0f} {mean(r.seconds for r in mine):>5.1f} "
@@ -123,6 +152,28 @@ def summary(replies: list[Reply]) -> None:
             f"{sum(r.markdown for r in mine):>3} {sum(r.shows_steps for r in mine):>5} "
             f"{sum(r.leaked for r in mine):>4} {sum(not r.text for r in mine):>5}"
         )
+
+    # Jev: mean P(yes). good_reply and spoken: higher is better, the rest lower
+    names = ["good_reply", *QUESTIONS]
+    arrows = {name: "↓" if name in LOWER_IS_BETTER else "↑" for name in names}
+    print(f"\n{'Jev, mean P':18} " + " ".join(f"{n + arrows[n]:>13}" for n in names))
+    for technique in TECHNIQUES:
+        mine = [r for r in replies if r.technique == technique]
+        if mine:
+            print(f"{technique:18} " + " ".join(f"{average(mine, n):>13}" for n in names))
+
+    # good_reply per snapshot: where each prompt does well or badly
+    snapshots = list(dict.fromkeys(r.snapshot for r in replies))
+    print(f"\n{'good_reply ↑':18} " + " ".join(f"{name:>18}" for name in snapshots))
+
+    for technique in TECHNIQUES:
+        mine = [r for r in replies if r.technique == technique]
+        if mine:
+            cells = (
+                average([r for r in mine if r.snapshot == name], "good_reply")
+                for name in snapshots
+            )
+            print(f"{technique:18} " + " ".join(f"{cell:>18}" for cell in cells))
 
 
 async def main() -> None:
@@ -144,7 +195,7 @@ async def main() -> None:
 
     async def limited(technique, snapshot, turn, run):
         async with limit:
-            return await reply(technique, snapshot, turn, run)
+            return await judged(await reply(technique, snapshot, turn, run), snapshot)
 
     replies = await asyncio.gather(
         *(
@@ -159,7 +210,8 @@ async def main() -> None:
         print(f"\n=== {snapshot.name}: {snapshot.good_reply}")
         for r in replies:
             if r.snapshot == snapshot.name:
-                print(f"[{r.technique} #{r.run}, {r.seconds} s] {r.text}")
+                scores = " ".join(f"{name} {p:.2f}" for name, p in r.judged.items())
+                print(f"[{r.technique} #{r.run}, {r.seconds} s] {r.text}\n    Jev: {scores}")
 
     summary(replies)
 
