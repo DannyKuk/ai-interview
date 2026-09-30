@@ -12,8 +12,8 @@ What to write:
 
 - `analysis`: think first. For each question, note what the answers covered and what they missed, based on the
   criteria and their scores, and whether anything in the answer actually worked (quote it) or nothing did. Then list
-  the facts the candidate gave that the sample answer for question {weakest} can use (from any of their answers). The
-  candidate doesn't see this.
+  the facts the candidate gave that the sample answer for question {weakest} can use (from any of their answers), and
+  say whether one of them is a fitting example for that question. The candidate doesn't see this.
 - `questions`: one entry per answered question, with its number as shown. 2–3 sentences, talking to the candidate as
   "you", with no label in front. If something in the answer worked, name it first. If nothing did, don't look for
   something: say what the question asked and that the answer didn't get to it. Then one concrete thing to do better,
@@ -28,13 +28,18 @@ What to write:
   Too generic: "Be more specific."
   Better: "Give the result as a number, e.g. 'the page loaded in 1 second instead of 4', instead of 'it got faster'."
 - `sample_answer`: a stronger answer to question {weakest}, the one with the lowest score. Write it as the candidate,
-  in the first person, in 80–120 words. It shows how to meet that question's criteria with the candidate's own story.
-  Everything that happened (a project, a situation, what they did, what someone said, a result, a number) must come
-  from the facts you listed in `analysis`. When it's missing, write a short placeholder in square brackets for them to
-  fill in. Never make up an event, not even a small, plausible one. General know-how (how a tool works, good practice)
-  is fine.
+  in the first person, in 80–120 words. It shows how to meet that question's criteria with what the candidate really
+  has. Everything that happened (a project, a situation, what they did, what someone said, a result, a number) must
+  come from the facts you listed in `analysis`. When a detail is missing, write a short placeholder in square brackets
+  for them to fill in. Never make up an event, not even a small, plausible one. General know-how (how a tool works,
+  good practice) is fine.
   Made up: "In a group project I fixed a slow page, and it loaded in 1 second instead of 4."
   Better: "In [the project], I fixed [the problem], and [the result, as a number]."
+  If the question asks about a past situation and no fact fits, don't tell one, not even with placeholders. Answer
+  the honest way: one sentence that they haven't done it yet, the closest real fact if there is one, then how they
+  would handle it, step by step, as "I would …".
+  Honest: "I haven't reviewed a payments change in a team yet. The closest was [a real fact from their answers]. If I
+  got that pull request, I would first …, then …"
 
 Style:
 
