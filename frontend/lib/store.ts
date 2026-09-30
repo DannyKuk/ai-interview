@@ -49,6 +49,9 @@ type InterviewState = {
   dev: DevSettings | null; // null until the setup page fills in the backend defaults
   turnLog: TurnLogEntry[]; // oldest first
   costs: Costs; // CV, plan and feedback of this interview; the turns' costs are in turnLog
+  // voice answers: false = stop sends the answer, true = it goes into the text field to
+  // edit first. A preference: reset() keeps it
+  reviewBeforeSending: boolean;
   updateSettings: (patch: Partial<InterviewSettings>) => void;
   choosePreset: (preset: Preset) => void;
   clearCandidate: () => void;
@@ -62,6 +65,7 @@ type InterviewState = {
   setFeedback: (feedback: FeedbackResponse, cost: number | null) => void;
   updateDev: (patch: Partial<DevSettings>) => void;
   recordTurn: (turn: StreamedTurn) => void;
+  setReviewBeforeSending: (review: boolean) => void;
   reset: () => void;
 };
 
@@ -81,6 +85,7 @@ export const useInterviewStore = create<InterviewState>()(
       dev: null,
       turnLog: [],
       costs: {},
+      reviewBeforeSending: false,
 
       updateSettings: (patch) =>
         set((state) => ({ settings: { ...state.settings, ...patch } as InterviewSettings })),
@@ -120,6 +125,7 @@ export const useInterviewStore = create<InterviewState>()(
       updateDev: (patch) => set((state) => ({ dev: { ...state.dev, ...patch } as DevSettings })),
       recordTurn: ({ guard, blocked, hint, ended, usage }) =>
         set((state) => ({ turnLog: [...state.turnLog, { guard, blocked, hint, ended, usage }] })),
+      setReviewBeforeSending: (reviewBeforeSending) => set({ reviewBeforeSending }),
       reset: () =>
         set({
           settings: null,
