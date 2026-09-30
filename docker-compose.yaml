@@ -21,6 +21,23 @@ services:
       # the STT model loads before the backend answers (~1 s native, slower in the VM)
       start_period: 30s
 
+  # local TTS (HeadTTS / Kokoro), the TTS switch's default. The browser calls it directly
+  # (on this machine, no key), so it's published like the backend
+  headtts:
+    build: ./headtts
+    ports:
+      - "8882:8882"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:8882/v1/hello', {method: 'POST'}).then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 30s
+
   frontend:
     build:
       context: ./frontend

@@ -1,0 +1,9 @@
+{
+  "name": "ai-interview-headtts",
+  "private": true,
+  "description": "HeadTTS (Kokoro, local) as its own service: the TTS switch's off setting",
+  "type": "module",
+  "dependencies": {
+    "@met4citizen/headtts": "1.3.0"
+  }
+}
