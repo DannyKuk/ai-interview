@@ -236,7 +236,7 @@ async def build(spec: Spec) -> Preset:
         if verdict.blocked:
             raise RuntimeError(f"{spec.id}: {kind} blocked ({verdict.blocked})")
 
-    profile = await extract_profile(cv_text)
+    profile = (await extract_profile(cv_text)).value
     return Preset(
         id=spec.id,
         settings=spec.settings,

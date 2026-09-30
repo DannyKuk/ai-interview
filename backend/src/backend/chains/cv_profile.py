@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from backend.chains.llm import get_chat_model
+from backend.chains.llm import Priced, get_chat_model, priced
 from backend.guard.delimiters import wrap
 from backend.prompts import load_prompt
 from backend.schemas.cv import CandidateProfile
@@ -29,20 +29,22 @@ def build_profile_chain() -> Runnable:
         ]
     )
     # strict: the API forces the reply into CandidateProfile's schema, so it always parses.
-    # max_tokens includes the reasoning tokens, the JSON itself is ~500
+    # max_tokens includes the reasoning tokens, the JSON itself is ~500.
+    # include_raw: the raw message carries the cost (the dev panel's cost breakdown)
     llm = get_chat_model(max_tokens=3000, effort="low").with_structured_output(
-        CandidateProfile, method="function_calling", strict=True
+        CandidateProfile, method="function_calling", strict=True, include_raw=True
     )
     return prompt | llm
 
 
-async def extract_profile(cv_text: str) -> CandidateProfile:
+async def extract_profile(cv_text: str) -> Priced[CandidateProfile]:
     # the CV is untrusted: escaped and in <cv> tags, declared as data in the prompt.
     # today: the model doesn't know the date, so "2020 – present" came out 1-2 years short
-    profile = await build_profile_chain().ainvoke(
+    result = await build_profile_chain().ainvoke(
         {"cv": wrap("cv", cv_text), "today": this_month()}
     )
-    if has_control_chars(profile.model_dump()):
+    profile = priced(result, "cv profile")
+    if has_control_chars(profile.value.model_dump()):
         # safety net for the json_schema bug above. Only the fact is logged, no CV data
         logger.warning("cv profile contains control characters")
     return profile

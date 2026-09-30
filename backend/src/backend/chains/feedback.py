@@ -1,10 +1,9 @@
 import logging
-from dataclasses import dataclass
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from backend.chains.llm import get_chat_model
+from backend.chains.llm import Priced, get_chat_model, priced
 from backend.config import settings as app_settings
 from backend.guard.delimiters import wrap
 from backend.prompts import load_prompt
@@ -52,19 +51,13 @@ def format_question(
     return "\n".join(lines)
 
 
-@dataclass
-class WrittenFeedback:
-    text: FeedbackText
-    cost: float | None  # USD, from OpenRouter's usage
-
-
 async def write_feedback(
     settings: InterviewSettings,
     plan: InterviewPlan,
     answers: list[AnsweredQuestion],
     scores: list[ScoredAnswer],
     weakest: int,
-) -> WrittenFeedback:
+) -> Priced[FeedbackText]:
     # scores[i] belongs to answers[i]. weakest: the plan index the sample answer is for
     interview = "\n\n".join(
         format_question(plan, answer, scored)
@@ -80,14 +73,11 @@ async def write_feedback(
         }
     )
 
-    if result["parsing_error"] or result["parsed"] is None:
-        raise ValueError("feedback reply didn't parse")
-
-    text: FeedbackText = result["parsed"]
+    written = priced(result, "feedback")
     shown = {answer.question + 1 for answer in answers}
-    written = {entry.number for entry in text.questions}
+    numbers = {entry.number for entry in written.value.questions}
 
-    if written != shown:
-        logger.warning("feedback for %s, asked for %s", sorted(written), sorted(shown))
+    if numbers != shown:
+        logger.warning("feedback for %s, asked for %s", sorted(numbers), sorted(shown))
 
-    return WrittenFeedback(text=text, cost=result["raw"].response_metadata.get("cost"))
+    return written

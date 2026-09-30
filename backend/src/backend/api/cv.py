@@ -1,8 +1,9 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 
+from backend.api.cost_cap import report_cost
 from backend.api.rate_limit import cv_rate_limit
 from backend.chains.cv_profile import extract_profile
 from backend.guard.jev import check_document
@@ -30,7 +31,7 @@ PROFILE_FAILED = "We couldn't read your CV right now. Please try again."
 
 
 @router.post("/parse")
-async def parse_cv(file: UploadFile) -> CandidateProfile:
+async def parse_cv(file: UploadFile, response: Response) -> CandidateProfile:
     # Starlette keeps uploads up to 1 MB in memory, bigger ones in a temp file that is
     # deleted after the request (the app only runs on the user's machine)
     data = await file.read(MAX_CV_BYTES + 1)  # one byte over is enough to say "too big"
@@ -47,7 +48,9 @@ async def parse_cv(file: UploadFile) -> CandidateProfile:
         raise HTTPException(status_code=status_code, detail=detail)
 
     try:
-        return await extract_profile(text)
+        profile = await extract_profile(text)
     except Exception as error:  # timeout, provider error, …
         logger.warning("cv profile failed: %s", type(error).__name__)
         raise HTTPException(status_code=503, detail=PROFILE_FAILED) from error
+    report_cost(response, profile.cost)
+    return profile.value

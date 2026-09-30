@@ -3,7 +3,7 @@ import logging
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 
-from backend.chains.llm import get_chat_model
+from backend.chains.llm import Priced, get_chat_model, priced
 from backend.guard.delimiters import wrap
 from backend.prompts import load_prompt
 from backend.prompts.interview_settings import PLAN_DIFFICULTY
@@ -21,9 +21,10 @@ def build_plan_chain(effort: Effort = "low") -> Runnable:
             ("human", "{documents}"),
         ]
     )
-    # the JSON for 8 questions is ~1500 tokens, the rest is room for reasoning (medium)
+    # the JSON for 8 questions is ~1500 tokens, the rest is room for reasoning (medium).
+    # include_raw: the raw message carries the cost (the dev panel's cost breakdown)
     llm = get_chat_model(max_tokens=6000, effort=effort).with_structured_output(
-        InterviewPlan, method="function_calling", strict=True
+        InterviewPlan, method="function_calling", strict=True, include_raw=True
     )
     return prompt | llm
 
@@ -51,8 +52,8 @@ async def make_plan(
     profile: CandidateProfile | None = None,
     job_description: str | None = None,
     effort: Effort = "low",
-) -> InterviewPlan:
-    plan = await build_plan_chain(effort).ainvoke(
+) -> Priced[InterviewPlan]:
+    result = await build_plan_chain(effort).ainvoke(
         {
             "company": settings.company,
             "role": wrap("role", settings.role),
@@ -61,6 +62,8 @@ async def make_plan(
             "documents": format_documents(profile, job_description),
         }
     )
+    planned = priced(result, "plan")
+    plan: InterviewPlan = planned.value
     # the schema allows 3-8 questions, the exact count is only asked for in the prompt
     if len(plan.questions) != settings.question_count:
         logger.warning(
@@ -68,6 +71,7 @@ async def make_plan(
             len(plan.questions),
             settings.question_count,
         )
-    return plan.model_copy(
+    planned.value = plan.model_copy(
         update={"questions": plan.questions[: settings.question_count]}
     )
+    return planned

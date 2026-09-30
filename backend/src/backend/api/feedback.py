@@ -1,9 +1,9 @@
 import asyncio
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 
-from backend.api.cost_cap import add_cost, over_cap
+from backend.api.cost_cap import add_cost, over_cap, report_cost
 from backend.api.interview import REFUSALS as CHAT_REFUSALS
 from backend.api.rate_limit import chat_rate_limit
 from backend.chains.feedback import write_feedback
@@ -35,7 +35,9 @@ NO_WRITTEN_FEEDBACK = "No written feedback for this answer, but its scores still
 
 
 @router.post("/feedback")
-async def create_feedback(request: FeedbackRequest) -> FeedbackResponse:
+async def create_feedback(
+    request: FeedbackRequest, response: Response
+) -> FeedbackResponse:
     if over_cap(request.session_id):
         raise HTTPException(status_code=429, detail=OVER_BUDGET)
     plan = request.plan.plan
@@ -63,10 +65,11 @@ async def create_feedback(request: FeedbackRequest) -> FeedbackResponse:
         logger.warning("feedback failed: %s", type(error).__name__)
         raise HTTPException(status_code=503, detail=FEEDBACK_FAILED) from error
     add_cost(request.session_id, written.cost)
+    report_cost(response, written.cost)
 
     # the LLM numbers the questions as shown (1-based)
     feedback_for = {
-        entry.number - 1: entry.feedback for entry in written.text.questions
+        entry.number - 1: entry.feedback for entry in written.value.questions
     }
     evaluations = [
         AnswerEvaluation(
@@ -86,9 +89,9 @@ async def create_feedback(request: FeedbackRequest) -> FeedbackResponse:
             overall=round(overall, 2),
             answered=len(answers),
             total=len(plan.questions),
-            strengths=written.text.strengths,
-            improvements=written.text.improvements,
+            strengths=written.value.strengths,
+            improvements=written.value.improvements,
             weakest_question=weakest,
-            sample_answer=written.text.sample_answer,
+            sample_answer=written.value.sample_answer,
         ),
     )
