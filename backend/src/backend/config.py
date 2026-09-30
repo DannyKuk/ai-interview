@@ -44,12 +44,20 @@ class Settings(BaseSettings):
     cv_rate_limit: str = "5/minute"  # every CV upload is an LLM call
     # live captions re-send the answer so far ~1x per second, + the final pass
     stt_rate_limit: str = "120/minute"
+    tts_rate_limit: str = "60/minute"  # one call per sentence, a reply has ~2-6
     # per interview (session_id). A normal interview costs about $0.01
     session_cost_cap_usd: float = 0.10
 
     # speech-to-text, local on the CPU (docs/stt-decision.md)
     stt_model: str = "nemo-parakeet-tdt-0.6b-v2"
     stt_threads: int = 4  # the spike's setting: 0.3 s for a 15 s answer
+
+    # text-to-speech when the switch is on (docs/tts-decision.md). Off = HeadTTS, local
+    tts_model: str = "google/gemini-3.8-flash-lite-tts"
+    tts_timeout_ms: int = 15_000  # 1.4-3.8 s per sentence in the spike
+    # estimate, the response has no cost: $6 per 1M audio tokens x 25 tokens per second.
+    # The spike's billed cost was $0.00012-0.00014/s, so it errs on the cap's safe side
+    tts_usd_per_audio_second: float = 0.00015
 
     cors_origins: list[str] = ["http://localhost:3000"]
 

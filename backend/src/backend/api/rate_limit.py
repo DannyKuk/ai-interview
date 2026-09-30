@@ -36,3 +36,4 @@ def rate_limit_for(name: str, get_limit: Callable[[], str]) -> Callable:
 chat_rate_limit = rate_limit_for("chat", lambda: settings.chat_rate_limit)
 cv_rate_limit = rate_limit_for("cv", lambda: settings.cv_rate_limit)
 stt_rate_limit = rate_limit_for("stt", lambda: settings.stt_rate_limit)
+tts_rate_limit = rate_limit_for("tts", lambda: settings.tts_rate_limit)
