@@ -1,15 +1,20 @@
 "use client";
 
+import type { TalkingHead } from "@met4citizen/talkinghead";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { speak, type ChatStreamEvent, type SpeakRequest } from "@/lib/api";
-import { synthesizeHeadTts, type HeadTtsVoice } from "@/lib/headtts";
+import { synthesizeHeadTts, type HeadTtsSpeech, type HeadTtsVoice } from "@/lib/headtts";
 import { SentenceSplitter } from "@/lib/sentences";
 import { SpeechQueue } from "@/lib/speech-queue";
 import { useInterviewStore } from "@/lib/store";
 
 type Engine = "gemini" | "headtts";
+
+// one synthesized sentence: the audio, plus HeadTTS's word and mouth-shape timings for
+// the avatar's lips (Gemini has none)
+type Clip = { buffer: AudioBuffer; lipsync?: Omit<HeadTtsSpeech, "audio"> };
 
 // until the avatar picks the interviewer - the same person in both engines
 const VOICE: { headtts: HeadTtsVoice; gemini: SpeakRequest["voice"] } = {
@@ -20,6 +25,9 @@ const VOICE: { headtts: HeadTtsVoice; gemini: SpeakRequest["voice"] } = {
 const GEMINI_SAMPLE_RATE = 24000;
 // Gemini takes ~1.5 s per sentence: shorter ones go out with the next
 const GEMINI_MIN_CHARS = 20;
+// the avatar's "clip finished" marker should fire at the clip's end. If it doesn't
+// (TalkingHead skipped the clip), the queue goes on this long after it should have ended
+const AVATAR_END_GRACE_MS = 2000;
 
 const VOICE_UNAVAILABLE = "The interviewer's voice isn't available, so replies are text only.";
 const SWITCHED_TO_LOCAL =
@@ -57,14 +65,47 @@ function playBuffer(
   });
 }
 
-// speaks the interviewer's replies as they stream in: sentence by sentence
-export function useSpeech() {
+// plays one clip through the avatar, lip-synced; barge-in (signal) cuts it off.
+// Resolves at the clip's end: a marker callback TalkingHead runs on its own clock
+function playOnAvatar(head: TalkingHead, clip: Clip, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const durationMs = clip.buffer.duration * 1000;
+    const fallback = setTimeout(resolve, durationMs + AVATAR_END_GRACE_MS);
+
+    const finish = () => {
+      clearTimeout(fallback);
+      resolve();
+    };
+
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(fallback);
+        head.stopSpeaking();
+        reject(signal.reason);
+      },
+      { once: true },
+    );
+
+    head.speakAudio({
+      audio: clip.buffer,
+      words: [], // markers only run when words are set: HeadTTS's real ones replace it
+      ...clip.lipsync,
+      markers: [finish],
+      mtimes: [durationMs],
+    });
+  });
+}
+
+// speaks the interviewer's replies as they stream in: sentence by sentence, through
+// the avatar once it's ready (head), plain audio until then
+export function useSpeech(head: TalkingHead | null) {
   const [speaking, setSpeaking] = useState(false);
-  const [sentence, setSentence] = useState<string | null>(null); // the one playing now
-  const queueRef = useRef<SpeechQueue<AudioBuffer> | null>(null);
+  const [sentence, setSentence] = useState<string | null>(null);
+  const queueRef = useRef<SpeechQueue<Clip> | null>(null);
+  const headRef = useRef(head);
   const splitterRef = useRef(new SentenceSplitter());
   const warnedRef = useRef(false);
-  // barge-in: quiet for the rest of this turn, even if more of the reply streams in
   const silencedRef = useRef(false);
   const engineRef = useRef<Engine | null>(null);
   const engine = useCallback((): Engine => {
@@ -73,15 +114,19 @@ export function useSpeech() {
   }, []);
 
   useEffect(() => {
+    headRef.current = head;
+  }, [head]);
+
+  useEffect(() => {
     const context = new AudioContext();
 
-    const headtts = async (text: string, signal: AbortSignal) => {
-      const { audio } = await synthesizeHeadTts(text, VOICE.headtts, signal);
+    const headtts = async (text: string, signal: AbortSignal): Promise<Clip> => {
+      const { audio, ...lipsync } = await synthesizeHeadTts(text, VOICE.headtts, signal);
 
-      return context.decodeAudioData(audio);
+      return { buffer: await context.decodeAudioData(audio), lipsync };
     };
 
-    const gemini = async (text: string, signal: AbortSignal) => {
+    const gemini = async (text: string, signal: AbortSignal): Promise<Clip> => {
       const { sessionId, addVoiceCost } = useInterviewStore.getState();
       const { value, cost } = await speak(
         { text, voice: VOICE.gemini, session_id: sessionId! },
@@ -89,10 +134,10 @@ export function useSpeech() {
       );
 
       addVoiceCost(cost);
-      return pcmToBuffer(context, value);
+      return { buffer: pcmToBuffer(context, value) };
     };
 
-    const queue = new SpeechQueue<AudioBuffer>(
+    const queue = new SpeechQueue<Clip>(
       async (text, signal) => {
         if (engine() === "gemini") {
           try {
@@ -109,7 +154,16 @@ export function useSpeech() {
         }
         return headtts(text, signal);
       },
-      (buffer, signal) => playBuffer(context, buffer, signal),
+      (clip, signal) => {
+        const avatar = headRef.current;
+        // its own audio context, still blocked after a reload until the first click:
+        // TalkingHead would skip the clip, so play it plainly
+        if (avatar?.audioCtx.state === "running") {
+          return playOnAvatar(avatar, clip, signal);
+        }
+
+        return playBuffer(context, clip.buffer, signal);
+      },
       {
         onSentence: setSentence,
         onSpeakingChange: (now) => {
@@ -134,7 +188,10 @@ export function useSpeech() {
 
     // browsers only allow sound after a click or key press on the page. Coming from the
     // setup page's Start button that's the case; after a reload, the first click is
-    const resume = () => void context.resume();
+    const resume = () => {
+      void context.resume();
+      void headRef.current?.audioCtx.resume();
+    };
     window.addEventListener("pointerdown", resume, { once: true });
     window.addEventListener("keydown", resume, { once: true });
 

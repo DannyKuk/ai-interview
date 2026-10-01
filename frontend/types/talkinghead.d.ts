@@ -24,6 +24,8 @@ declare module "@met4citizen/talkinghead" {
     visemes?: string[];
     vtimes?: number[];
     vdurations?: number[];
+    markers?: (() => void)[];
+    mtimes?: number[];
   };
 
   export class TalkingHead {
@@ -31,6 +33,7 @@ declare module "@met4citizen/talkinghead" {
     audioCtx: AudioContext;
     showAvatar(avatar: AvatarOptions): Promise<void>;
     speakAudio(speech: SpeakAudioInput): void;
+    stopSpeaking(): void; // stops the clip, clears its queue, closes the lips
     dispose(): void;
   }
 }

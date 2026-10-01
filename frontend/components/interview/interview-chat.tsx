@@ -1,5 +1,6 @@
 "use client";
 
+import type { TalkingHead } from "@met4citizen/talkinghead";
 import { Volume2, VolumeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -50,8 +51,8 @@ export function InterviewChat() {
   const muted = useInterviewStore((state) => state.muted);
   const setMuted = useInterviewStore((state) => state.setMuted);
   const company = useInterviewStore((state) => state.settings?.company);
-  // the interviewer's replies are spoken while they stream (HeadTTS)
-  const speech = useSpeech();
+  const [head, setHead] = useState<TalkingHead | null>(null);
+  const speech = useSpeech(head);
   const { turn, error, send, stop } = useChatStream({ onEvent: speech.handleEvent });
   const router = useRouter();
   const [draft, setDraft] = useState("");
@@ -145,7 +146,7 @@ export function InterviewChat() {
 
   return (
     <div className="flex flex-col gap-4">
-      <InterviewStage company={company} />
+      <InterviewStage company={company} onReady={setHead} />
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {plan &&
