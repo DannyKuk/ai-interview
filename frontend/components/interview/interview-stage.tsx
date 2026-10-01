@@ -46,18 +46,20 @@ type Props = {
 export function InterviewStage({ company, persona, avatar = true, onReady }: Props) {
   return (
     <div
-      className="relative min-h-[420px] overflow-hidden rounded-xl bg-muted bg-cover bg-center"
+      className="relative min-h-105 overflow-hidden rounded-xl bg-muted bg-cover bg-center"
       style={company ? { backgroundImage: `url(${backgroundOf(company)})` } : undefined}
     >
-      {avatar ? (
-        <TalkingHeadAvatar
-          onReady={onReady}
-          placeholder={<Portrait />}
-          mood={persona && MOOD[persona]}
-        />
-      ) : (
-        <Portrait />
-      )}
+      <div className="absolute inset-0">
+        {avatar ? (
+          <TalkingHeadAvatar
+            onReady={onReady}
+            placeholder={<Portrait />}
+            mood={persona && MOOD[persona]}
+          />
+        ) : (
+          <Portrait />
+        )}
+      </div>
     </div>
   );
 }
