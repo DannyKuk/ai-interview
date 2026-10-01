@@ -98,3 +98,84 @@
     color-scheme: dark;
   }
 }
+
+@layer components {
+  .stage-office {
+    position: absolute;
+    inset: 0;
+    background-position: center;
+    background-size: cover;
+    filter: saturate(0.5) brightness(0.4);
+    mask-image: radial-gradient(ellipse 70% 85% at 50% 50%, #000 15%, transparent 92%);
+  }
+
+  .stage-cone {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background: radial-gradient(
+      ellipse 30% 75% at 50% -8%,
+      color-mix(in oklch, var(--primary) 30%, transparent),
+      transparent 70%
+    );
+  }
+
+  .film-grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.14;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .speaking-edge {
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+    transition:
+      outline-color 0.3s,
+      box-shadow 0.3s;
+  }
+  .speaking-edge[data-speaking] {
+    outline-color: var(--primary);
+    box-shadow: 0 0 40px -8px color-mix(in oklch, var(--primary) 35%, transparent);
+  }
+
+  /* --level (0..1) is set from the mic's analyser */
+  .voice-ring {
+    box-shadow: 0 0 0 calc(var(--level, 0) * 22px)
+      color-mix(in oklch, var(--primary) 35%, transparent);
+  }
+
+  .equalizer {
+    display: inline-flex;
+    align-items: end;
+    gap: 2px;
+    height: 11px;
+  }
+  .equalizer i {
+    display: block;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--primary);
+    animation: equalizer 0.9s ease-in-out infinite alternate;
+  }
+  .equalizer i:nth-child(1) {
+    height: 55%;
+  }
+  .equalizer i:nth-child(2) {
+    height: 100%;
+    animation-delay: -0.3s;
+  }
+  .equalizer i:nth-child(3) {
+    height: 70%;
+    animation-delay: -0.6s;
+  }
+}
+
+@keyframes equalizer {
+  to {
+    transform: scaleY(0.35);
+  }
+}

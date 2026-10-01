@@ -58,6 +58,8 @@ export function InterviewChat() {
   const company = useInterviewStore((state) => state.settings?.company);
   const persona = useInterviewStore((state) => state.settings?.persona);
   const role = useInterviewStore((state) => state.settings?.role);
+  const interviewer = useInterviewStore((state) => state.interviewer);
+  const candidate = useInterviewStore((state) => state.profile?.first_name ?? null);
   const startedAt = useInterviewStore((state) => state.startedAt);
   const endedAt = useInterviewStore((state) => state.endedAt);
   const [head, setHead] = useState<TalkingHead | null>(null);
@@ -198,7 +200,16 @@ export function InterviewChat() {
         endedAt={endedAt}
       />
       <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <InterviewStage company={company} persona={persona} avatar={avatar} onReady={setHead} />
+        <InterviewStage
+          company={company}
+          persona={persona}
+          avatar={avatar}
+          onReady={setHead}
+          interviewer={interviewer}
+          speaking={speech.speaking}
+          candidate={candidate}
+          mic={micAnalyser}
+        />
         <Card className="min-h-0">
           <CardHeader>
             <CardTitle>Transcript</CardTitle>

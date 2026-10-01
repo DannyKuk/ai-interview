@@ -120,7 +120,14 @@ export default function AvatarTestPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-16">
-      <InterviewStage company={company} onReady={setHead} />
+      <InterviewStage
+        company={company}
+        onReady={setHead}
+        interviewer="Mia Laurent"
+        speaking={busy}
+        candidate={null}
+        mic={null}
+      />
       <div className="grid grid-cols-2 gap-4">
         <OptionSelect
           id="company"

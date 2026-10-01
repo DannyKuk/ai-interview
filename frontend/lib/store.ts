@@ -50,6 +50,7 @@ type InterviewState = {
   progress: PlanProgress | null; // where we are in the plan, from the last turn's meta
   messages: TranscriptMessage[]; // the transcript, sent as history on every turn
   ended: EndReason | null; // set once the interviewer has said goodbye
+  interviewer: string | null; // the interviewer's name at the picked company
   startedAt: number | null; // ms timestamps, for the call's clock
   endedAt: number | null;
   feedback: FeedbackResponse | null; // kept, so a reload of /results doesn't recall the API
@@ -73,7 +74,7 @@ type InterviewState = {
   setJobDescription: (jobDescription: string) => void;
   setProfile: (profile: CandidateProfile, cost: number | null) => void;
   updateProfile: (patch: Partial<CandidateProfile>) => void;
-  startInterview: (plan: SignedPlan, cost: number | null) => void;
+  startInterview: (plan: SignedPlan, cost: number | null, interviewer: string) => void;
   addMessage: (message: TranscriptMessage) => void;
   setProgress: (progress: PlanProgress) => void;
   endInterview: (reason: EndReason) => void;
@@ -100,6 +101,7 @@ export const useInterviewStore = create<InterviewState>()(
       progress: null,
       messages: [],
       ended: null,
+      interviewer: null,
       startedAt: null,
       endedAt: null,
       feedback: null,
@@ -129,13 +131,14 @@ export const useInterviewStore = create<InterviewState>()(
       // the candidate's own fixes - /plan checks the profile again
       updateProfile: (patch) =>
         set((state) => (state.profile ? { profile: { ...state.profile, ...patch } } : {})),
-      startInterview: (plan, cost) =>
+      startInterview: (plan, cost, interviewer) =>
         set((state) => ({
           sessionId: crypto.randomUUID(),
           plan,
           progress: null,
           messages: [],
           ended: null,
+          interviewer,
           startedAt: Date.now(),
           endedAt: null,
           feedback: null,
@@ -171,6 +174,7 @@ export const useInterviewStore = create<InterviewState>()(
           progress: null,
           messages: [],
           ended: null,
+          interviewer: null,
           startedAt: null,
           endedAt: null,
           feedback: null,

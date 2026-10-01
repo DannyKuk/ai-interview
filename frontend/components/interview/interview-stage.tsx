@@ -4,6 +4,8 @@ import type { Mood, TalkingHead } from "@met4citizen/talkinghead";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 
+import { Equalizer } from "@/components/interview/equalizer";
+import { SelfView } from "@/components/interview/self-view";
 import type { InterviewSettings } from "@/lib/api";
 
 // A still of the same avatar, rendered at the stage's height: shows while three.js and
@@ -40,15 +42,34 @@ type Props = {
   persona?: Persona; // none: TalkingHead's default mood (neutral)
   avatar?: boolean; // false: only the still image, three.js isn't loaded
   onReady?: (head: TalkingHead | null) => void; // to make it speak
+  interviewer: string | null;
+  speaking: boolean;
+  candidate: string | null;
+  mic: AnalyserNode | null; // the candidate's mic while recording
 };
 
-// the interviewer in the company's office
-export function InterviewStage({ company, persona, avatar = true, onReady }: Props) {
+export function InterviewStage({
+  company,
+  persona,
+  avatar = true,
+  onReady,
+  interviewer,
+  speaking,
+  candidate,
+  mic,
+}: Props) {
   return (
     <div
-      className="relative min-h-105 overflow-hidden rounded-xl bg-muted bg-cover bg-center"
-      style={company ? { backgroundImage: `url(${backgroundOf(company)})` } : undefined}
+      data-speaking={speaking ? "" : undefined}
+      className="speaking-edge relative min-h-[420px] overflow-hidden rounded-xl bg-card"
     >
+      {company && (
+        <div
+          className="stage-office"
+          style={{ backgroundImage: `url(${backgroundOf(company)})` }}
+        />
+      )}
+      <div className="stage-cone" />
       <div className="absolute inset-0">
         {avatar ? (
           <TalkingHeadAvatar
@@ -60,6 +81,15 @@ export function InterviewStage({ company, persona, avatar = true, onReady }: Pro
           <Portrait />
         )}
       </div>
+      <div className="film-grain" />
+      {interviewer && (
+        <span className="absolute top-3 left-3 inline-flex items-center gap-2 rounded-lg bg-background/70 px-2.5 py-1 text-sm font-medium backdrop-blur">
+          {speaking && <Equalizer />}
+          {interviewer}
+          <span className="font-normal text-muted-foreground">{company}</span>
+        </span>
+      )}
+      <SelfView name={candidate} mic={mic} />
     </div>
   );
 }

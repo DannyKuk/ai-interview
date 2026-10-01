@@ -98,7 +98,7 @@ export function SetupForm() {
         profile,
         job_description: jobDescription || null,
       });
-      startInterview(plan, cost);
+      startInterview(plan, cost, config!.interviewers[settings!.company]);
       router.push("/interview"); // stays "starting" until the page changes
     } catch (error) {
       setStartError(errorMessage(error));
