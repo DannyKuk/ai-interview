@@ -3,6 +3,8 @@
 import { TalkingHead } from "@met4citizen/talkinghead";
 import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
 
+import { addInterviewGestures } from "@/lib/avatar-gestures";
+
 type Status = "loading" | "ready" | "error";
 
 type Props = {
@@ -42,6 +44,7 @@ export function TalkingHeadAvatar({ onReady, placeholder }: Props) {
           avatarMood: "neutral",
           lipsyncLang: "en",
         });
+        addInterviewGestures(head);
         if (!disposed) {
           setStatus("ready");
           reportHead(head);

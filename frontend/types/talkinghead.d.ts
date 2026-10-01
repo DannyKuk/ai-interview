@@ -8,10 +8,13 @@ declare module "@met4citizen/talkinghead" {
     cameraRotateEnable?: boolean;
   };
 
+  // the face's base expression
+  export type Mood = "neutral" | "happy" | "angry" | "sad" | "fear" | "disgust" | "love" | "sleep";
+
   export type AvatarOptions = {
     url: string;
     body: "M" | "F";
-    avatarMood?: string;
+    avatarMood?: Mood;
     lipsyncLang?: string;
   };
 
@@ -35,9 +38,14 @@ declare module "@met4citizen/talkinghead" {
     // the morph targets (mouth shapes, …) by name: newvalue is applied on the next frame
     mtAvatar: Record<string, { newvalue?: number; needsUpdate?: boolean }>;
     opt: { update: ((dt: number) => void) | null };
+    animEmojis: Record<string, object>;
     showAvatar(avatar: AvatarOptions): Promise<void>;
     speakAudio(speech: SpeakAudioInput): void;
     stopSpeaking(): void; // stops the clip, clears its queue, closes the lips
+    setMood(mood: Mood): void;
+    playGesture(name: string, seconds?: number): void;
+    lookAhead(ms: number): void;
+    lookAtCamera(ms: number): void;
     dispose(): void;
   }
 }

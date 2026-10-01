@@ -1,6 +1,6 @@
 "use client";
 
-import type { TalkingHead } from "@met4citizen/talkinghead";
+import type { Mood, TalkingHead } from "@met4citizen/talkinghead";
 import { useState } from "react";
 
 import { InterviewStage } from "@/components/interview/interview-stage";
@@ -8,6 +8,7 @@ import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { InterviewSettings } from "@/lib/api";
+import { THINKING } from "@/lib/avatar-gestures";
 import { synthesizeHeadTts } from "@/lib/headtts";
 
 // Avatar playground: the interview's stage, any office, any sentence straight to HeadTTS.
@@ -26,6 +27,26 @@ const COMPANIES: Company[] = [
   "Starbacks",
 ];
 
+const MOODS: Mood[] = ["neutral", "happy", "angry", "sad", "fear", "disgust", "love", "sleep"];
+
+// candidates for the interview: TalkingHead's names (hand gestures, face / head animations)
+const GESTURES = [
+  { label: "🤔 Thinking (ours, chin)", name: THINKING },
+  { label: "🤔 Thinking (TalkingHead)", name: "🤔" },
+  { label: "Nod", name: "yes" },
+  { label: "Head shake", name: "no" },
+  { label: "🙂 Smile", name: "🙂" },
+  { label: "😊 Warm smile", name: "😊" },
+  { label: "😐 Straight face", name: "😐" },
+  { label: "👀 Eyes", name: "👀" },
+  { label: "🙄 Eye roll", name: "🙄" },
+  { label: "👍 Thumbs up", name: "thumbup" },
+  { label: "👌 OK", name: "ok" },
+  { label: "☝️ Index", name: "index" },
+  { label: "🤷 Shrug", name: "shrug" },
+  { label: "✋ Hand up", name: "handup" },
+];
+
 // lips closed (P, B, M) and teeth on lip (F, V) are the easiest mouth shapes to check
 const SAMPLE =
   "Hi, I'm Sam. Before we begin, maybe tell me about a project that made you proud, and what you would do differently today.";
@@ -33,6 +54,7 @@ const SAMPLE =
 export default function AvatarTestPage() {
   const [head, setHead] = useState<TalkingHead | null>(null);
   const [company, setCompany] = useState<Company>("Netflux");
+  const [mood, setMood] = useState<Mood>("neutral");
   const [text, setText] = useState(SAMPLE);
   const [busy, setBusy] = useState(false);
 
@@ -59,13 +81,50 @@ export default function AvatarTestPage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-16">
       <InterviewStage company={company} onReady={setHead} />
-      <OptionSelect
-        id="company"
-        label="Office"
-        options={COMPANIES}
-        value={company}
-        onChange={setCompany}
-      />
+      <div className="grid grid-cols-2 gap-4">
+        <OptionSelect
+          id="company"
+          label="Office"
+          options={COMPANIES}
+          value={company}
+          onChange={setCompany}
+        />
+        <OptionSelect
+          id="mood"
+          label="Mood"
+          options={MOODS}
+          value={mood}
+          onChange={(next) => {
+            setMood(next);
+            head?.setMood(next);
+          }}
+          disabled={!head}
+        />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {GESTURES.map(({ label, name }) => (
+          <Button
+            key={name}
+            variant="outline"
+            size="sm"
+            onClick={() => head?.playGesture(name)}
+            disabled={!head}
+          >
+            {label}
+          </Button>
+        ))}
+        <Button variant="outline" size="sm" onClick={() => head?.lookAhead(2000)} disabled={!head}>
+          Look away 2 s
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => head?.lookAtCamera(2000)}
+          disabled={!head}
+        >
+          Eye contact 2 s
+        </Button>
+      </div>
       <Textarea value={text} onChange={(event) => setText(event.target.value)} rows={3} />
       <Button onClick={speak} disabled={!head || busy || !text.trim()} className="self-start">
         {busy ? "Synthesizing…" : "Speak"}
