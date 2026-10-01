@@ -5,11 +5,13 @@ import { useEffect, useState } from "react";
 
 import { CvUpload } from "@/components/interview/cv-upload";
 import { PresetPicker } from "@/components/interview/preset-picker";
+import { InviteCard } from "@/components/interview/invite-card";
 import { ProfileOverview } from "@/components/interview/profile-overview";
 import { OptionSelect } from "@/components/option-select";
 import { OptionToggle } from "@/components/option-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -125,80 +127,85 @@ export function SetupForm() {
           <ProfileOverview defaultOpen={!presetId} />
         </div>
 
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle>The interview</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <OptionSelect
-                id="company"
-                label="Company"
-                options={config.companies}
-                value={settings.company}
-                onChange={(company) => updateSettings({ company })}
-              />
+        <div className="flex min-w-0 flex-col gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>The interview</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <OptionSelect
+                  id="company"
+                  label="Company"
+                  options={config.companies}
+                  value={settings.company}
+                  onChange={(company) => updateSettings({ company })}
+                />
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Input
+                    id="role"
+                    value={settings.role}
+                    onChange={(event) => updateSettings({ role: event.target.value })}
+                  />
+                </div>
+              </div>
               <div className="flex flex-col gap-2">
-                <Label htmlFor="role">Role</Label>
-                <Input
-                  id="role"
-                  value={settings.role}
-                  onChange={(event) => updateSettings({ role: event.target.value })}
+                <Label htmlFor="job_description">Job description (optional)</Label>
+                <Textarea
+                  id="job_description"
+                  rows={8}
+                  className="max-h-64"
+                  maxLength={MAX_JD_CHARS}
+                  placeholder="Paste the job ad: the questions will fit what it asks for."
+                  value={jobDescription}
+                  onChange={(event) => setJobDescription(event.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {jobDescription.length} / {MAX_JD_CHARS} characters
+                </p>
+              </div>
+              <OptionToggle
+                label="Interviewer"
+                options={config.personas}
+                value={settings.persona}
+                onChange={(persona) => updateSettings({ persona })}
+              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <OptionToggle
+                  label="Difficulty"
+                  options={config.difficulties}
+                  value={settings.difficulty}
+                  onChange={(difficulty) => updateSettings({ difficulty })}
+                />
+                <OptionToggle
+                  label="Questions"
+                  options={questionCounts}
+                  value={String(settings.question_count)}
+                  onChange={(count) => updateSettings({ question_count: Number(count) })}
                 />
               </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="job_description">Job description (optional)</Label>
-              <Textarea
-                id="job_description"
-                rows={8}
-                className="max-h-64"
-                maxLength={MAX_JD_CHARS}
-                placeholder="Paste the job ad: the questions will fit what it asks for."
-                value={jobDescription}
-                onChange={(event) => setJobDescription(event.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                {jobDescription.length} / {MAX_JD_CHARS} characters
-              </p>
-            </div>
-            <OptionToggle
-              label="Interviewer"
-              options={config.personas}
-              value={settings.persona}
-              onChange={(persona) => updateSettings({ persona })}
-            />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <OptionToggle
-                label="Difficulty"
-                options={config.difficulties}
-                value={settings.difficulty}
-                onChange={(difficulty) => updateSettings({ difficulty })}
-              />
-              <OptionToggle
-                label="Questions"
-                options={questionCounts}
-                value={String(settings.question_count)}
-                onChange={(count) => updateSettings({ question_count: Number(count) })}
-              />
-            </div>
+            </CardContent>
+          </Card>
+
+          <InviteCard settings={settings} interviewer={config.interviewers[settings.company]}>
             <div className="flex flex-wrap items-center gap-4">
-              <Button type="submit" size="lg">
+              <Button type="submit" size="lg" className="flex-1 basis-48">
                 {starting ? "Preparing your interview…" : "Start interview"}
               </Button>
-              <label className="flex items-center gap-2 text-sm">
-                <Switch checked={cloudVoice} onCheckedChange={setCloudVoice} />
-                Cloud voice
-              </label>
+              <Field orientation="horizontal" className="w-auto">
+                <Switch id="cloud_voice" checked={cloudVoice} onCheckedChange={setCloudVoice} />
+                <FieldLabel htmlFor="cloud_voice">Cloud voice</FieldLabel>
+              </Field>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <FieldDescription className="text-xs">
               {cloudVoice
                 ? "Google's Gemini voice: sounds more natural, about $0.03 per interview, and a few seconds more before each reply. Only the interviewer's text goes to Google, never your voice."
                 : "A free voice that runs on this computer. Turn on the cloud voice for a more natural one."}
-            </p>
+            </FieldDescription>
             {startError && <p className="text-sm text-destructive">{startError}</p>}
-          </CardContent>
-        </Card>
+          </InviteCard>
+        </div>
       </fieldset>
     </form>
   );
