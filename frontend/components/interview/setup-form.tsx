@@ -151,6 +151,7 @@ export function SetupForm() {
               <Textarea
                 id="job_description"
                 rows={8}
+                className="max-h-64"
                 maxLength={MAX_JD_CHARS}
                 placeholder="Paste the job ad: the questions will fit what it asks for."
                 value={jobDescription}

@@ -1,7 +1,9 @@
 "use client";
 
+import { FileCheckIcon, UploadIcon } from "lucide-react";
 import { useState } from "react";
 
+import { Spinner } from "@/components/ui/spinner";
 import { errorMessage, MAX_CV_BYTES, parseCv } from "@/lib/api";
 import { useInterviewStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -84,9 +86,9 @@ export function CvUpload({ locked, onUploadingChange }: CvUploadProps) {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={cn(
-          "flex cursor-pointer flex-col items-center gap-1 rounded-lg border border-dashed p-6 text-center text-sm transition-colors hover:bg-muted",
-          dragging && "border-primary bg-muted",
-          ownCv && "border-solid border-primary ring-2 ring-primary",
+          "flex cursor-pointer items-center gap-3 rounded-lg border border-dashed p-3.5 text-sm transition-colors hover:bg-muted/50",
+          dragging && "border-primary bg-primary/10",
+          ownCv && "border-solid border-primary/20 bg-primary/10",
           uploading && "cursor-wait",
         )}
       >
@@ -97,23 +99,31 @@ export function CvUpload({ locked, onUploadingChange }: CvUploadProps) {
           onChange={handleChange}
         />
         {uploading ? (
-          <span>Reading your CV… this takes about 10 seconds.</span>
+          <Spinner className="size-5 shrink-0 text-primary" />
         ) : ownCv ? (
-          <>
-            <span className="font-semibold">Your CV: {ownCv.first_name ?? "uploaded"}</span>
-            <span className="text-muted-foreground">
-              {ownCv.headline}. Drop or pick another PDF to replace it.
-            </span>
-          </>
+          <FileCheckIcon className="size-5 shrink-0 text-primary" />
         ) : (
-          <>
-            <span className="font-semibold">Or use your own CV</span>
-            <span className="text-muted-foreground">
-              Drop a PDF here or click to pick one (up to 5 MB, 5 pages). The PDF itself isn&apos;t
-              stored.
-            </span>
-          </>
+          <UploadIcon className="size-5 shrink-0 text-primary" />
         )}
+        <span className="flex min-w-0 flex-col">
+          {uploading ? (
+            <span>Reading your CV… this takes about 10 seconds.</span>
+          ) : ownCv ? (
+            <>
+              <span className="font-medium">Your CV: {ownCv.first_name ?? "uploaded"}</span>
+              <span className="text-muted-foreground">
+                {ownCv.headline}. Drop or pick another PDF to replace it.
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="font-medium">Drop your CV here, or choose a file</span>
+              <span className="text-muted-foreground">
+                PDF, up to 5 pages and 5 MB. The PDF itself isn&apos;t stored.
+              </span>
+            </>
+          )}
+        </span>
       </label>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

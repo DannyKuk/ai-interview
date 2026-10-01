@@ -1,12 +1,43 @@
 "use client";
 
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldTitle,
+} from "@/components/ui/field";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Preset } from "@/lib/api";
 import { useInterviewStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
 
-const CARD =
-  "flex flex-col gap-1 rounded-lg border p-3 text-left text-sm transition-colors hover:bg-muted";
-const SELECTED = "border-primary ring-2 ring-primary";
+const NO_CV = "no-cv";
+
+type ChoiceCardProps = {
+  value: string;
+  initial: string;
+  title: string;
+  description: string;
+};
+
+function ChoiceCard({ value, initial, title, description }: ChoiceCardProps) {
+  const id = `candidate-${value}`;
+  return (
+    <FieldLabel htmlFor={id}>
+      <Field orientation="horizontal">
+        <Avatar>
+          <AvatarFallback className="font-heading">{initial}</AvatarFallback>
+        </Avatar>
+        <FieldContent className="min-w-0">
+          <FieldTitle>{title}</FieldTitle>
+          <FieldDescription className="truncate">{description}</FieldDescription>
+        </FieldContent>
+        <RadioGroupItem value={value} id={id} />
+      </Field>
+    </FieldLabel>
+  );
+}
 
 // the ready-made candidates + "no CV". Picking one fills company, role, interviewer,
 // profile and job description
@@ -16,36 +47,37 @@ export function PresetPicker({ presets }: { presets: Preset[] }) {
   const choosePreset = useInterviewStore((state) => state.choosePreset);
   const clearCandidate = useInterviewStore((state) => state.clearCandidate);
   const picked = presets.find((preset) => preset.id === presetId);
+  // an uploaded CV is none of these cards: "" matches no radio
+  const value = presetId ?? (profile ? "" : NO_CV);
+
+  function handleChange(next: unknown) {
+    const preset = presets.find((preset) => preset.id === next);
+    if (preset) {
+      choosePreset(preset);
+    } else if (next === NO_CV) {
+      clearCandidate();
+    }
+  }
 
   return (
-    <fieldset className="flex flex-col gap-3">
-      <legend className="mb-2 text-sm font-medium">Candidate</legend>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+    <div className="flex flex-col gap-3">
+      <RadioGroup value={value} onValueChange={handleChange} className="grid-cols-1 sm:grid-cols-2">
         {presets.map((preset) => (
-          <button
+          <ChoiceCard
             key={preset.id}
-            type="button"
-            aria-pressed={preset.id === presetId}
-            onClick={() => choosePreset(preset)}
-            className={cn(CARD, preset.id === presetId && SELECTED)}
-          >
-            <span className="font-semibold">{preset.settings.company}</span>
-            <span>{preset.settings.role}</span>
-            <span className="text-muted-foreground">
-              {preset.profile.first_name} · {preset.profile.seniority}
-            </span>
-          </button>
+            value={preset.id}
+            initial={preset.profile.first_name?.[0] ?? "?"}
+            title={preset.profile.first_name ?? preset.settings.role}
+            description={`${preset.settings.role}, ${preset.settings.company}`}
+          />
         ))}
-        <button
-          type="button"
-          aria-pressed={!profile}
-          onClick={clearCandidate}
-          className={cn(CARD, !profile && SELECTED)}
-        >
-          <span className="font-semibold">No CV</span>
-          <span className="text-muted-foreground">Questions from the company and role only</span>
-        </button>
-      </div>
+        <ChoiceCard
+          value={NO_CV}
+          initial="–"
+          title="No CV"
+          description="Questions from the company and role only"
+        />
+      </RadioGroup>
       {picked && (
         <p className="text-sm text-muted-foreground">
           {picked.profile.headline}.{" "}
@@ -54,6 +86,6 @@ export function PresetPicker({ presets }: { presets: Preset[] }) {
           </a>
         </p>
       )}
-    </fieldset>
+    </div>
   );
 }
