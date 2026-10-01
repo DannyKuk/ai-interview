@@ -7,6 +7,7 @@ import { CvUpload } from "@/components/interview/cv-upload";
 import { PresetPicker } from "@/components/interview/preset-picker";
 import { ProfileOverview } from "@/components/interview/profile-overview";
 import { OptionSelect } from "@/components/option-select";
+import { OptionToggle } from "@/components/option-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -161,27 +162,26 @@ export function SetupForm() {
                 {jobDescription.length} / {MAX_JD_CHARS} characters
               </p>
             </div>
-            <OptionSelect
-              id="difficulty"
-              label="Difficulty"
-              options={config.difficulties}
-              value={settings.difficulty}
-              onChange={(difficulty) => updateSettings({ difficulty })}
-            />
-            <OptionSelect
-              id="question_count"
-              label="Questions"
-              options={questionCounts}
-              value={String(settings.question_count)}
-              onChange={(count) => updateSettings({ question_count: Number(count) })}
-            />
-            <OptionSelect
-              id="persona"
+            <OptionToggle
               label="Interviewer"
               options={config.personas}
               value={settings.persona}
               onChange={(persona) => updateSettings({ persona })}
             />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <OptionToggle
+                label="Difficulty"
+                options={config.difficulties}
+                value={settings.difficulty}
+                onChange={(difficulty) => updateSettings({ difficulty })}
+              />
+              <OptionToggle
+                label="Questions"
+                options={questionCounts}
+                value={String(settings.question_count)}
+                onChange={(count) => updateSettings({ question_count: Number(count) })}
+              />
+            </div>
             <div className="flex flex-wrap items-center gap-4">
               <Button type="submit" size="lg">
                 {starting ? "Preparing your interview…" : "Start interview"}
