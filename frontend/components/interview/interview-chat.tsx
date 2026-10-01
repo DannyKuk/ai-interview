@@ -1,7 +1,7 @@
 "use client";
 
 import type { TalkingHead } from "@met4citizen/talkinghead";
-import { Volume2, VolumeOff } from "lucide-react";
+import { Box, Image as ImageIcon, Volume2, VolumeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -51,6 +51,8 @@ export function InterviewChat() {
   const progress = useInterviewStore((state) => state.progress);
   const muted = useInterviewStore((state) => state.muted);
   const setMuted = useInterviewStore((state) => state.setMuted);
+  const avatar = useInterviewStore((state) => state.avatar);
+  const setAvatar = useInterviewStore((state) => state.setAvatar);
   const company = useInterviewStore((state) => state.settings?.company);
   const persona = useInterviewStore((state) => state.settings?.persona);
   const [head, setHead] = useState<TalkingHead | null>(null);
@@ -181,7 +183,7 @@ export function InterviewChat() {
 
   return (
     <div className="flex flex-col gap-4">
-      <InterviewStage company={company} persona={persona} onReady={setHead} />
+      <InterviewStage company={company} persona={persona} avatar={avatar} onReady={setHead} />
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {plan &&
@@ -189,16 +191,32 @@ export function InterviewChat() {
             !ended &&
             `Question ${shownProgress.question + 1} of ${plan.plan.questions.length}`}
         </p>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setMuted(!muted)}
-          aria-pressed={muted}
-          title={muted ? "Turn the interviewer's voice on" : "Mute the interviewer"}
-        >
-          {muted ? <VolumeOff /> : <Volume2 />}
-          {muted ? "Unmute" : "Mute"}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setAvatar(!avatar)}
+            aria-pressed={!avatar}
+            title={
+              avatar
+                ? "Show a still image instead of the 3D interviewer (lighter for slow computers)"
+                : "Show the 3D interviewer"
+            }
+          >
+            {avatar ? <ImageIcon /> : <Box />}
+            {avatar ? "Still image" : "3D avatar"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMuted(!muted)}
+            aria-pressed={muted}
+            title={muted ? "Turn the interviewer's voice on" : "Mute the interviewer"}
+          >
+            {muted ? <VolumeOff /> : <Volume2 />}
+            {muted ? "Unmute" : "Mute"}
+          </Button>
+        </div>
       </div>
       <Transcript messages={messages}>
         {pending && <TranscriptLine role="user" content={pending} />}

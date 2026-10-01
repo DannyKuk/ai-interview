@@ -38,21 +38,26 @@ const MOOD: Record<Persona, Mood> = { strict: "angry", neutral: "neutral", frien
 type Props = {
   company?: InterviewSettings["company"]; // none: a plain backdrop
   persona?: Persona; // none: TalkingHead's default mood (neutral)
+  avatar?: boolean; // false: only the still image, three.js isn't loaded
   onReady?: (head: TalkingHead | null) => void; // to make it speak
 };
 
 // the interviewer in the company's office
-export function InterviewStage({ company, persona, onReady }: Props) {
+export function InterviewStage({ company, persona, avatar = true, onReady }: Props) {
   return (
     <div
       className="relative h-[360px] overflow-hidden rounded-xl bg-muted bg-cover bg-center"
       style={company ? { backgroundImage: `url(${backgroundOf(company)})` } : undefined}
     >
-      <TalkingHeadAvatar
-        onReady={onReady}
-        placeholder={<Portrait />}
-        mood={persona && MOOD[persona]}
-      />
+      {avatar ? (
+        <TalkingHeadAvatar
+          onReady={onReady}
+          placeholder={<Portrait />}
+          mood={persona && MOOD[persona]}
+        />
+      ) : (
+        <Portrait />
+      )}
     </div>
   );
 }

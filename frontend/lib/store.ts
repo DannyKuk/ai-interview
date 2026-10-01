@@ -62,6 +62,9 @@ type InterviewState = {
   cloudVoice: boolean;
   // the interviewer's voice off: no TTS calls at all. A preference: reset() keeps it
   muted: boolean;
+  // the 3D interviewer; off = a still image, three.js never loads (slow computers).
+  // A preference: reset() keeps it
+  avatar: boolean;
   updateSettings: (patch: Partial<InterviewSettings>) => void;
   choosePreset: (preset: Preset) => void;
   clearCandidate: () => void;
@@ -78,6 +81,7 @@ type InterviewState = {
   setReviewBeforeSending: (review: boolean) => void;
   setCloudVoice: (cloudVoice: boolean) => void;
   setMuted: (muted: boolean) => void;
+  setAvatar: (avatar: boolean) => void;
   addVoiceCost: (cost: number | null) => void;
   reset: () => void;
 };
@@ -101,6 +105,7 @@ export const useInterviewStore = create<InterviewState>()(
       reviewBeforeSending: false,
       cloudVoice: false,
       muted: false,
+      avatar: true,
 
       updateSettings: (patch) =>
         set((state) => ({ settings: { ...state.settings, ...patch } as InterviewSettings })),
@@ -143,6 +148,7 @@ export const useInterviewStore = create<InterviewState>()(
       setReviewBeforeSending: (reviewBeforeSending) => set({ reviewBeforeSending }),
       setCloudVoice: (cloudVoice) => set({ cloudVoice }),
       setMuted: (muted) => set({ muted }),
+      setAvatar: (avatar) => set({ avatar }),
       addVoiceCost: (cost) =>
         set((state) => ({
           costs: { ...state.costs, voice: (state.costs.voice ?? 0) + (cost ?? 0) },
