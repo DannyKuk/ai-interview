@@ -232,6 +232,10 @@ export interface components {
             default_technique: "zero_shot" | "few_shot" | "chain_of_thought" | "persona" | "self_critique";
             /** Companies */
             companies: ("Guugle" | "HeadBook" | "Instakilogram" | "Netflux" | "Amazin" | "Goldman Sax" | "Tesler" | "Starbacks")[];
+            /** Interviewers */
+            interviewers: {
+                [key: string]: string;
+            };
             /** Difficulties */
             difficulties: ("easy" | "medium" | "hard")[];
             /** Personas */

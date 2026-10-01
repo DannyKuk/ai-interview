@@ -45,6 +45,17 @@ Company = Literal[
     "Tesler",
     "Starbacks",
 ]
+
+INTERVIEWERS: dict[Company, str] = {
+    "Guugle": "Hannah Park",
+    "HeadBook": "Mia Laurent",
+    "Instakilogram": "Zoe Martins",
+    "Netflux": "Leah Okafor",
+    "Amazin": "Clara Weiss",
+    "Goldman Sax": "Eleanor Hart",
+    "Tesler": "Nina Kovač",
+    "Starbacks": "Rosa Delgado",
+}
 Difficulty = Literal["easy", "medium", "hard"]
 Persona = Literal["friendly", "neutral", "strict"]
 

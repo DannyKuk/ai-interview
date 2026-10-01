@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from backend.config import settings
 from backend.schemas.chat import (
     DEFAULT_TECHNIQUE,
+    INTERVIEWERS,
     MAX_MAX_TOKENS,
     MIN_MAX_TOKENS,
     Company,
@@ -29,6 +30,7 @@ async def get_config() -> AppConfig:
         techniques=list(get_args(Technique)),
         default_technique=DEFAULT_TECHNIQUE,
         companies=list(get_args(Company)),
+        interviewers=INTERVIEWERS,
         difficulties=list(get_args(Difficulty)),
         personas=list(get_args(Persona)),
         default_settings=InterviewSettings(),

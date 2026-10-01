@@ -26,6 +26,7 @@ class AppConfig(BaseModel):
     techniques: list[Technique]
     default_technique: Technique
     companies: list[Company]
+    interviewers: dict[Company, str]
     difficulties: list[Difficulty]
     personas: list[Persona]
     default_settings: InterviewSettings
