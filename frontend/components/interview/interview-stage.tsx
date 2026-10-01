@@ -1,6 +1,6 @@
 "use client";
 
-import type { TalkingHead } from "@met4citizen/talkinghead";
+import type { Mood, TalkingHead } from "@met4citizen/talkinghead";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 
@@ -31,19 +31,28 @@ function backgroundOf(company: string): string {
   return `/backgrounds/${company.toLowerCase().replaceAll(" ", "-")}.webp`;
 }
 
+type Persona = InterviewSettings["persona"];
+
+const MOOD: Record<Persona, Mood> = { strict: "angry", neutral: "neutral", friendly: "happy" };
+
 type Props = {
   company?: InterviewSettings["company"]; // none: a plain backdrop
+  persona?: Persona; // none: TalkingHead's default mood (neutral)
   onReady?: (head: TalkingHead | null) => void; // to make it speak
 };
 
 // the interviewer in the company's office
-export function InterviewStage({ company, onReady }: Props) {
+export function InterviewStage({ company, persona, onReady }: Props) {
   return (
     <div
       className="relative h-[360px] overflow-hidden rounded-xl bg-muted bg-cover bg-center"
       style={company ? { backgroundImage: `url(${backgroundOf(company)})` } : undefined}
     >
-      <TalkingHeadAvatar onReady={onReady} placeholder={<Portrait />} />
+      <TalkingHeadAvatar
+        onReady={onReady}
+        placeholder={<Portrait />}
+        mood={persona && MOOD[persona]}
+      />
     </div>
   );
 }

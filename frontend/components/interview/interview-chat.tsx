@@ -51,6 +51,7 @@ export function InterviewChat() {
   const muted = useInterviewStore((state) => state.muted);
   const setMuted = useInterviewStore((state) => state.setMuted);
   const company = useInterviewStore((state) => state.settings?.company);
+  const persona = useInterviewStore((state) => state.settings?.persona);
   const [head, setHead] = useState<TalkingHead | null>(null);
   const speech = useSpeech(head);
   const { turn, error, send, stop } = useChatStream({ onEvent: speech.handleEvent });
@@ -95,6 +96,14 @@ export function InterviewChat() {
       firstTurn();
     }
   }, [hydrated, router, firstTurn]);
+
+  // she waves hello when she first appears
+  useEffect(() => {
+    const answered = useInterviewStore.getState().messages.some(({ role }) => role === "user");
+    if (head && !answered) {
+      head.playGesture("handup", 2);
+    }
+  }, [head]);
 
   // a new error (429, backend down, ...) pops up as a toast. The answer is back in the box
   useEffect(() => {
@@ -146,7 +155,7 @@ export function InterviewChat() {
 
   return (
     <div className="flex flex-col gap-4">
-      <InterviewStage company={company} onReady={setHead} />
+      <InterviewStage company={company} persona={persona} onReady={setHead} />
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {plan &&

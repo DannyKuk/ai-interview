@@ -1,6 +1,6 @@
 "use client";
 
-import { TalkingHead } from "@met4citizen/talkinghead";
+import { TalkingHead, type Mood } from "@met4citizen/talkinghead";
 import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
 
 import { addInterviewGestures } from "@/lib/avatar-gestures";
@@ -11,12 +11,14 @@ type Props = {
   // the head once the avatar is on screen (to make it speak), null after unmount
   onReady?: (head: TalkingHead | null) => void;
   placeholder?: ReactNode;
+  mood?: Mood; // the face's base expression, also when it changes later
 };
 
 // The 3D interviewer. three.js and TalkingHead need the browser, so load this
 // only through next/dynamic with ssr: false
-export function TalkingHeadAvatar({ onReady, placeholder }: Props) {
+export function TalkingHeadAvatar({ onReady, placeholder, mood }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<TalkingHead | null>(null); // once it's on screen
   const [status, setStatus] = useState<Status>("loading");
   // always calls the latest onReady, without making the effect rebuild the avatar
   const reportHead = useEffectEvent((head: TalkingHead | null) => onReady?.(head));
@@ -46,6 +48,7 @@ export function TalkingHeadAvatar({ onReady, placeholder }: Props) {
         });
         addInterviewGestures(head);
         if (!disposed) {
+          headRef.current = head;
           setStatus("ready");
           reportHead(head);
         }
@@ -67,10 +70,17 @@ export function TalkingHeadAvatar({ onReady, placeholder }: Props) {
     // dev mode unmounts once right away, so wait for the load to finish
     return () => {
       disposed = true;
+      headRef.current = null;
       reportHead(null);
       void loading.then((loaded) => loaded && head.dispose());
     };
   }, []);
+
+  useEffect(() => {
+    if (status === "ready" && mood) {
+      headRef.current?.setMood(mood);
+    }
+  }, [status, mood]);
 
   return (
     <div className="relative size-full">
