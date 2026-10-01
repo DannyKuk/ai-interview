@@ -8,6 +8,7 @@ import { PresetPicker } from "@/components/interview/preset-picker";
 import { ProfileOverview } from "@/components/interview/profile-overview";
 import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -103,76 +104,100 @@ export function SetupForm() {
   }
 
   return (
+    // one <form> around both columns: Start submits it, and the fieldset locks everything while busy
     <form onSubmit={handleSubmit}>
-      <fieldset disabled={starting || uploading} className="flex flex-col gap-4">
-        <PresetPicker presets={presets} />
-        <CvUpload locked={starting || uploading} onUploadingChange={setUploading} />
-        <ProfileOverview defaultOpen={!presetId} />
-        <OptionSelect
-          id="company"
-          label="Company"
-          options={config.companies}
-          value={settings.company}
-          onChange={(company) => updateSettings({ company })}
-        />
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="role">Role</Label>
-          <Input
-            id="role"
-            value={settings.role}
-            onChange={(event) => updateSettings({ role: event.target.value })}
-          />
+      <fieldset
+        disabled={starting || uploading}
+        className="grid min-w-0 items-start gap-4 md:grid-cols-2"
+      >
+        <div className="flex min-w-0 flex-col gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>You</CardTitle>
+              <CardDescription>Pick a candidate or use your own CV</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <PresetPicker presets={presets} />
+              <CvUpload locked={starting || uploading} onUploadingChange={setUploading} />
+            </CardContent>
+          </Card>
+          <ProfileOverview defaultOpen={!presetId} />
         </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="job_description">Job description (optional)</Label>
-          <Textarea
-            id="job_description"
-            rows={8}
-            maxLength={MAX_JD_CHARS}
-            placeholder="Paste the job ad: the questions will fit what it asks for."
-            value={jobDescription}
-            onChange={(event) => setJobDescription(event.target.value)}
-          />
-          <p className="text-xs text-muted-foreground">
-            {jobDescription.length} / {MAX_JD_CHARS} characters
-          </p>
-        </div>
-        <OptionSelect
-          id="difficulty"
-          label="Difficulty"
-          options={config.difficulties}
-          value={settings.difficulty}
-          onChange={(difficulty) => updateSettings({ difficulty })}
-        />
-        <OptionSelect
-          id="question_count"
-          label="Questions"
-          options={questionCounts}
-          value={String(settings.question_count)}
-          onChange={(count) => updateSettings({ question_count: Number(count) })}
-        />
-        <OptionSelect
-          id="persona"
-          label="Interviewer"
-          options={config.personas}
-          value={settings.persona}
-          onChange={(persona) => updateSettings({ persona })}
-        />
-        <div className="flex flex-wrap items-center gap-4">
-          <Button type="submit" size="lg">
-            {starting ? "Preparing your interview…" : "Start interview"}
-          </Button>
-          <label className="flex items-center gap-2 text-sm">
-            <Switch checked={cloudVoice} onCheckedChange={setCloudVoice} />
-            Cloud voice
-          </label>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {cloudVoice
-            ? "Google's Gemini voice: sounds more natural, about $0.03 per interview, and a few seconds more before each reply. Only the interviewer's text goes to Google, never your voice."
-            : "A free voice that runs on this computer. Turn on the cloud voice for a more natural one."}
-        </p>
-        {startError && <p className="text-sm text-destructive">{startError}</p>}
+
+        <Card className="min-w-0">
+          <CardHeader>
+            <CardTitle>The interview</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <OptionSelect
+                id="company"
+                label="Company"
+                options={config.companies}
+                value={settings.company}
+                onChange={(company) => updateSettings({ company })}
+              />
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="role">Role</Label>
+                <Input
+                  id="role"
+                  value={settings.role}
+                  onChange={(event) => updateSettings({ role: event.target.value })}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="job_description">Job description (optional)</Label>
+              <Textarea
+                id="job_description"
+                rows={8}
+                maxLength={MAX_JD_CHARS}
+                placeholder="Paste the job ad: the questions will fit what it asks for."
+                value={jobDescription}
+                onChange={(event) => setJobDescription(event.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {jobDescription.length} / {MAX_JD_CHARS} characters
+              </p>
+            </div>
+            <OptionSelect
+              id="difficulty"
+              label="Difficulty"
+              options={config.difficulties}
+              value={settings.difficulty}
+              onChange={(difficulty) => updateSettings({ difficulty })}
+            />
+            <OptionSelect
+              id="question_count"
+              label="Questions"
+              options={questionCounts}
+              value={String(settings.question_count)}
+              onChange={(count) => updateSettings({ question_count: Number(count) })}
+            />
+            <OptionSelect
+              id="persona"
+              label="Interviewer"
+              options={config.personas}
+              value={settings.persona}
+              onChange={(persona) => updateSettings({ persona })}
+            />
+            <div className="flex flex-wrap items-center gap-4">
+              <Button type="submit" size="lg">
+                {starting ? "Preparing your interview…" : "Start interview"}
+              </Button>
+              <label className="flex items-center gap-2 text-sm">
+                <Switch checked={cloudVoice} onCheckedChange={setCloudVoice} />
+                Cloud voice
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {cloudVoice
+                ? "Google's Gemini voice: sounds more natural, about $0.03 per interview, and a few seconds more before each reply. Only the interviewer's text goes to Google, never your voice."
+                : "A free voice that runs on this computer. Turn on the cloud voice for a more natural one."}
+            </p>
+            {startError && <p className="text-sm text-destructive">{startError}</p>}
+          </CardContent>
+        </Card>
       </fieldset>
     </form>
   );
