@@ -123,6 +123,9 @@ function playOnAvatar(
 export function useSpeech(head: TalkingHead | null) {
   const [speaking, setSpeaking] = useState(false);
   const [sentence, setSentence] = useState<string | null>(null);
+  // the current reply's first sentence has started to play. Not `speaking`: that's true
+  // as soon as a sentence is queued, while it's still being synthesized
+  const [replyStarted, setReplyStarted] = useState(false);
   const queueRef = useRef<SpeechQueue<Clip> | null>(null);
   const headRef = useRef(head);
   const audioLipsyncRef = useRef<HeadAudio | null>(null);
@@ -210,7 +213,10 @@ export function useSpeech(head: TalkingHead | null) {
         return playBuffer(context, clip.buffer, signal);
       },
       {
-        onSentence: setSentence,
+        onSentence: (text) => {
+          setSentence(text);
+          setReplyStarted(true);
+        },
         onSpeakingChange: (now) => {
           setSpeaking(now);
           if (!now) setSentence(null);
@@ -267,6 +273,7 @@ export function useSpeech(head: TalkingHead | null) {
         case "meta": // a new turn
           queueRef.current?.stop();
           silencedRef.current = false;
+          setReplyStarted(false);
           splitterRef.current = newSplitter();
           break;
         case "token":
@@ -276,6 +283,7 @@ export function useSpeech(head: TalkingHead | null) {
           // stop at once (a leak: nothing more of that reply), then the in-character refusal
           queueRef.current?.stop();
           silencedRef.current = false; // a blocked answer gets its own spoken refusal
+          setReplyStarted(false);
           const splitter = newSplitter();
           splitterRef.current = splitter;
           say([...splitter.push(event.data.reply), ...splitter.flush()]);
@@ -293,7 +301,8 @@ export function useSpeech(head: TalkingHead | null) {
   const stop = useCallback(() => {
     silencedRef.current = true;
     queueRef.current?.stop();
+    setReplyStarted(false); // sending an answer starts here: the next reply hasn't
   }, []);
 
-  return { speaking, sentence, handleEvent, stop };
+  return { speaking, sentence, replyStarted, handleEvent, stop };
 }

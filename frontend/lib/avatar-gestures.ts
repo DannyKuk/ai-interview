@@ -30,6 +30,20 @@ export function addInterviewGestures(head: TalkingHead) {
   };
 }
 
+export function listenTo(
+  head: TalkingHead,
+  analyser: AnalyserNode,
+  onChange?: (event: string) => void, // for the test page: what TalkingHead detected
+) {
+  // a pause = quieter than its threshold for 1 s (its default 2 s feels late for a nod)
+  head.startListening(analyser, { listeningSilenceThresholdMs: 1000 }, (event) => {
+    if (event === "stop") {
+      head.playGesture("yes");
+    }
+    onChange?.(event);
+  });
+}
+
 // ends the thinking pose early. stopGesture() alone removes the animation before its
 // "hand down" step, so the arm would stay at the chin: a short one brings it down
 export function stopThinking(head: TalkingHead) {

@@ -46,8 +46,13 @@ declare module "@met4citizen/talkinghead" {
     playGesture(name: string, seconds?: number): void;
     stopGesture(ms?: number): void; // back to the rest pose over ms
     // listening: eye contact, head moves with the candidate's voice (volume from analyser)
-    startListening(analyser: AnalyserNode): void;
+    startListening(
+      analyser: AnalyserNode,
+      options?: { listeningSilenceThresholdMs?: number },
+      onChange?: (event: string) => void,
+    ): void;
     stopListening(): void;
+    listeningVolume: number; // 0..255, what its "start" / "stop" thresholds compare
     lookAhead(ms: number): void;
     lookAtCamera(ms: number): void;
     dispose(): void;

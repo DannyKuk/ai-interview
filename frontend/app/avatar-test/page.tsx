@@ -1,18 +1,19 @@
 "use client";
 
 import type { Mood, TalkingHead } from "@met4citizen/talkinghead";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { InterviewStage } from "@/components/interview/interview-stage";
 import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useRecorder } from "@/hooks/use-recorder";
 import type { InterviewSettings } from "@/lib/api";
-import { THINKING } from "@/lib/avatar-gestures";
+import { listenTo, stopThinking, THINKING } from "@/lib/avatar-gestures";
 import { synthesizeHeadTts } from "@/lib/headtts";
 
-// Avatar playground: the interview's stage, any office, any sentence straight to HeadTTS.
-// No LLM, no backend, no interview needed
+// Avatar playground: the interview's stage, any office, any sentence straight to HeadTTS,
+// thinking and listening as in the interview. No LLM, no backend, no interview needed
 
 type Company = InterviewSettings["company"];
 
@@ -47,6 +48,14 @@ const GESTURES = [
   { label: "✋ Hand up", name: "handup" },
 ];
 
+// stands in for the LLM: in the interview she thinks until the first sentence plays
+const EXTRA_WAITS = ["0 s", "1.5 s", "3 s"] as const;
+type ExtraWait = (typeof EXTRA_WAITS)[number];
+
+// TalkingHead's defaults for "the candidate talks" / "pauses" (its volume scale 0..255)
+const TALKING_ABOVE = 75;
+const PAUSE_BELOW = 40;
+
 // lips closed (P, B, M) and teeth on lip (F, V) are the easiest mouth shapes to check
 const SAMPLE =
   "Hi, I'm Sam. Before we begin, maybe tell me about a project that made you proud, and what you would do differently today.";
@@ -57,6 +66,30 @@ export default function AvatarTestPage() {
   const [mood, setMood] = useState<Mood>("neutral");
   const [text, setText] = useState(SAMPLE);
   const [busy, setBusy] = useState(false);
+  const [extraWait, setExtraWait] = useState<ExtraWait>("1.5 s");
+  const recorder = useRecorder();
+  const [volume, setVolume] = useState(0);
+  const [events, setEvents] = useState<string[]>([]); // newest first
+
+  // listening as in the interview, plus what TalkingHead hears, to tune its thresholds
+  useEffect(() => {
+    const analyser = recorder.analyser;
+    if (!head || !analyser) {
+      return;
+    }
+
+    const started = performance.now();
+    listenTo(head, analyser, (event) => {
+      const seconds = ((performance.now() - started) / 1000).toFixed(1);
+      setEvents((previous) => [`${seconds} s ${event}`, ...previous].slice(0, 6));
+    });
+    const timer = setInterval(() => setVolume(Math.round(head.listeningVolume)), 100);
+
+    return () => {
+      clearInterval(timer);
+      head.stopListening();
+    };
+  }, [head, recorder.analyser]);
 
   async function speak() {
     if (!head) {
@@ -64,14 +97,21 @@ export default function AvatarTestPage() {
     }
 
     setBusy(true);
+    // as in the interview: she thinks until the reply plays
+    head.playGesture(THINKING, 30);
     try {
       // the browser only lets audio start after a click
       await head.audioCtx.resume();
-      // nothing cancels it here: HeadTTS's own time limit still applies
-      const speech = await synthesizeHeadTts(text, "af_heart", new AbortController().signal);
+      const [speech] = await Promise.all([
+        // nothing cancels it here: HeadTTS's own time limit still applies
+        synthesizeHeadTts(text, "af_heart", new AbortController().signal),
+        new Promise((resolve) => setTimeout(resolve, parseFloat(extraWait) * 1000)),
+      ]);
       const audio = await head.audioCtx.decodeAudioData(speech.audio);
+      stopThinking(head);
       head.speakAudio({ ...speech, audio });
     } catch (error) {
+      stopThinking(head);
       console.error("Speaking failed", error);
     } finally {
       setBusy(false);
@@ -126,9 +166,35 @@ export default function AvatarTestPage() {
         </Button>
       </div>
       <Textarea value={text} onChange={(event) => setText(event.target.value)} rows={3} />
-      <Button onClick={speak} disabled={!head || busy || !text.trim()} className="self-start">
-        {busy ? "Synthesizing…" : "Speak"}
-      </Button>
+      <div className="flex items-end gap-4">
+        <OptionSelect
+          id="extra-wait"
+          label="Extra thinking time (the LLM)"
+          options={[...EXTRA_WAITS]}
+          value={extraWait}
+          onChange={setExtraWait}
+        />
+        <Button onClick={speak} disabled={!head || busy || !text.trim()}>
+          {busy ? "Thinking…" : "Speak"}
+        </Button>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Button
+          variant={recorder.status === "recording" ? "destructive" : "outline"}
+          onClick={() => (recorder.status === "recording" ? recorder.stop() : recorder.start())}
+          disabled={!head || recorder.status === "starting"}
+          className="self-start"
+        >
+          {recorder.status === "recording" ? "Stop listening" : "Listen (mic)"}
+        </Button>
+        {recorder.error && <p className="text-sm text-destructive">{recorder.error}</p>}
+        {recorder.status === "recording" && (
+          <p className="font-mono text-sm text-muted-foreground">
+            volume {volume} (talking above {TALKING_ABOVE}, pause below {PAUSE_BELOW}) ·{" "}
+            {events.join(" · ") || "no events yet"}
+          </p>
+        )}
+      </div>
     </main>
   );
 }

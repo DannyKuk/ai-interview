@@ -14,7 +14,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { useChatStream, type StreamedTurn } from "@/hooks/use-chat-stream";
 import { useSpeech } from "@/hooks/use-speech";
 import type { ChatMessage, ChatRequest } from "@/lib/api";
-import { stopThinking, THINKING } from "@/lib/avatar-gestures";
+import { listenTo, stopThinking, THINKING } from "@/lib/avatar-gestures";
 import { useInterviewStore, useStoreHydrated, type EndReason } from "@/lib/store";
 
 // request for the next interviewer turn: the whole transcript goes along every time,
@@ -108,7 +108,10 @@ export function InterviewChat() {
   }, [head]);
 
   const thinking =
-    messages.length > 0 && !!turn?.streaming && !speech.speaking && !(muted && turn.reply);
+    messages.length > 0 &&
+    !speech.replyStarted &&
+    (!!turn?.streaming || speech.speaking) &&
+    !(muted && turn?.reply);
   useEffect(() => {
     if (!head || !thinking) {
       return;
@@ -124,7 +127,7 @@ export function InterviewChat() {
       return;
     }
 
-    head.startListening(micAnalyser);
+    listenTo(head, micAnalyser);
     return () => head.stopListening();
   }, [head, micAnalyser]);
 
