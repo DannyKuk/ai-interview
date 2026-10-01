@@ -1,3 +1,5 @@
+import { Bubble, BubbleContent } from "@/components/ui/bubble";
+import { Message, MessageContent } from "@/components/ui/message";
 import type { ChatMessage } from "@/lib/api";
 
 type TranscriptProps = {
@@ -8,7 +10,7 @@ type TranscriptProps = {
 // the conversation so far. Used on /interview and /results
 export function Transcript({ messages, children }: TranscriptProps) {
   return (
-    <ol className="flex flex-col gap-3">
+    <ol className="flex flex-col gap-2">
       {messages.map((message, index) => (
         <TranscriptLine key={index} role={message.role} content={message.content} />
       ))}
@@ -18,9 +20,17 @@ export function Transcript({ messages, children }: TranscriptProps) {
 }
 
 export function TranscriptLine({ role, content }: ChatMessage) {
+  const mine = role === "user";
+
   return (
     <li>
-      <strong>{role === "assistant" ? "Interviewer" : "You"}:</strong> {content}
+      <Message align={mine ? "end" : "start"}>
+        <MessageContent>
+          <Bubble variant={mine ? "tinted" : "secondary"} align={mine ? "end" : "start"}>
+            <BubbleContent className="whitespace-pre-wrap">{content}</BubbleContent>
+          </Bubble>
+        </MessageContent>
+      </Message>
     </li>
   );
 }

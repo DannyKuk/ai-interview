@@ -4,6 +4,7 @@ import { LoaderCircle, Mic, Square } from "lucide-react";
 import { useEffect, useEffectEvent, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { MAX_ANSWER_SECONDS, useDictation } from "@/hooks/use-dictation";
@@ -41,6 +42,7 @@ export function AnswerInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const reviewBeforeSending = useInterviewStore((state) => state.reviewBeforeSending);
   const setReviewBeforeSending = useInterviewStore((state) => state.setReviewBeforeSending);
+  const captions = useInterviewStore((state) => state.captions);
   const text = value.trim();
 
   // switch off: stop = send the answer. On: it goes into the field to edit and send
@@ -100,7 +102,7 @@ export function AnswerInput({
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-2">
-      {busy && (
+      {(dictation.status === "transcribing" || (busy && !captions)) && (
         <p className="min-h-10 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
           {dictation.status === "transcribing"
             ? "Writing down your answer…"
@@ -117,57 +119,62 @@ export function AnswerInput({
         placeholder="Type your answer, or use the mic… (Enter to send, Shift+Enter for a new line)"
         className="max-h-60"
       />
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          variant={recording ? "destructive" : "outline"}
+          onClick={toggleMic}
+          disabled={
+            (disabled && !recording) ||
+            dictation.status === "starting" ||
+            dictation.status === "transcribing"
+          }
+          aria-pressed={recording}
+          title={recording ? "Stop: I'm done" : "Answer by voice"}
+          // the ring grows with the voice: you can see the mic hears you
+          style={
+            recording
+              ? {
+                  boxShadow: `0 0 0 ${2 + dictation.level * 8}px color-mix(in oklch, var(--destructive) 30%, transparent)`,
+                }
+              : undefined
+          }
+          className="tabular-nums transition-shadow"
+        >
+          {dictation.status === "transcribing" ? (
+            <LoaderCircle className="animate-spin" />
+          ) : recording ? (
+            <Square />
+          ) : (
+            <Mic />
+          )}
+          {recording ? `${clock(dictation.seconds)} / ${clock(MAX_ANSWER_SECONDS)}` : "Speak"}
+        </Button>
+        <Field orientation="horizontal" className="w-auto gap-2">
+          <Switch
+            id="review-before-sending"
+            size="sm"
+            checked={reviewBeforeSending}
+            onCheckedChange={setReviewBeforeSending}
+          />
+          <FieldLabel htmlFor="review-before-sending" className="text-xs font-normal">
+            Review before sending
+          </FieldLabel>
+        </Field>
+        <Button type="submit" disabled={locked || !text} className="ml-auto">
+          Send
+        </Button>
+      </div>
+      <FieldDescription className="flex justify-between gap-3 text-xs">
+        <span>
+          {reviewBeforeSending
+            ? "When you stop, your spoken answer lands in the box, so you can fix it before you send."
+            : "When you stop, your spoken answer is sent right away."}
+        </span>
+        <span className="shrink-0 whitespace-nowrap tabular-nums">
           {value.length} / {MAX_MESSAGE_CHARS}
         </span>
-        <div className="flex flex-wrap items-center justify-end gap-3">
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Switch
-              size="sm"
-              checked={reviewBeforeSending}
-              onCheckedChange={setReviewBeforeSending}
-            />
-            Review before sending
-          </label>
-          {/* mic + Send stay together: on a narrow screen the switch wraps, not Send */}
-          <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant={recording ? "destructive" : "outline"}
-              onClick={toggleMic}
-              disabled={
-                (disabled && !recording) ||
-                dictation.status === "starting" ||
-                dictation.status === "transcribing"
-              }
-              aria-pressed={recording}
-              title={recording ? "Stop: I'm done" : "Answer by voice"}
-              // the ring grows with the voice: you can see the mic hears you
-              style={
-                recording
-                  ? {
-                      boxShadow: `0 0 0 ${2 + dictation.level * 8}px color-mix(in oklch, var(--destructive) 30%, transparent)`,
-                    }
-                  : undefined
-              }
-              className="tabular-nums transition-shadow"
-            >
-              {dictation.status === "transcribing" ? (
-                <LoaderCircle className="animate-spin" />
-              ) : recording ? (
-                <Square />
-              ) : (
-                <Mic />
-              )}
-              {recording ? `${clock(dictation.seconds)} / ${clock(MAX_ANSWER_SECONDS)}` : "Speak"}
-            </Button>
-            <Button type="submit" disabled={locked || !text}>
-              Send
-            </Button>
-          </div>
-        </div>
-      </div>
+      </FieldDescription>
       {dictation.error && <p className="text-sm text-destructive">{dictation.error}</p>}
     </form>
   );

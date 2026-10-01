@@ -202,7 +202,7 @@ export function InterviewChat() {
         startedAt={startedAt}
         endedAt={endedAt}
       />
-      <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_360px]">
         <InterviewStage
           company={company}
           persona={persona}
