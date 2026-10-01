@@ -61,7 +61,7 @@ export function ResultsView() {
         )
       )}
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Transcript</h2>
+        <h2 className="font-heading text-lg font-medium">Transcript</h2>
         <Transcript messages={messages} />
       </section>
     </div>

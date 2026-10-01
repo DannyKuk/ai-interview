@@ -21,7 +21,9 @@ export function Scorecard({ feedback }: { feedback: FeedbackResponse }) {
     <div className="flex flex-col gap-6">
       <Card>
         <CardContent className="flex items-baseline gap-3">
-          <span className="text-4xl font-semibold">{formatScore(scorecard.overall)}</span>
+          <span className="font-heading text-4xl font-semibold">
+            {formatScore(scorecard.overall)}
+          </span>
           <span className="text-muted-foreground">
             out of 5 · {scorecard.answered} of {scorecard.total} questions answered
           </span>
@@ -38,7 +40,7 @@ export function Scorecard({ feedback }: { feedback: FeedbackResponse }) {
       </div>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-medium">Per question</h2>
+        <h2 className="font-heading text-lg font-medium">Per question</h2>
         {evaluations.map((evaluation) => (
           <QuestionCard
             key={evaluation.question}
@@ -50,7 +52,7 @@ export function Scorecard({ feedback }: { feedback: FeedbackResponse }) {
 
       {weakest && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-medium">
+          <h2 className="font-heading text-lg font-medium">
             A stronger answer to question {weakest.question + 1}
           </h2>
           <p className="text-sm text-muted-foreground">
