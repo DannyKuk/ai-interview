@@ -148,6 +148,10 @@
       color-mix(in oklch, var(--primary) 35%, transparent);
   }
 
+  .pulse-ring[data-speaking] {
+    animation: pulse-ring 1.2s ease-out infinite;
+  }
+
   .equalizer {
     display: inline-flex;
     align-items: end;
@@ -177,5 +181,14 @@
 @keyframes equalizer {
   to {
     transform: scaleY(0.35);
+  }
+}
+
+@keyframes pulse-ring {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--primary) 55%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 22px transparent;
   }
 }

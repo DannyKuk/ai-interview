@@ -23,6 +23,15 @@ function Portrait() {
   );
 }
 
+function RoundPortrait({ speaking }: { speaking: boolean }) {
+  return (
+    <div
+      data-speaking={speaking ? "" : undefined}
+      className="pulse-ring absolute top-[46%] left-1/2 aspect-square w-[clamp(130px,28%,200px)] -translate-1/2 rounded-full bg-muted bg-[url(/avatars/brunette.png)] bg-size-[140%] bg-position-[78%_54%] bg-no-repeat"
+    />
+  );
+}
+
 // three.js only loads on this page, and only in the browser
 const TalkingHeadAvatar = dynamic(
   async () => (await import("@/components/avatar/talking-head")).TalkingHeadAvatar,
@@ -81,7 +90,7 @@ export function InterviewStage({
             mood={persona && MOOD[persona]}
           />
         ) : (
-          <Portrait />
+          <RoundPortrait speaking={speaking} />
         )}
       </div>
       <div className="film-grain" />
