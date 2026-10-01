@@ -67,6 +67,8 @@ type InterviewState = {
   muted: boolean;
   // captions on the stage. A preference: reset() keeps it
   captions: boolean;
+  // the interview's session column (cost, guard). A preference: reset() keeps it
+  sessionPanel: boolean;
   // the 3D interviewer; off = a still image, three.js never loads (slow computers).
   // A preference: reset() keeps it
   avatar: boolean;
@@ -88,6 +90,7 @@ type InterviewState = {
   setMuted: (muted: boolean) => void;
   setAvatar: (avatar: boolean) => void;
   setCaptions: (captions: boolean) => void;
+  setSessionPanel: (sessionPanel: boolean) => void;
   addVoiceCost: (cost: number | null) => void;
   reset: () => void;
 };
@@ -116,6 +119,7 @@ export const useInterviewStore = create<InterviewState>()(
       muted: false,
       avatar: true,
       captions: true,
+      sessionPanel: false,
 
       updateSettings: (patch) =>
         set((state) => ({ settings: { ...state.settings, ...patch } as InterviewSettings })),
@@ -164,6 +168,7 @@ export const useInterviewStore = create<InterviewState>()(
       setMuted: (muted) => set({ muted }),
       setAvatar: (avatar) => set({ avatar }),
       setCaptions: (captions) => set({ captions }),
+      setSessionPanel: (sessionPanel) => set({ sessionPanel }),
       addVoiceCost: (cost) =>
         set((state) => ({
           costs: { ...state.costs, voice: (state.costs.voice ?? 0) + (cost ?? 0) },

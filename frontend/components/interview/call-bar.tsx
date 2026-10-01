@@ -1,10 +1,12 @@
 "use client";
 
-import { CaptionsIcon, ImageIcon, PhoneOffIcon, VolumeOffIcon } from "lucide-react";
+import { CaptionsIcon, ImageIcon, PanelLeftIcon, PhoneOffIcon, VolumeOffIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 type CallBarProps = {
+  sessionPanel: boolean;
+  onSessionPanelChange: (sessionPanel: boolean) => void;
   captions: boolean;
   onCaptionsChange: (captions: boolean) => void;
   muted: boolean;
@@ -16,6 +18,8 @@ type CallBarProps = {
 };
 
 export function CallBar({
+  sessionPanel,
+  onSessionPanelChange,
   captions,
   onCaptionsChange,
   muted,
@@ -27,7 +31,17 @@ export function CallBar({
 }: CallBarProps) {
   return (
     <footer className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-2">
-      <div className="col-start-2 flex justify-center gap-4">
+      <div className="justify-self-start">
+        <CallButton
+          label="Session"
+          pressed={sessionPanel}
+          onClick={() => onSessionPanelChange(!sessionPanel)}
+          title={sessionPanel ? "Hide the session numbers" : "Show cost, guard and plan"}
+        >
+          <PanelLeftIcon />
+        </CallButton>
+      </div>
+      <div className="flex justify-center gap-4">
         <CallButton
           label="Captions"
           pressed={captions}

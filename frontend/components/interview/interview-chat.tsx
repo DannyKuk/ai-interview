@@ -10,6 +10,7 @@ import { AnswerInput } from "@/components/interview/answer-input";
 import { CallBar } from "@/components/interview/call-bar";
 import { InterviewStage } from "@/components/interview/interview-stage";
 import { InterviewTopBar } from "@/components/interview/interview-top-bar";
+import { SessionPanel } from "@/components/interview/session-panel";
 import { Transcript, TranscriptLine } from "@/components/interview/transcript";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,7 @@ import { useSpeech } from "@/hooks/use-speech";
 import type { ChatMessage, ChatRequest } from "@/lib/api";
 import { listenTo, stopThinking, THINKING } from "@/lib/avatar-gestures";
 import { useInterviewStore, useStoreHydrated, type EndReason } from "@/lib/store";
+import { cn } from "@/lib/utils";
 
 // request for the next interviewer turn: the whole transcript goes along every time,
 // the plan unchanged (it's signed) and where we are in it
@@ -55,6 +57,8 @@ export function InterviewChat() {
   const setMuted = useInterviewStore((state) => state.setMuted);
   const avatar = useInterviewStore((state) => state.avatar);
   const captions = useInterviewStore((state) => state.captions);
+  const sessionPanel = useInterviewStore((state) => state.sessionPanel);
+  const setSessionPanel = useInterviewStore((state) => state.setSessionPanel);
   const setCaptions = useInterviewStore((state) => state.setCaptions);
   const setAvatar = useInterviewStore((state) => state.setAvatar);
   const company = useInterviewStore((state) => state.settings?.company);
@@ -202,7 +206,17 @@ export function InterviewChat() {
         startedAt={startedAt}
         endedAt={endedAt}
       />
-      <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <div
+        className={cn(
+          "grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-[minmax(0,1fr)]",
+          sessionPanel && "lg:grid-cols-[250px_minmax(0,1fr)_360px]",
+        )}
+      >
+        {sessionPanel && (
+          <div className="order-last flex min-h-0 flex-col lg:order-first">
+            <SessionPanel />
+          </div>
+        )}
         <InterviewStage
           company={company}
           persona={persona}
@@ -257,6 +271,8 @@ export function InterviewChat() {
         </Card>
       </div>
       <CallBar
+        sessionPanel={sessionPanel}
+        onSessionPanelChange={setSessionPanel}
         captions={captions}
         onCaptionsChange={setCaptions}
         muted={muted}

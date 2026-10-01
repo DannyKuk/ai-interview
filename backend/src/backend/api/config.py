@@ -37,4 +37,5 @@ async def get_config() -> AppConfig:
         default_model_settings=ModelSettings(model=settings.default_model),
         max_tokens_range=(MIN_MAX_TOKENS, MAX_MAX_TOKENS),
         question_count_range=(MIN_QUESTIONS, MAX_QUESTIONS),
+        session_cost_cap_usd=settings.session_cost_cap_usd,
     )

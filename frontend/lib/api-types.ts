@@ -252,6 +252,8 @@ export interface components {
                 number,
                 number
             ];
+            /** Session Cost Cap Usd */
+            session_cost_cap_usd: number;
         };
         /** Body_parse_cv_api_cv_parse_post */
         Body_parse_cv_api_cv_parse_post: {
