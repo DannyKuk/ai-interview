@@ -54,6 +54,8 @@ export function InterviewChat() {
   const muted = useInterviewStore((state) => state.muted);
   const setMuted = useInterviewStore((state) => state.setMuted);
   const avatar = useInterviewStore((state) => state.avatar);
+  const captions = useInterviewStore((state) => state.captions);
+  const setCaptions = useInterviewStore((state) => state.setCaptions);
   const setAvatar = useInterviewStore((state) => state.setAvatar);
   const company = useInterviewStore((state) => state.settings?.company);
   const persona = useInterviewStore((state) => state.settings?.persona);
@@ -64,6 +66,7 @@ export function InterviewChat() {
   const endedAt = useInterviewStore((state) => state.endedAt);
   const [head, setHead] = useState<TalkingHead | null>(null);
   const [micAnalyser, setMicAnalyser] = useState<AnalyserNode | null>(null);
+  const [dictationCaption, setDictationCaption] = useState<string | null>(null);
   const speech = useSpeech(head);
   const { turn, error, send, stop } = useChatStream({ onEvent: speech.handleEvent });
   const router = useRouter();
@@ -209,6 +212,7 @@ export function InterviewChat() {
           speaking={speech.speaking}
           candidate={candidate}
           mic={micAnalyser}
+          caption={captions ? { spoken: speech.sentence, dictation: dictationCaption } : undefined}
         />
         <Card className="min-h-0">
           <CardHeader>
@@ -246,12 +250,15 @@ export function InterviewChat() {
                 disabled={messages.length === 0 || !!turn?.streaming}
                 onMicStart={speech.stop}
                 onMicAudio={setMicAnalyser}
+                onCaption={setDictationCaption}
               />
             )}
           </CardFooter>
         </Card>
       </div>
       <CallBar
+        captions={captions}
+        onCaptionsChange={setCaptions}
         muted={muted}
         onMutedChange={setMuted}
         stillImage={!avatar}

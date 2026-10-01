@@ -6,6 +6,7 @@ import Image from "next/image";
 
 import { Equalizer } from "@/components/interview/equalizer";
 import { SelfView } from "@/components/interview/self-view";
+import { StageCaption } from "@/components/interview/stage-caption";
 import type { InterviewSettings } from "@/lib/api";
 
 // A still of the same avatar, rendered at the stage's height: shows while three.js and
@@ -46,6 +47,7 @@ type Props = {
   speaking: boolean;
   candidate: string | null;
   mic: AnalyserNode | null; // the candidate's mic while recording
+  caption?: { spoken: string | null; dictation: string | null }; // none = captions off
 };
 
 export function InterviewStage({
@@ -57,6 +59,7 @@ export function InterviewStage({
   speaking,
   candidate,
   mic,
+  caption,
 }: Props) {
   return (
     <div
@@ -90,6 +93,7 @@ export function InterviewStage({
         </span>
       )}
       <SelfView name={candidate} mic={mic} />
+      {caption && <StageCaption spoken={caption.spoken} dictation={caption.dictation} />}
     </div>
   );
 }

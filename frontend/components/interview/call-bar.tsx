@@ -1,10 +1,12 @@
 "use client";
 
-import { ImageIcon, PhoneOffIcon, VolumeOffIcon } from "lucide-react";
+import { CaptionsIcon, ImageIcon, PhoneOffIcon, VolumeOffIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 type CallBarProps = {
+  captions: boolean;
+  onCaptionsChange: (captions: boolean) => void;
   muted: boolean;
   onMutedChange: (muted: boolean) => void;
   stillImage: boolean;
@@ -14,6 +16,8 @@ type CallBarProps = {
 };
 
 export function CallBar({
+  captions,
+  onCaptionsChange,
   muted,
   onMutedChange,
   stillImage,
@@ -24,6 +28,14 @@ export function CallBar({
   return (
     <footer className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-2">
       <div className="col-start-2 flex justify-center gap-4">
+        <CallButton
+          label="Captions"
+          pressed={captions}
+          onClick={() => onCaptionsChange(!captions)}
+          title={captions ? "Hide the captions" : "Show captions on the call"}
+        >
+          <CaptionsIcon />
+        </CallButton>
         <CallButton
           label="Mute"
           pressed={muted}

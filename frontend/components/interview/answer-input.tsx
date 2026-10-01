@@ -17,6 +17,7 @@ type AnswerInputProps = {
   disabled: boolean;
   onMicStart?: () => void; // barge-in: the interviewer stops talking
   onMicAudio?: (analyser: AnalyserNode | null) => void; // the mic's volume while recording
+  onCaption?: (caption: string | null) => void; // the live dictation, null = not recording
 };
 
 function clock(seconds: number): string {
@@ -35,6 +36,7 @@ export function AnswerInput({
   disabled,
   onMicStart,
   onMicAudio,
+  onCaption,
 }: AnswerInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const reviewBeforeSending = useInterviewStore((state) => state.reviewBeforeSending);
@@ -59,6 +61,13 @@ export function AnswerInput({
     reportMicAudio(dictation.analyser);
     return () => reportMicAudio(null);
   }, [dictation.analyser]);
+
+  const reportCaption = useEffectEvent((caption: string | null) => onCaption?.(caption));
+  const caption = recording ? dictation.caption : null;
+  useEffect(() => {
+    reportCaption(caption);
+    return () => reportCaption(null);
+  }, [caption]);
 
   // back into the field when it's usable again (after a reply, or after dictating)
   useEffect(() => {
