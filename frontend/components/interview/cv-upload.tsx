@@ -86,7 +86,7 @@ export function CvUpload({ locked, onUploadingChange }: CvUploadProps) {
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         className={cn(
-          "flex cursor-pointer items-center gap-3 rounded-lg border border-dashed p-3.5 text-sm transition-colors hover:bg-muted/50",
+          "flex cursor-pointer items-center gap-3 rounded-lg border border-dashed p-3.5 text-sm transition-colors hover:bg-muted/50 has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
           dragging && "border-primary bg-primary/10",
           ownCv && "border-solid border-primary/20 bg-primary/10",
           uploading && "cursor-wait",

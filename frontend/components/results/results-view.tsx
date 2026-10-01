@@ -50,7 +50,7 @@ export function ResultsView() {
     <>
       <header className="flex flex-wrap items-center gap-x-4 gap-y-2 pr-12 pl-2 sm:pr-28">
         <span className="font-semibold">{company}</span>
-        <h1 className="text-muted-foreground">
+        <h1 className="order-last basis-full text-muted-foreground sm:order-none sm:basis-auto">
           {role} interview
           {startedAt && endedAt && ` ended after ${formatDuration((endedAt - startedAt) / 1000)}`}
         </h1>

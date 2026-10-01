@@ -72,9 +72,14 @@ export function CallBar({
         </CallButton>
       </div>
       {!ended && (
-        <Button variant="destructive" className="justify-self-end rounded-full" onClick={onEnd}>
+        <Button
+          variant="destructive"
+          className="justify-self-end rounded-full max-sm:size-11"
+          aria-label="End interview"
+          onClick={onEnd}
+        >
           <PhoneOffIcon />
-          End interview
+          <span className="max-sm:hidden">End interview</span>
         </Button>
       )}
     </footer>

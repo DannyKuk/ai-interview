@@ -192,3 +192,18 @@
     box-shadow: 0 0 0 22px transparent;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* a still ring instead of the pulse, so "she's speaking" still shows */
+  .pulse-ring[data-speaking] {
+    box-shadow: 0 0 0 4px color-mix(in oklch, var(--primary) 55%, transparent);
+  }
+}

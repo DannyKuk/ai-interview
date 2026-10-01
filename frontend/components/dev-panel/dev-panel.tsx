@@ -71,7 +71,7 @@ export function DevPanel() {
           <Button
             variant="outline"
             size="sm"
-            className="fixed top-3.5 right-4 z-10"
+            className="absolute top-3.5 right-4 z-10"
             aria-label="Settings"
           />
         }
