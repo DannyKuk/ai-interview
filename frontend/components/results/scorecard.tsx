@@ -1,5 +1,14 @@
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import type { FeedbackResponse } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 type Evaluation = FeedbackResponse["evaluations"][number];
 type Criterion = Evaluation["criteria"][number];
@@ -9,125 +18,145 @@ function formatScore(score: number): string {
   return score.toFixed(1);
 }
 
-// the whole feedback: overall score, strengths / improvements, one card per answered
-// question, the sample answer. No "use client": it's rendered by ResultsView, which is one
-export function Scorecard({ feedback }: { feedback: FeedbackResponse }) {
-  const { scorecard, evaluations } = feedback;
-  const weakest = evaluations.find(
-    (evaluation) => evaluation.question === scorecard.weakest_question,
-  );
+// 1 = empty, 5 = full
+function percentOf(score: number): number {
+  return ((score - 1) / 4) * 100;
+}
 
+function weakestOf({ scorecard, evaluations }: FeedbackResponse): Evaluation | undefined {
+  return evaluations.find((evaluation) => evaluation.question === scorecard.weakest_question);
+}
+
+// the left column
+export function ScoreSummary({ feedback: { scorecard } }: { feedback: FeedbackResponse }) {
   return (
     <div className="flex flex-col gap-6">
-      <Card>
-        <CardContent className="flex items-baseline gap-3">
-          <span className="font-heading text-4xl font-semibold">
-            {formatScore(scorecard.overall)}
-          </span>
-          <span className="text-muted-foreground">
-            out of 5 · {scorecard.answered} of {scorecard.total} questions answered
-          </span>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Points
-          title="What went well"
-          points={scorecard.strengths}
-          empty="Nothing to build on yet. Start with the points under “What to work on”."
+      <div className="flex flex-col gap-1">
+        <strong className="font-heading text-7xl leading-none font-semibold tracking-tight tabular-nums">
+          {formatScore(scorecard.overall)}
+        </strong>
+        <span className="text-muted-foreground">
+          out of 5, {scorecard.answered} of {scorecard.total} questions answered
+        </span>
+        <Progress
+          value={percentOf(scorecard.overall)}
+          className="mt-3 *:data-[slot=progress-track]:h-2"
         />
-        <Points title="What to work on" points={scorecard.improvements} />
+        <div className="flex justify-between text-xs text-muted-foreground tabular-nums">
+          {[1, 2, 3, 4, 5].map((tick) => (
+            <span key={tick}>{tick}</span>
+          ))}
+        </div>
       </div>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-lg font-medium">Per question</h2>
-        {evaluations.map((evaluation) => (
-          <QuestionCard
-            key={evaluation.question}
-            evaluation={evaluation}
-            weakest={evaluation === weakest}
-          />
-        ))}
-      </section>
-
-      {weakest && (
-        <section className="flex flex-col gap-3">
-          <h2 className="font-heading text-lg font-medium">
-            A stronger answer to question {weakest.question + 1}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {weakest.asked} Use it as a template: replace the [brackets] with your own story.
-          </p>
-          <Card>
-            <CardContent>
-              <SampleAnswer text={scorecard.sample_answer} />
-            </CardContent>
-          </Card>
-        </section>
-      )}
+      <Points
+        title="What went well"
+        points={scorecard.strengths}
+        empty="Nothing to build on yet. Start with the points under “What to work on”."
+      />
+      <Points title="What to work on" points={scorecard.improvements} hollow />
     </div>
   );
 }
 
-function Points({ title, points, empty }: { title: string; points: string[]; empty?: string }) {
+type PointsProps = { title: string; points: string[]; empty?: string; hollow?: boolean };
+
+function Points({ title, points, empty, hollow }: PointsProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {points.length === 0 ? (
-          <p className="text-muted-foreground">{empty}</p>
-        ) : (
-          <ul className="flex list-disc flex-col gap-2 pl-5">
-            {points.map((point) => (
-              <li key={point}>{point}</li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
+    <section className="flex flex-col gap-2">
+      <h3 className="font-medium">{title}</h3>
+      {points.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{empty}</p>
+      ) : (
+        <ul className="flex flex-col gap-2 text-sm">
+          {points.map((point) => (
+            <li key={point} className="grid grid-cols-[14px_1fr] gap-2">
+              <span
+                className={cn(
+                  "mt-1.5 size-2 rounded-full",
+                  hollow ? "border-[1.5px] border-muted-foreground" : "bg-primary",
+                )}
+              />
+              {point}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
-function QuestionCard({ evaluation, weakest }: { evaluation: Evaluation; weakest: boolean }) {
+// the right column: one row per answered question (the weakest open), then the sample answer
+export function QuestionResults({ feedback }: { feedback: FeedbackResponse }) {
+  const weakest = weakestOf(feedback);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          Question {evaluation.question + 1} · {evaluation.topic}
-          {weakest && (
-            <span className="ml-2 text-sm font-normal text-muted-foreground">(weakest)</span>
-          )}
-        </CardTitle>
-        <CardAction className="text-lg font-semibold">{formatScore(evaluation.score)}</CardAction>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <p className="text-sm text-muted-foreground">{evaluation.asked}</p>
+    <>
+      <Card className="py-2">
+        <CardContent>
+          <Accordion multiple defaultValue={weakest ? [weakest.question] : []}>
+            {feedback.evaluations.map((evaluation) => (
+              <QuestionRow
+                key={evaluation.question}
+                evaluation={evaluation}
+                weakest={evaluation === weakest}
+              />
+            ))}
+          </Accordion>
+        </CardContent>
+      </Card>
+
+      {weakest && (
+        <Card>
+          <CardHeader>
+            <CardTitle>A stronger answer to question {weakest.question + 1}</CardTitle>
+            <CardDescription>
+              {weakest.asked} Use it as a template: replace the [brackets] with your own story.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SampleAnswer text={feedback.scorecard.sample_answer} />
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
+
+function QuestionRow({ evaluation, weakest }: { evaluation: Evaluation; weakest: boolean }) {
+  return (
+    <AccordionItem value={evaluation.question}>
+      <AccordionTrigger className="min-w-0 items-center gap-3 py-3 hover:no-underline">
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold tabular-nums">
+          {evaluation.question + 1}
+        </span>
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="truncate">{evaluation.topic}</span>
+          {weakest && <Badge variant="secondary">Weakest</Badge>}
+        </span>
+        <Progress value={percentOf(evaluation.score)} className="hidden w-16 shrink-0 sm:flex" />
+        <span className="w-8 shrink-0 text-right font-heading text-lg font-semibold tabular-nums">
+          {formatScore(evaluation.score)}
+        </span>
+      </AccordionTrigger>
+      <AccordionContent className="flex flex-col gap-3 pl-10 [&_p:not(:last-child)]:mb-0">
+        <p className="text-muted-foreground">{evaluation.asked}</p>
         <p>{evaluation.feedback}</p>
         <ul className="flex flex-col gap-2">
           {evaluation.criteria.map((criterion) => (
             <CriterionLine key={criterion.criterion} criterion={criterion} />
           ))}
         </ul>
-      </CardContent>
-    </Card>
+      </AccordionContent>
+    </AccordionItem>
   );
 }
 
-// a criterion with its score as a bar: 1 = empty, 5 = full
 function CriterionLine({ criterion }: { criterion: Criterion }) {
-  const filled = ((criterion.score - 1) / 4) * 100;
-
   return (
-    <li className="flex flex-col gap-1 text-sm">
-      <div className="flex justify-between gap-4">
-        <span>{criterion.criterion}</span>
-        <span className="font-medium">{formatScore(criterion.score)}</span>
-      </div>
-      <div className="h-1.5 rounded-full bg-muted">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${filled}%` }} />
-      </div>
+    <li className="grid grid-cols-[minmax(0,1fr)_120px_3ch] items-center gap-3 tabular-nums">
+      <span>{criterion.criterion}</span>
+      <Progress value={percentOf(criterion.score)} />
+      <span className="text-right text-muted-foreground">{formatScore(criterion.score)}</span>
     </li>
   );
 }
@@ -138,10 +167,10 @@ function SampleAnswer({ text }: { text: string }) {
   const parts = text.split(/(\[[^\]]+\])/);
 
   return (
-    <p>
+    <p className="leading-relaxed">
       {parts.map((part, index) =>
         part.startsWith("[") ? (
-          <mark key={index} className="rounded bg-muted px-1 text-foreground">
+          <mark key={index} className="rounded bg-primary/15 px-1 text-primary">
             {part}
           </mark>
         ) : (

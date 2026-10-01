@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { formatDuration } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 type InterviewTopBarProps = {
@@ -74,8 +75,5 @@ function ElapsedTime({ startedAt, endedAt }: { startedAt: number; endedAt: numbe
     return () => clearInterval(timer);
   }, [endedAt]);
 
-  const seconds = Math.max(0, Math.floor(((endedAt ?? now) - startedAt) / 1000));
-  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
-  const ss = String(seconds % 60).padStart(2, "0");
-  return `${mm}:${ss}`;
+  return formatDuration(((endedAt ?? now) - startedAt) / 1000);
 }
