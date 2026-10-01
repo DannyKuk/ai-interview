@@ -1,13 +1,24 @@
 "use client";
 
-import { SettingsIcon } from "lucide-react";
+import { SlidersHorizontalIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Fragment, useEffect, useState } from "react";
 
 import { OptionSelect } from "@/components/option-select";
+import { OptionToggle } from "@/components/option-toggle";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+  FieldTitle,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Sheet,
   SheetContent,
@@ -23,14 +34,18 @@ import {
   getSystemPrompt,
   type AppConfig,
   type GuardVerdict,
+  type ModelInfo,
   type ModelSettings,
   type SystemPromptRequest,
 } from "@/lib/api";
 import { useInterviewStore, useStoreHydrated, type TurnLogEntry } from "@/lib/store";
 
 type Effort = ModelSettings["reasoning_effort"];
+// the backend lists a model's efforts high → minimal; the toggle reads better from low to high
+const EFFORT_ORDER: Effort[] = ["minimal", "low", "medium", "high"];
 
-// gear icon (or ?dev=1) → side sheet. Separate from the candidate UI, lives in the root layout.
+// Settings button top right on every page (or ?dev=1) → side sheet over the content.
+// Lives in the root layout.
 // useSearchParams needs a <Suspense> around it (see layout.tsx)
 export function DevPanel() {
   const [open, setOpen] = useState(useSearchParams().get("dev") === "1");
@@ -54,18 +69,19 @@ export function DevPanel() {
       <SheetTrigger
         render={
           <Button
-            variant="ghost"
-            size="icon"
-            className="fixed top-3 right-3"
-            aria-label="Developer settings"
+            variant="outline"
+            size="sm"
+            className="fixed top-3.5 right-4 z-10"
+            aria-label="Settings"
           />
         }
       >
-        <SettingsIcon />
+        <SlidersHorizontalIcon />
+        <span className="hidden sm:inline">Settings</span>
       </SheetTrigger>
       <SheetContent className="overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Developer settings</SheetTitle>
+          <SheetTitle>Settings</SheetTitle>
           <SheetDescription>Used from the next interviewer turn on.</SheetDescription>
         </SheetHeader>
         <div className="flex flex-col gap-5 px-4 pb-4">
@@ -93,7 +109,9 @@ function DevSettingsForm({ config }: { config: AppConfig }) {
   const modelId = modelSettings.model ?? config.default_model;
   const model = config.models.find((m) => m.id === modelId);
   const supports = (param: string) => model?.supported_parameters?.includes(param) ?? true;
-  const efforts = (model?.reasoning_efforts ?? [modelSettings.reasoning_effort]) as Effort[];
+  const efforts = EFFORT_ORDER.filter((effort) =>
+    (model?.reasoning_efforts ?? [modelSettings.reasoning_effort]).includes(effort),
+  );
 
   function updateModel(patch: Partial<ModelSettings>) {
     updateDev({ modelSettings: { ...modelSettings, ...patch } });
@@ -101,27 +119,12 @@ function DevSettingsForm({ config }: { config: AppConfig }) {
 
   return (
     <>
-      <OptionSelect
-        id="technique"
-        label="Prompt technique"
-        options={config.techniques}
-        value={dev.technique}
-        onChange={(technique) => updateDev({ technique })}
-      />
-      <OptionSelect
-        id="model"
-        label="Model"
-        options={config.models.map((m) => m.id)}
+      <ModelPicker
+        models={config.models}
         value={modelId}
         onChange={(model) => updateModel({ model })}
-        hint={
-          model?.input_price_per_m != null
-            ? `$${model.input_price_per_m} in / $${model.output_price_per_m} out per 1M tokens`
-            : undefined
-        }
       />
-      <OptionSelect
-        id="effort"
+      <OptionToggle
         label="Reasoning effort"
         options={efforts}
         value={modelSettings.reasoning_effort}
@@ -135,11 +138,57 @@ function DevSettingsForm({ config }: { config: AppConfig }) {
         onChange={(max_tokens) => updateModel({ max_tokens })}
         disabled={!supports("max_tokens")}
       />
+      <OptionSelect
+        id="technique"
+        label="Prompt technique"
+        options={config.techniques}
+        value={dev.technique}
+        onChange={(technique) => updateDev({ technique })}
+      />
       <PromptView />
       <SessionInfo />
       <CostBreakdown />
       <GuardLog />
     </>
+  );
+}
+
+const price = (value: number | null | undefined) => (value == null ? "?" : `$${value.toFixed(2)}`);
+
+type ModelPickerProps = {
+  models: ModelInfo[];
+  value: string;
+  onChange: (model: string) => void;
+};
+
+function ModelPicker({ models, value, onChange }: ModelPickerProps) {
+  return (
+    <FieldSet className="gap-0">
+      <FieldLegend variant="label">Model</FieldLegend>
+      <RadioGroup
+        value={value}
+        onValueChange={(next) => {
+          const picked = models.find((m) => m.id === next);
+          if (picked) {
+            onChange(picked.id);
+          }
+        }}
+      >
+        {models.map((m) => (
+          <FieldLabel key={m.id} htmlFor={`model-${m.id}`}>
+            <Field orientation="horizontal">
+              <FieldContent>
+                <FieldTitle>{m.id.split("/").at(-1)}</FieldTitle>
+                <FieldDescription className="tabular-nums">
+                  {price(m.input_price_per_m)} in / {price(m.output_price_per_m)} out per 1M tokens
+                </FieldDescription>
+              </FieldContent>
+              <RadioGroupItem value={m.id} id={`model-${m.id}`} />
+            </Field>
+          </FieldLabel>
+        ))}
+      </RadioGroup>
+    </FieldSet>
   );
 }
 

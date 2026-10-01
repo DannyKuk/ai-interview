@@ -1,6 +1,6 @@
 "use client";
 
-import { FieldLegend, FieldSet } from "@/components/ui/field";
+import { FieldDescription, FieldLegend, FieldSet } from "@/components/ui/field";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 type OptionToggleProps<T extends string> = {
@@ -8,6 +8,8 @@ type OptionToggleProps<T extends string> = {
   options: T[];
   value: T;
   onChange: (value: T) => void;
+  disabled?: boolean;
+  hint?: string;
 };
 
 // OptionSelect's sibling for short lists: every option visible, one click to pick.
@@ -17,6 +19,8 @@ export function OptionToggle<T extends string>({
   options,
   value,
   onChange,
+  disabled,
+  hint,
 }: OptionToggleProps<T>) {
   return (
     <FieldSet className="min-w-0 gap-0">
@@ -25,6 +29,7 @@ export function OptionToggle<T extends string>({
         variant="outline"
         spacing={0}
         className="w-full"
+        disabled={disabled}
         // Base UI keeps a list of pressed values (as plain strings); clicking the pressed one
         // empties it, and an empty pick isn't allowed here, so only a new option counts.
         // The find() turns the string back into T without a cast
@@ -42,6 +47,7 @@ export function OptionToggle<T extends string>({
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
+      {hint && <FieldDescription className="mt-2 text-xs">{hint}</FieldDescription>}
     </FieldSet>
   );
 }

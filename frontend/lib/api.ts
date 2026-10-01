@@ -1,6 +1,7 @@
 import type { components } from "@/lib/api-types";
 
 export type AppConfig = components["schemas"]["AppConfig"];
+export type ModelInfo = components["schemas"]["ModelInfo"];
 export type ChatMessage = components["schemas"]["ChatMessage"];
 export type ChatRequest = components["schemas"]["ChatRequest"];
 export type ChatResponse = components["schemas"]["ChatResponse"];
