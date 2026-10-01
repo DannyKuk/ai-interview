@@ -15,9 +15,22 @@ declare module "@met4citizen/talkinghead" {
     lipsyncLang?: string;
   };
 
+  // audio plus word and viseme (mouth shape) timings in ms, as HeadTTS returns them
+  export type SpeakAudioInput = {
+    audio: AudioBuffer;
+    words?: string[];
+    wtimes?: number[];
+    wdurations?: number[];
+    visemes?: string[];
+    vtimes?: number[];
+    vdurations?: number[];
+  };
+
   export class TalkingHead {
     constructor(node: HTMLElement, options?: TalkingHeadOptions);
+    audioCtx: AudioContext;
     showAvatar(avatar: AvatarOptions): Promise<void>;
+    speakAudio(speech: SpeakAudioInput): void;
     dispose(): void;
   }
 }
