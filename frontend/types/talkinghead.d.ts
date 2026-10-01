@@ -31,6 +31,10 @@ declare module "@met4citizen/talkinghead" {
   export class TalkingHead {
     constructor(node: HTMLElement, options?: TalkingHeadOptions);
     audioCtx: AudioContext;
+    audioSpeechGainNode: GainNode; // the speech output: HeadAudio listens here
+    // the morph targets (mouth shapes, …) by name: newvalue is applied on the next frame
+    mtAvatar: Record<string, { newvalue?: number; needsUpdate?: boolean }>;
+    opt: { update: ((dt: number) => void) | null };
     showAvatar(avatar: AvatarOptions): Promise<void>;
     speakAudio(speech: SpeakAudioInput): void;
     stopSpeaking(): void; // stops the clip, clears its queue, closes the lips

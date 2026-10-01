@@ -1,10 +1,12 @@
 "use client";
 
+import type { HeadAudio } from "@met4citizen/headaudio/dist/headaudio.min.mjs";
 import type { TalkingHead } from "@met4citizen/talkinghead";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { speak, type ChatStreamEvent, type SpeakRequest } from "@/lib/api";
+import { createAudioLipsync } from "@/lib/audio-lipsync";
 import { synthesizeHeadTts, type HeadTtsSpeech, type HeadTtsVoice } from "@/lib/headtts";
 import { SentenceSplitter } from "@/lib/sentences";
 import { SpeechQueue } from "@/lib/speech-queue";
@@ -66,21 +68,40 @@ function playBuffer(
 }
 
 // plays one clip through the avatar, lip-synced; barge-in (signal) cuts it off.
-// Resolves at the clip's end: a marker callback TalkingHead runs on its own clock
-function playOnAvatar(head: TalkingHead, clip: Clip, signal: AbortSignal): Promise<void> {
+// Resolves at the clip's end: a marker callback TalkingHead runs on its own clock.
+// A clip without timings (Gemini) moves the lips through audioLipsync
+function playOnAvatar(
+  head: TalkingHead,
+  clip: Clip,
+  audioLipsync: HeadAudio | null,
+  signal: AbortSignal,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     const durationMs = clip.buffer.duration * 1000;
     const fallback = setTimeout(resolve, durationMs + AVATAR_END_GRACE_MS);
 
-    const finish = () => {
+    let listener = clip.lipsync ? null : audioLipsync;
+    if (listener) {
+      head.audioSpeechGainNode.connect(listener);
+    }
+
+    const release = () => {
       clearTimeout(fallback);
+      if (listener) {
+        head.audioSpeechGainNode.disconnect(listener);
+        listener = null;
+      }
+    };
+
+    const finish = () => {
+      release();
       resolve();
     };
 
     signal.addEventListener(
       "abort",
       () => {
-        clearTimeout(fallback);
+        release();
         head.stopSpeaking();
         reject(signal.reason);
       },
@@ -104,6 +125,7 @@ export function useSpeech(head: TalkingHead | null) {
   const [sentence, setSentence] = useState<string | null>(null);
   const queueRef = useRef<SpeechQueue<Clip> | null>(null);
   const headRef = useRef(head);
+  const audioLipsyncRef = useRef<HeadAudio | null>(null);
   const splitterRef = useRef(new SentenceSplitter());
   const warnedRef = useRef(false);
   const silencedRef = useRef(false);
@@ -115,7 +137,30 @@ export function useSpeech(head: TalkingHead | null) {
 
   useEffect(() => {
     headRef.current = head;
-  }, [head]);
+    audioLipsyncRef.current = null;
+    // HeadTTS sends its own timings: HeadAudio is only needed for the TTS Cloud model
+    if (!head || engine() !== "gemini") {
+      return;
+    }
+
+    let cancelled = false;
+    async function setUp(avatar: TalkingHead) {
+      try {
+        const audioLipsync = await createAudioLipsync(avatar);
+        if (!cancelled) {
+          audioLipsyncRef.current = audioLipsync;
+        }
+      } catch (error) {
+        // the voice still plays, only the lips stay still
+        console.error("Lip-sync for the cloud voice failed to load", error);
+      }
+    }
+    setUp(head);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [head, engine]);
 
   useEffect(() => {
     const context = new AudioContext();
@@ -159,7 +204,7 @@ export function useSpeech(head: TalkingHead | null) {
         // its own audio context, still blocked after a reload until the first click:
         // TalkingHead would skip the clip, so play it plainly
         if (avatar?.audioCtx.state === "running") {
-          return playOnAvatar(avatar, clip, signal);
+          return playOnAvatar(avatar, clip, audioLipsyncRef.current, signal);
         }
 
         return playBuffer(context, clip.buffer, signal);

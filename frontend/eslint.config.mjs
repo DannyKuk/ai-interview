@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // vendored: HeadAudio's minified worklet, copied from node_modules
+    "public/headaudio/**",
   ]),
 ]);
 
