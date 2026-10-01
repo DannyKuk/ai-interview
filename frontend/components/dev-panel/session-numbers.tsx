@@ -4,7 +4,7 @@ import { Fragment } from "react";
 
 import { Progress } from "@/components/ui/progress";
 import type { GuardVerdict } from "@/lib/api";
-import { useInterviewStore, type TurnLogEntry } from "@/lib/store";
+import { useInterviewStore, type Costs, type TurnLogEntry } from "@/lib/store";
 
 export function SessionNumbers({ costCap }: { costCap: number | null }) {
   return (
@@ -16,10 +16,22 @@ export function SessionNumbers({ costCap }: { costCap: number | null }) {
   );
 }
 
-const usd = (value: number) => `$${value.toFixed(4)}`;
+export const usd = (value: number) => `$${value.toFixed(4)}`;
 
 const sum = (costs: (number | null | undefined)[]) =>
   costs.filter((cost) => typeof cost === "number").reduce((total, cost) => total + cost, 0);
+
+// everything this interview cost so far
+export function totalCost(costs: Costs, turnLog: TurnLogEntry[]) {
+  const all = [
+    costs.cv,
+    costs.plan,
+    ...turnLog.map((entry) => entry.usage?.cost),
+    costs.voice,
+    costs.feedback,
+  ];
+  return { total: sum(all), unreported: all.some((cost) => cost === null) };
+}
 
 function SessionInfo() {
   const lastTurn = useInterviewStore((state) => state.turnLog.at(-1));
@@ -74,8 +86,7 @@ function CostBreakdown({ costCap }: { costCap: number | null }) {
     { label: "Feedback", cost: costs.feedback, noCall: "not yet" },
   ];
 
-  const total = sum(rows.map((row) => row.cost));
-  const unreported = [...rows.map((row) => row.cost), ...turnCosts].some((cost) => cost === null);
+  const { total, unreported } = totalCost(costs, turnLog);
   const counted = sum([...turnCosts, costs.voice, costs.feedback]);
 
   return (

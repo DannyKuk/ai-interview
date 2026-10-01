@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { Transcript } from "@/components/interview/transcript";
+import { InterviewSummary } from "@/components/results/interview-summary";
 import { QuestionResults, ScoreSummary } from "@/components/results/scorecard";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,32 +63,37 @@ export function ResultsView() {
       </header>
 
       <div className="grid items-start gap-3 lg:grid-cols-[340px_minmax(0,1fr)]">
-        <Card>
-          <CardContent>
-            {!scored ? (
-              <p>Interview ended early. Answer at least {MIN_ANSWERS} questions to get a score.</p>
-            ) : feedback ? (
-              <ScoreSummary feedback={feedback} />
-            ) : error ? (
-              <div className="flex flex-col items-start gap-3">
-                <p className="text-destructive">{error.message}</p>
-                {error.final ? (
-                  <Link href="/" className={buttonVariants()}>
-                    Start a new interview
-                  </Link>
-                ) : (
-                  <Button onClick={retry}>Try again</Button>
-                )}
-              </div>
-            ) : (
-              loading && (
-                <p className="text-muted-foreground">
-                  Scoring your answers and writing your feedback. This takes about 20 seconds…
+        <div className="flex min-w-0 flex-col gap-3">
+          <Card>
+            <CardContent>
+              {!scored ? (
+                <p>
+                  Interview ended early. Answer at least {MIN_ANSWERS} questions to get a score.
                 </p>
-              )
-            )}
-          </CardContent>
-        </Card>
+              ) : feedback ? (
+                <ScoreSummary feedback={feedback} />
+              ) : error ? (
+                <div className="flex flex-col items-start gap-3">
+                  <p className="text-destructive">{error.message}</p>
+                  {error.final ? (
+                    <Link href="/" className={buttonVariants()}>
+                      Start a new interview
+                    </Link>
+                  ) : (
+                    <Button onClick={retry}>Try again</Button>
+                  )}
+                </div>
+              ) : (
+                loading && (
+                  <p className="text-muted-foreground">
+                    Scoring your answers and writing your feedback. This takes about 20 seconds…
+                  </p>
+                )
+              )}
+            </CardContent>
+          </Card>
+          <InterviewSummary />
+        </div>
 
         <div className="flex min-w-0 flex-col gap-3">
           {feedback && <QuestionResults feedback={feedback} />}
