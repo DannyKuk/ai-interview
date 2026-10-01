@@ -1,19 +1,30 @@
 "use client";
 
 import type { TalkingHead } from "@met4citizen/talkinghead";
-import dynamic from "next/dynamic";
 import { useState } from "react";
 
+import { InterviewStage } from "@/components/interview/interview-stage";
+import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import type { InterviewSettings } from "@/lib/api";
 import { synthesizeHeadTts } from "@/lib/headtts";
 
-// Lip-sync playground: any sentence straight to HeadTTS and the avatar, no LLM or interview.
-// A client page because ssr: false isn't allowed in Server Components
-const TalkingHeadAvatar = dynamic(
-  async () => (await import("@/components/avatar/talking-head")).TalkingHeadAvatar,
-  { ssr: false },
-);
+// Avatar playground: the interview's stage, any office, any sentence straight to HeadTTS.
+// No LLM, no backend, no interview needed
+
+type Company = InterviewSettings["company"];
+
+const COMPANIES: Company[] = [
+  "Guugle",
+  "HeadBook",
+  "Instakilogram",
+  "Netflux",
+  "Amazin",
+  "Goldman Sax",
+  "Tesler",
+  "Starbacks",
+];
 
 // lips closed (P, B, M) and teeth on lip (F, V) are the easiest mouth shapes to check
 const SAMPLE =
@@ -21,6 +32,7 @@ const SAMPLE =
 
 export default function AvatarTestPage() {
   const [head, setHead] = useState<TalkingHead | null>(null);
+  const [company, setCompany] = useState<Company>("Netflux");
   const [text, setText] = useState(SAMPLE);
   const [busy, setBusy] = useState(false);
 
@@ -46,7 +58,14 @@ export default function AvatarTestPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-16">
-      <TalkingHeadAvatar onReady={setHead} />
+      <InterviewStage company={company} onReady={setHead} />
+      <OptionSelect
+        id="company"
+        label="Office"
+        options={COMPANIES}
+        value={company}
+        onChange={setCompany}
+      />
       <Textarea value={text} onChange={(event) => setText(event.target.value)} rows={3} />
       <Button onClick={speak} disabled={!head || busy || !text.trim()} className="self-start">
         {busy ? "Synthesizing…" : "Speak"}

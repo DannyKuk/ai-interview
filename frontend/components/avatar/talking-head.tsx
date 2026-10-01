@@ -1,18 +1,19 @@
 "use client";
 
 import { TalkingHead } from "@met4citizen/talkinghead";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
 
 type Status = "loading" | "ready" | "error";
 
 type Props = {
   // the head once the avatar is on screen (to make it speak), null after unmount
   onReady?: (head: TalkingHead | null) => void;
+  placeholder?: ReactNode;
 };
 
 // The 3D interviewer. three.js and TalkingHead need the browser, so load this
 // only through next/dynamic with ssr: false
-export function TalkingHeadAvatar({ onReady }: Props) {
+export function TalkingHeadAvatar({ onReady, placeholder }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<Status>("loading");
   // always calls the latest onReady, without making the effect rebuild the avatar
@@ -69,13 +70,14 @@ export function TalkingHeadAvatar({ onReady }: Props) {
   }, []);
 
   return (
-    <div className="relative h-[480px] w-full">
+    <div className="relative size-full">
       <div ref={containerRef} className="size-full" />
-      {status !== "ready" && (
-        <p className="absolute inset-0 grid place-items-center text-sm text-muted-foreground">
-          {status === "loading" ? "Loading the interviewer…" : "The avatar couldn't load."}
-        </p>
-      )}
+      {status !== "ready" &&
+        (placeholder ?? (
+          <p className="absolute inset-0 grid place-items-center text-sm text-muted-foreground">
+            {status === "loading" ? "Loading the interviewer…" : "The avatar couldn't load."}
+          </p>
+        ))}
     </div>
   );
 }

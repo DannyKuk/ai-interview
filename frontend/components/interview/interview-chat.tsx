@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AnswerInput } from "@/components/interview/answer-input";
+import { InterviewStage } from "@/components/interview/interview-stage";
 import { Transcript, TranscriptLine } from "@/components/interview/transcript";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useChatStream, type StreamedTurn } from "@/hooks/use-chat-stream";
@@ -48,6 +49,7 @@ export function InterviewChat() {
   const progress = useInterviewStore((state) => state.progress);
   const muted = useInterviewStore((state) => state.muted);
   const setMuted = useInterviewStore((state) => state.setMuted);
+  const company = useInterviewStore((state) => state.settings?.company);
   // the interviewer's replies are spoken while they stream (HeadTTS)
   const speech = useSpeech();
   const { turn, error, send, stop } = useChatStream({ onEvent: speech.handleEvent });
@@ -143,6 +145,7 @@ export function InterviewChat() {
 
   return (
     <div className="flex flex-col gap-4">
+      <InterviewStage company={company} />
       <div className="flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {plan &&
