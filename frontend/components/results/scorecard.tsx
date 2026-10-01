@@ -7,6 +7,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { FeedbackResponse } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -54,6 +55,25 @@ export function ScoreSummary({ feedback: { scorecard } }: { feedback: FeedbackRe
         empty="Nothing to build on yet. Start with the points under “What to work on”."
       />
       <Points title="What to work on" points={scorecard.improvements} hollow />
+    </div>
+  );
+}
+
+export function ScoreSkeleton() {
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-18 w-28" />
+        <Skeleton className="h-4 w-52" />
+        <Skeleton className="h-2 w-full" />
+      </div>
+      {[0, 1].map((section) => (
+        <div key={section} className="flex flex-col gap-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-4/5" />
+        </div>
+      ))}
     </div>
   );
 }

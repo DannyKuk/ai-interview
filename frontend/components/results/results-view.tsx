@@ -1,21 +1,31 @@
 "use client";
 
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { Transcript } from "@/components/interview/transcript";
 import { InterviewSummary } from "@/components/results/interview-summary";
-import { QuestionResults, ScoreSummary } from "@/components/results/scorecard";
+import { QuestionResults, ScoreSkeleton, ScoreSummary } from "@/components/results/scorecard";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useFeedback } from "@/hooks/use-feedback";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Spinner } from "@/components/ui/spinner";
+import { useFeedback, type FeedbackError } from "@/hooks/use-feedback";
 import { answersFrom } from "@/lib/answers";
 import type { ChatMessage } from "@/lib/api";
 import { useInterviewStore, useStoreHydrated } from "@/lib/store";
 import { formatDuration } from "@/lib/time";
+import { cn } from "@/lib/utils";
 
 // fewer answers than this → no score, "ended early"
 const MIN_ANSWERS = 2;
@@ -54,53 +64,85 @@ export function ResultsView() {
           {role} interview
           {startedAt && endedAt && ` ended after ${formatDuration((endedAt - startedAt) / 1000)}`}
         </h1>
-        <Link
-          href="/"
-          className={buttonVariants({ variant: "outline", size: "sm", className: "ml-auto" })}
-        >
+        <Link href="/" className={buttonVariants({ size: "lg", className: "ml-auto" })}>
+          <PlusIcon data-icon="inline-start" />
           New interview
         </Link>
       </header>
 
       <div className="grid items-start gap-3 lg:grid-cols-[340px_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-3">
-          <Card>
-            <CardContent>
-              {!scored ? (
-                <p>
-                  Interview ended early. Answer at least {MIN_ANSWERS} questions to get a score.
-                </p>
-              ) : feedback ? (
-                <ScoreSummary feedback={feedback} />
-              ) : error ? (
-                <div className="flex flex-col items-start gap-3">
-                  <p className="text-destructive">{error.message}</p>
-                  {error.final ? (
-                    <Link href="/" className={buttonVariants()}>
-                      Start a new interview
-                    </Link>
-                  ) : (
-                    <Button onClick={retry}>Try again</Button>
-                  )}
-                </div>
-              ) : (
-                loading && (
-                  <p className="text-muted-foreground">
-                    Scoring your answers and writing your feedback. This takes about 20 seconds…
+          {(!scored || feedback || loading) && (
+            <Card>
+              <CardContent>
+                {!scored ? (
+                  <p>
+                    Interview ended early. Answer at least {MIN_ANSWERS} questions to get a score.
                   </p>
-                )
-              )}
-            </CardContent>
-          </Card>
+                ) : feedback ? (
+                  <ScoreSummary feedback={feedback} />
+                ) : (
+                  <ScoreSkeleton />
+                )}
+              </CardContent>
+            </Card>
+          )}
           <InterviewSummary />
         </div>
 
-        <div className="flex min-w-0 flex-col gap-3">
-          {feedback && <QuestionResults feedback={feedback} />}
+        {/* phones stack the columns: while scoring, the wait comes first, not the skeleton */}
+        <div
+          className={cn("flex min-w-0 flex-col gap-3", scored && !feedback && "max-lg:order-first")}
+        >
+          {feedback ? (
+            <QuestionResults feedback={feedback} />
+          ) : (
+            scored &&
+            (loading || error) && <FeedbackStatus error={error} retry={retry} answers={answers} />
+          )}
           <TranscriptCard messages={messages} />
         </div>
       </div>
     </>
+  );
+}
+
+type FeedbackStatusProps = { error: FeedbackError | null; retry: () => void; answers: number };
+
+function FeedbackStatus({ error, retry, answers }: FeedbackStatusProps) {
+  return (
+    <Card>
+      <Empty className="py-12">
+        {error ? (
+          <>
+            <EmptyHeader>
+              <EmptyTitle className="text-xl">Couldn&apos;t score your answers</EmptyTitle>
+              <EmptyDescription>{error.message}</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              {error.final ? (
+                <Link href="/" className={buttonVariants()}>
+                  Start a new interview
+                </Link>
+              ) : (
+                <Button onClick={retry}>Try again</Button>
+              )}
+            </EmptyContent>
+          </>
+        ) : (
+          <EmptyHeader>
+            <EmptyMedia variant="icon" className="size-12 rounded-full bg-primary/10 text-primary">
+              <Spinner className="size-6" />
+            </EmptyMedia>
+            <EmptyTitle className="text-xl">Scoring your answers</EmptyTitle>
+            <EmptyDescription>
+              Going through your {answers} answers and writing your feedback. This takes about 20
+              seconds.
+            </EmptyDescription>
+          </EmptyHeader>
+        )}
+      </Empty>
+    </Card>
   );
 }
 
