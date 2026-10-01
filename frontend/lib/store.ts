@@ -50,6 +50,8 @@ type InterviewState = {
   progress: PlanProgress | null; // where we are in the plan, from the last turn's meta
   messages: TranscriptMessage[]; // the transcript, sent as history on every turn
   ended: EndReason | null; // set once the interviewer has said goodbye
+  startedAt: number | null; // ms timestamps, for the call's clock
+  endedAt: number | null;
   feedback: FeedbackResponse | null; // kept, so a reload of /results doesn't recall the API
   dev: DevSettings | null; // null until the setup page fills in the backend defaults
   turnLog: TurnLogEntry[]; // oldest first
@@ -98,6 +100,8 @@ export const useInterviewStore = create<InterviewState>()(
       progress: null,
       messages: [],
       ended: null,
+      startedAt: null,
+      endedAt: null,
       feedback: null,
       dev: null,
       turnLog: [],
@@ -132,13 +136,16 @@ export const useInterviewStore = create<InterviewState>()(
           progress: null,
           messages: [],
           ended: null,
+          startedAt: Date.now(),
+          endedAt: null,
           feedback: null,
           turnLog: [],
           costs: { cv: state.costs.cv, plan: cost },
         })),
       addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
       setProgress: (progress) => set({ progress }),
-      endInterview: (reason) => set({ ended: reason }),
+      endInterview: (reason) =>
+        set((state) => ({ ended: reason, endedAt: state.endedAt ?? Date.now() })),
       setFeedback: (feedback, cost) =>
         set((state) => ({ feedback, costs: { ...state.costs, feedback: cost } })),
       // kept across interviews (not cleared by startInterview): it's the experiment setup
@@ -164,6 +171,8 @@ export const useInterviewStore = create<InterviewState>()(
           progress: null,
           messages: [],
           ended: null,
+          startedAt: null,
+          endedAt: null,
           feedback: null,
           dev: null,
           turnLog: [],

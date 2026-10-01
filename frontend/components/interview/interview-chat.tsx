@@ -1,16 +1,18 @@
 "use client";
 
 import type { TalkingHead } from "@met4citizen/talkinghead";
-import { Box, Image as ImageIcon, Volume2, VolumeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { AnswerInput } from "@/components/interview/answer-input";
+import { CallBar } from "@/components/interview/call-bar";
 import { InterviewStage } from "@/components/interview/interview-stage";
+import { InterviewTopBar } from "@/components/interview/interview-top-bar";
 import { Transcript, TranscriptLine } from "@/components/interview/transcript";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useChatStream, type StreamedTurn } from "@/hooks/use-chat-stream";
 import { useSpeech } from "@/hooks/use-speech";
 import type { ChatMessage, ChatRequest } from "@/lib/api";
@@ -55,6 +57,9 @@ export function InterviewChat() {
   const setAvatar = useInterviewStore((state) => state.setAvatar);
   const company = useInterviewStore((state) => state.settings?.company);
   const persona = useInterviewStore((state) => state.settings?.persona);
+  const role = useInterviewStore((state) => state.settings?.role);
+  const startedAt = useInterviewStore((state) => state.startedAt);
+  const endedAt = useInterviewStore((state) => state.endedAt);
   const [head, setHead] = useState<TalkingHead | null>(null);
   const [micAnalyser, setMicAnalyser] = useState<AnalyserNode | null>(null);
   const speech = useSpeech(head);
@@ -182,77 +187,67 @@ export function InterviewChat() {
   const shownProgress = (turn?.streaming && turn.progress) || progress;
 
   return (
-    <div className="flex flex-col gap-4">
-      <InterviewStage company={company} persona={persona} avatar={avatar} onReady={setHead} />
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">
-          {plan &&
-            shownProgress &&
-            !ended &&
-            `Question ${shownProgress.question + 1} of ${plan.plan.questions.length}`}
-        </p>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setAvatar(!avatar)}
-            aria-pressed={!avatar}
-            title={
-              avatar
-                ? "Show a still image instead of the 3D interviewer (lighter for slow computers)"
-                : "Show the 3D interviewer"
-            }
-          >
-            {avatar ? <ImageIcon /> : <Box />}
-            {avatar ? "Still image" : "3D avatar"}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMuted(!muted)}
-            aria-pressed={muted}
-            title={muted ? "Turn the interviewer's voice on" : "Mute the interviewer"}
-          >
-            {muted ? <VolumeOff /> : <Volume2 />}
-            {muted ? "Unmute" : "Mute"}
-          </Button>
-        </div>
+    <>
+      <InterviewTopBar
+        company={company}
+        role={role}
+        questionCount={plan?.plan.questions.length}
+        currentQuestion={shownProgress?.question}
+        ended={!!ended}
+        startedAt={startedAt}
+        endedAt={endedAt}
+      />
+      <div className="grid gap-3 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <InterviewStage company={company} persona={persona} avatar={avatar} onReady={setHead} />
+        <Card className="min-h-0">
+          <CardHeader>
+            <CardTitle>Transcript</CardTitle>
+          </CardHeader>
+          {/* column-reverse keeps the scroll pinned to the newest line without any JS */}
+          <CardContent className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto">
+            <Transcript messages={messages}>
+              {pending && <TranscriptLine role="user" content={pending} />}
+              {(turn?.streaming || turn?.blocked) && (
+                <TranscriptLine role="assistant" content={turn.reply || "…"} />
+              )}
+            </Transcript>
+          </CardContent>
+          <CardFooter className="flex-col items-stretch gap-3">
+            {ended ? (
+              <>
+                <p className="text-muted-foreground">{ENDED_TEXT[ended]}</p>
+                <Link href="/results" className={buttonVariants()}>
+                  See your feedback
+                </Link>
+              </>
+            ) : noQuestion || mustRestart ? (
+              <div className="flex items-center justify-end gap-2">
+                <Link href="/" className={buttonVariants({ variant: "outline" })}>
+                  Back to setup
+                </Link>
+                {!mustRestart && <Button onClick={firstTurn}>Try again</Button>}
+              </div>
+            ) : (
+              <AnswerInput
+                value={draft}
+                onChange={setDraft}
+                onSend={answer}
+                disabled={messages.length === 0 || !!turn?.streaming}
+                onMicStart={speech.stop}
+                onMicAudio={setMicAnalyser}
+              />
+            )}
+          </CardFooter>
+        </Card>
       </div>
-      <Transcript messages={messages}>
-        {pending && <TranscriptLine role="user" content={pending} />}
-        {(turn?.streaming || turn?.blocked) && (
-          <TranscriptLine role="assistant" content={turn.reply || "…"} />
-        )}
-      </Transcript>
-      {ended ? (
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-muted-foreground">{ENDED_TEXT[ended]}</p>
-          <Link href="/results" className={buttonVariants()}>
-            See your feedback
-          </Link>
-        </div>
-      ) : noQuestion || mustRestart ? (
-        <div className="flex items-center justify-end gap-2">
-          <Link href="/" className={buttonVariants({ variant: "outline" })}>
-            Back to setup
-          </Link>
-          {!mustRestart && <Button onClick={firstTurn}>Try again</Button>}
-        </div>
-      ) : (
-        <AnswerInput
-          value={draft}
-          onChange={setDraft}
-          onSend={answer}
-          disabled={messages.length === 0 || !!turn?.streaming}
-          onMicStart={speech.stop}
-          onMicAudio={setMicAnalyser}
-        />
-      )}
-      {!ended && (
-        <Button variant="destructive" className="self-start" onClick={leave}>
-          Leave interview
-        </Button>
-      )}
-    </div>
+      <CallBar
+        muted={muted}
+        onMutedChange={setMuted}
+        stillImage={!avatar}
+        onStillImageChange={(stillImage) => setAvatar(!stillImage)}
+        ended={!!ended}
+        onEnd={leave}
+      />
+    </>
   );
 }

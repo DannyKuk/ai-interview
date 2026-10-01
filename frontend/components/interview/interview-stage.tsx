@@ -46,7 +46,7 @@ type Props = {
 export function InterviewStage({ company, persona, avatar = true, onReady }: Props) {
   return (
     <div
-      className="relative h-[360px] overflow-hidden rounded-xl bg-muted bg-cover bg-center"
+      className="relative min-h-[420px] overflow-hidden rounded-xl bg-muted bg-cover bg-center"
       style={company ? { backgroundImage: `url(${backgroundOf(company)})` } : undefined}
     >
       {avatar ? (
