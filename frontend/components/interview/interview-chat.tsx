@@ -14,6 +14,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { useChatStream, type StreamedTurn } from "@/hooks/use-chat-stream";
 import { useSpeech } from "@/hooks/use-speech";
 import type { ChatMessage, ChatRequest } from "@/lib/api";
+import { stopThinking, THINKING } from "@/lib/avatar-gestures";
 import { useInterviewStore, useStoreHydrated, type EndReason } from "@/lib/store";
 
 // request for the next interviewer turn: the whole transcript goes along every time,
@@ -53,6 +54,7 @@ export function InterviewChat() {
   const company = useInterviewStore((state) => state.settings?.company);
   const persona = useInterviewStore((state) => state.settings?.persona);
   const [head, setHead] = useState<TalkingHead | null>(null);
+  const [micAnalyser, setMicAnalyser] = useState<AnalyserNode | null>(null);
   const speech = useSpeech(head);
   const { turn, error, send, stop } = useChatStream({ onEvent: speech.handleEvent });
   const router = useRouter();
@@ -104,6 +106,27 @@ export function InterviewChat() {
       head.playGesture("handup", 2);
     }
   }, [head]);
+
+  const thinking =
+    messages.length > 0 && !!turn?.streaming && !speech.speaking && !(muted && turn.reply);
+  useEffect(() => {
+    if (!head || !thinking) {
+      return;
+    }
+
+    head.playGesture(THINKING, 30);
+
+    return () => stopThinking(head);
+  }, [head, thinking]);
+
+  useEffect(() => {
+    if (!head || !micAnalyser) {
+      return;
+    }
+
+    head.startListening(micAnalyser);
+    return () => head.stopListening();
+  }, [head, micAnalyser]);
 
   // a new error (429, backend down, ...) pops up as a toast. The answer is back in the box
   useEffect(() => {
@@ -201,6 +224,7 @@ export function InterviewChat() {
           onSend={answer}
           disabled={messages.length === 0 || !!turn?.streaming}
           onMicStart={speech.stop}
+          onMicAudio={setMicAnalyser}
         />
       )}
       {!ended && (

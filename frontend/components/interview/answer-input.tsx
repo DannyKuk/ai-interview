@@ -1,7 +1,7 @@
 "use client";
 
 import { LoaderCircle, Mic, Square } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -16,6 +16,7 @@ type AnswerInputProps = {
   onSend: (text: string) => void;
   disabled: boolean;
   onMicStart?: () => void; // barge-in: the interviewer stops talking
+  onMicAudio?: (analyser: AnalyserNode | null) => void; // the mic's volume while recording
 };
 
 function clock(seconds: number): string {
@@ -27,7 +28,14 @@ function joined(typed: string, spoken: string): string {
   return [typed.trim(), spoken].filter(Boolean).join(" ").slice(0, MAX_MESSAGE_CHARS);
 }
 
-export function AnswerInput({ value, onChange, onSend, disabled, onMicStart }: AnswerInputProps) {
+export function AnswerInput({
+  value,
+  onChange,
+  onSend,
+  disabled,
+  onMicStart,
+  onMicAudio,
+}: AnswerInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const reviewBeforeSending = useInterviewStore((state) => state.reviewBeforeSending);
   const setReviewBeforeSending = useInterviewStore((state) => state.setReviewBeforeSending);
@@ -45,6 +53,12 @@ export function AnswerInput({ value, onChange, onSend, disabled, onMicStart }: A
   const recording = dictation.status === "recording";
   const busy = dictation.status !== "idle"; // starting, recording or transcribing
   const locked = disabled || busy;
+
+  const reportMicAudio = useEffectEvent((analyser: AnalyserNode | null) => onMicAudio?.(analyser));
+  useEffect(() => {
+    reportMicAudio(dictation.analyser);
+    return () => reportMicAudio(null);
+  }, [dictation.analyser]);
 
   // back into the field when it's usable again (after a reply, or after dictating)
   useEffect(() => {

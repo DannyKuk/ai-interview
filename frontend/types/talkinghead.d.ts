@@ -44,6 +44,10 @@ declare module "@met4citizen/talkinghead" {
     stopSpeaking(): void; // stops the clip, clears its queue, closes the lips
     setMood(mood: Mood): void;
     playGesture(name: string, seconds?: number): void;
+    stopGesture(ms?: number): void; // back to the rest pose over ms
+    // listening: eye contact, head moves with the candidate's voice (volume from analyser)
+    startListening(analyser: AnalyserNode): void;
+    stopListening(): void;
     lookAhead(ms: number): void;
     lookAtCamera(ms: number): void;
     dispose(): void;

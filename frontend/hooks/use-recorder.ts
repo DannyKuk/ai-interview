@@ -53,6 +53,8 @@ export function useRecorder({ maxSeconds = Infinity, onMaxLength }: RecorderOpti
   const [error, setError] = useState<string | null>(null);
   const [level, setLevel] = useState(0); // loudness of the last ~100 ms, 0..1
   const [seconds, setSeconds] = useState(0);
+  // the mic's live volume while it records, for the avatar's listening (null = not recording)
+  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
   // refs, not state: changing them shouldn't re-render (like a plain variable in Vue's
   // setup() that isn't wrapped in ref()), and they survive re-renders
   const recordingRef = useRef<Recording | null>(null);
@@ -72,6 +74,7 @@ export function useRecorder({ maxSeconds = Infinity, onMaxLength }: RecorderOpti
     recording.node.disconnect();
     recording.stream.getTracks().forEach((track) => track.stop()); // the browser's mic light goes off
     void recording.context.close();
+    setAnalyser(null);
   }, []);
 
   const start = useCallback(async () => {
@@ -109,7 +112,10 @@ export function useRecorder({ maxSeconds = Infinity, onMaxLength }: RecorderOpti
         if (seconds >= maxSeconds && recordingRef.current) onMaxLengthRef.current?.();
       };
       source.connect(node);
+      const meter = context.createAnalyser(); // reads the mic, outputs nowhere
+      source.connect(meter);
       recordingRef.current = { stream, context, node };
+      setAnalyser(meter);
       setStatus("recording");
     } catch (error) {
       stream?.getTracks().forEach((track) => track.stop());
@@ -138,5 +144,5 @@ export function useRecorder({ maxSeconds = Infinity, onMaxLength }: RecorderOpti
   // leaving the page while recording: turn the mic off
   useEffect(() => release, [release]);
 
-  return { status, error, level, seconds, start, stop, audioSoFar };
+  return { status, error, level, seconds, analyser, start, stop, audioSoFar };
 }

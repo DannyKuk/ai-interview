@@ -93,6 +93,7 @@ export function useDictation(onTranscript: (text: string) => void) {
     error: recorder.error ?? error,
     level: recorder.level,
     seconds: recorder.seconds,
+    analyser: recorder.analyser,
     start,
     stop,
   };

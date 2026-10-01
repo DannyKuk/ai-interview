@@ -1,6 +1,7 @@
 import type { TalkingHead } from "@met4citizen/talkinghead";
 
 export const THINKING = "thinking";
+const THINKING_DONE = "thinking-done";
 
 // TalkingHead's own thinking aims the hand at a point so close to the head that the arm solver
 // sometimes puts it behind the head, and makes a fist. Ours: the same thinking face, an
@@ -8,7 +9,10 @@ export const THINKING = "thinking";
 export function addInterviewGestures(head: TalkingHead) {
   head.animEmojis[THINKING] = {
     dt: [500, 1500],
-    rescale: [0, 1], // a longer playGesture() stretches the hold, not the moves
+    // a longer playGesture() stretches only the hold, not the hand's way up. TalkingHead
+    // reads this from template.rescale (its own emojis put it at the top, where it's
+    // ignored: everything stretches, and with 30 s the hand needs 7.5 s to come up)
+    template: { rescale: [0, 1] },
     vs: {
       browDownLeft: [1],
       browOuterUpRight: [1],
@@ -19,4 +23,16 @@ export function addInterviewGestures(head: TalkingHead) {
       handFistRight: [0],
     },
   };
+
+  head.animEmojis[THINKING_DONE] = {
+    dt: [800],
+    vs: { handRight: [{ d: 800 }] }, // no target: the arm goes back to its rest pose
+  };
+}
+
+// ends the thinking pose early. stopGesture() alone removes the animation before its
+// "hand down" step, so the arm would stay at the chin: a short one brings it down
+export function stopThinking(head: TalkingHead) {
+  head.stopGesture();
+  head.playGesture(THINKING_DONE, 0.8);
 }
