@@ -16,6 +16,7 @@ from backend.chains.interviewer import (
 )
 from backend.guard.canary import leaked
 from backend.guard.jev import check_input
+from backend.guard.transcript_signature import sign_transcript
 from backend.prompts.plan_turns import plan_turn
 from backend.prompts.turn_hints import HINTS, HintName, pick_hint
 from backend.schemas.chat import (
@@ -45,6 +46,11 @@ REFUSALS: dict[BlockReason, str] = {
     "guard_error": "Sorry, I didn't quite catch that. Could you say it again?",
     "leak": "Let's keep this about the interview. Where were we?",
 }
+
+
+def signature_with(request: ChatRequest, reply: str) -> str:
+    replied = ChatMessage.model_construct(role="assistant", content=reply)
+    return sign_transcript(request.session_id, [*request.messages, replied])
 
 
 def to_langchain_messages(messages: list[ChatMessage]) -> list[BaseMessage]:
@@ -184,12 +190,14 @@ async def chat(request: ChatRequest) -> ChatResponse:
     if leaked(result.text, turn.chain_input["canary"]):
         return ChatResponse(reply=REFUSALS["leak"], blocked="leak", guard=turn.verdict)
 
+    reply = result.text or FALLBACK_REPLY
     return ChatResponse(
-        reply=result.text or FALLBACK_REPLY,
+        reply=reply,
         hint=turn.hint,
         ended=turn.ended,
         progress=turn.progress,
         guard=turn.verdict,
+        history_signature=signature_with(request, reply),
     )
 
 
@@ -235,10 +243,17 @@ async def chat_stream(request: ChatRequest) -> AsyncIterator[ServerSentEvent]:
     add_cost(request.session_id, usage.cost)
 
     if not reply:
+        reply = FALLBACK_REPLY
         yield ServerSentEvent(event="token", data={"text": FALLBACK_REPLY})
 
     yield ServerSentEvent(event="usage", data=usage)
-    yield ServerSentEvent(event="done", data={"finish_reason": finish_reason})
+    yield ServerSentEvent(
+        event="done",
+        data={
+            "finish_reason": finish_reason,
+            "history_signature": signature_with(request, reply),
+        },
+    )
 
 
 @router.post("/system-prompt")

@@ -44,7 +44,14 @@ from backend.chains.interviewer import build_interviewer_chain, build_interviewe
 from backend.config import settings as app_settings
 from backend.guard.canary import leaked
 from backend.guard.jev import describe
-from backend.schemas.chat import ChatRequest, Effort, ModelSettings, Technique
+from backend.guard.transcript_signature import sign_transcript
+from backend.schemas.chat import (
+    ChatRequest,
+    Effort,
+    ModelSettings,
+    Technique,
+    answered_part,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -105,8 +112,13 @@ class Reply:
 
 async def prepare(snapshot: Snapshot) -> TurnPlan:
     # the same guard call as the chat API: its verdict decides the note for this turn
+    session_id = uuid.uuid4()
     request = ChatRequest(
-        session_id=uuid.uuid4(), messages=snapshot.messages, settings=snapshot.settings
+        session_id=session_id,
+        messages=snapshot.messages,
+        settings=snapshot.settings,
+        # our own snapshots, so signed like the server signs a real conversation
+        history_signature=sign_transcript(session_id, answered_part(snapshot.messages)),
     )
     verdict = await guard_chat(request)
 

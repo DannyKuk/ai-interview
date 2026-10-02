@@ -1,10 +1,12 @@
 import pytest
 from pydantic import ValidationError
 
+from backend.guard.transcript_signature import sign_transcript
 from backend.schemas.chat import (
     MAX_MESSAGE_CHARS,
     MAX_MESSAGES,
     MIN_MAX_TOKENS,
+    ChatMessage,
     ChatRequest,
 )
 
@@ -13,13 +15,15 @@ VALID = {"session_id": "6f1c2b1e-8a47-4a8e-9a55-3f0d7c1e2b90"}
 
 
 def test_valid_request():
+    question = ChatMessage(role="assistant", content="Tell me about yourself.")
     request = ChatRequest.model_validate(
         {
             **VALID,
             "messages": [
-                {"role": "assistant", "content": "Tell me about yourself."},
+                question.model_dump(),
                 {"role": "user", "content": "  I'm a backend developer.  "},
             ],
+            "history_signature": sign_transcript(VALID["session_id"], [question]),
         }
     )
 

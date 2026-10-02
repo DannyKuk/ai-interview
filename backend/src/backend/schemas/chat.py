@@ -6,6 +6,7 @@ from pydantic_core import PydanticCustomError
 
 from backend import config
 from backend.guard.plan_signature import is_signed
+from backend.guard.transcript_signature import is_signed_transcript
 from backend.prompts.turn_hints import HintName
 from backend.schemas.cv import CandidateProfile
 from backend.schemas.guard import BlockReason, GuardVerdict
@@ -112,6 +113,7 @@ class ChatRequest(BaseModel):
     model_settings: ModelSettings = Field(default_factory=ModelSettings)
     plan: SignedPlan | None = None
     progress: PlanProgress | None = None
+    history_signature: str | None = None  # from the last reply, None on the first turn
 
     @model_validator(mode="after")
     def plan_is_ours(self) -> Self:
@@ -122,6 +124,22 @@ class ChatRequest(BaseModel):
         if self.progress and self.progress.question >= len(self.plan.plan.questions):
             raise PydanticCustomError("progress_past_plan", PLAN_EXPIRED)
         return self
+
+    @model_validator(mode="after")
+    def history_is_ours(self) -> Self:
+        # the browser sends the whole conversation back: everything before the newest
+        # answer must be what this server signed with its last reply
+        history = answered_part(self.messages)
+        if not is_signed_transcript(self.session_id, history, self.history_signature):
+            raise PydanticCustomError("history_not_signed", PLAN_EXPIRED)
+        return self
+
+
+def answered_part(messages: list[ChatMessage]) -> list[ChatMessage]:
+    # all but the newest answer: what the server already replied to
+    if messages and messages[-1].role == "user":
+        return messages[:-1]
+    return messages
 
 
 class SystemPromptRequest(BaseModel):
@@ -160,6 +178,8 @@ class ChatResponse(BaseModel):
     ended: EndReason | None = None  # the frontend ends the call when set
     progress: PlanProgress | None = None
     guard: GuardVerdict | None = None
+    # sent back with the next turn; None when nothing was added to the conversation
+    history_signature: str | None = None
 
 
 class Usage(BaseModel):
