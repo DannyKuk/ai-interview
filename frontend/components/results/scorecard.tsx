@@ -152,7 +152,8 @@ export function QuestionResults({ feedback }: { feedback: FeedbackResponse }) {
           <CardHeader>
             <CardTitle>A stronger answer to question {weakest.question + 1}</CardTitle>
             <CardDescription>
-              {weakest.asked} Use it as a template: replace the [brackets] with your own story.
+              {weakest.asked} Use it as a template: fill in the [brackets] and change any detail
+              that isn&apos;t yours. An interviewer will ask about it.
             </CardDescription>
           </CardHeader>
           <CardContent>
