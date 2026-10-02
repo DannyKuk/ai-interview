@@ -277,7 +277,7 @@ function MaxTokensInput({ value, range: [min, max], onChange, disabled }: MaxTok
         onBlur={() => setDraft(String(value))}
       />
       <p className="text-xs text-muted-foreground">
-        {min}–{max}. Includes the reasoning tokens: too low gives empty replies
+        {min}–{max}. Includes the reasoning tokens: too low gives empty or cut-off replies
       </p>
     </div>
   );
