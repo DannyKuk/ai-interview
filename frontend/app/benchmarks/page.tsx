@@ -15,7 +15,7 @@ import {
   effortLevels,
   feedbackMistakes,
   guards,
-  jailbreakStats,
+  jailbreakSteps,
   latency,
   promptFixes,
   sttModels,
@@ -152,7 +152,7 @@ export default function BenchmarksPage() {
             </>
           }
         >
-          <JailbreakResults stats={jailbreakStats} guards={guards} />
+          <JailbreakResults steps={jailbreakSteps} guards={guards} />
         </QuestionCard>
       </BenchmarkSection>
 

@@ -1,4 +1,6 @@
 import { cn } from "cn";
+import { ArrowRightIcon } from "lucide-react";
+import { Fragment } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -9,26 +11,38 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { GuardRow, Tile } from "@/lib/benchmarks";
+import type { GuardRow, JailbreakStep } from "@/lib/benchmarks";
 
-export function JailbreakResults({ stats, guards }: { stats: Tile[]; guards: GuardRow[] }) {
+type Props = { steps: JailbreakStep[]; guards: GuardRow[] };
+
+export function JailbreakResults({ steps, guards }: Props) {
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card
-            key={stat.label}
-            size="sm"
-            className={cn("bg-transparent", stat.used && "ring-primary/40")}
-          >
-            <CardContent className="flex flex-col gap-1">
-              <p className={cn("text-2xl font-semibold", stat.used && "text-primary")}>
-                {stat.value}
-              </p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex flex-col gap-3">
+        <div className="grid items-center gap-2 md:grid-cols-[1fr_auto_1fr_auto_1fr]">
+          {steps.map((step, index) => (
+            <Fragment key={step.title}>
+              {index > 0 && (
+                <ArrowRightIcon className="mx-auto size-4 rotate-90 text-muted-foreground md:rotate-0" />
+              )}
+              <Card
+                size="sm"
+                className={cn("h-full bg-transparent", step.used && "ring-primary/40")}
+              >
+                <CardContent className="flex flex-col gap-1">
+                  <p className="text-xs text-muted-foreground">{step.title}</p>
+                  <p className={cn("text-2xl font-semibold", step.used && "text-primary")}>
+                    {step.value}
+                  </p>
+                  <p className="text-sm text-muted-foreground">{step.label}</p>
+                </CardContent>
+              </Card>
+            </Fragment>
+          ))}
+        </div>
+        <p className="text-sm text-muted-foreground">
+          In both rounds no normal answer was blocked by mistake. A full round costs $0.03.
+        </p>
       </div>
       <Table>
         <TableHeader>

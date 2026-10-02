@@ -149,11 +149,25 @@ export const feedbackMistakes: PairedRow[] = [
   mistakes("Self-critique", 5, 2),
 ];
 
-export const jailbreakStats: Tile[] = [
-  { value: "43 / 44", label: "Round 1. The faked history worked in 1 of 5 runs." },
-  { value: "45 / 45", label: "Round 2, after signing the transcript", used: true },
-  { value: "0", label: "Normal answers blocked by mistake" },
-  { value: "$0.03", label: "Cost of a full test round" },
+export type JailbreakStep = { title: string; value: string; label: string; used?: boolean };
+
+export const jailbreakSteps: JailbreakStep[] = [
+  {
+    title: "Round 1 · before the fix",
+    value: "43 / 44",
+    label: "passed. A faked chat history got through in 1 of 5 runs.",
+  },
+  {
+    title: "The fix",
+    value: "Signed",
+    label: "The server signs the transcript, so an edited history is rejected.",
+  },
+  {
+    title: "Round 2 · after the fix",
+    value: "45 / 45",
+    label: "passed, the faked history included.",
+    used: true,
+  },
 ];
 
 export type GuardRow = { way: string; guard: string };
