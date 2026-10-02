@@ -68,6 +68,8 @@ export function PairedBars({ rows, max, a, b }: Props) {
               key={key}
               dataKey={key}
               radius={4}
+              // a 0 would draw no bar and drop its label
+              minPointSize={2}
               isAnimationActive={false}
               fill={series.outline ? "transparent" : `var(--color-${key})`}
               stroke={series.outline ? `var(--color-${key})` : undefined}

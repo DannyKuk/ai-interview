@@ -131,11 +131,20 @@ export const promptFixes: BeforeAfterMeasure[] = [
   },
 ];
 
-// runs (of 10) whose sample answer invented details the candidate never said
-export const feedbackInventions: BarRow[] = [
-  { name: "Plain prompt", value: 10, label: "10 of 10", used: true },
-  { name: "Few-shot", value: 10, label: "10 of 10" },
-  { name: "Persona", value: 10, label: "10 of 10" },
-  { name: "Chain-of-thought", value: 8, label: "8 of 10" },
-  { name: "Self-critique", value: 5, label: "5 of 10" },
+const mistakes = (name: string, invented: number, praised: number): PairedRow => ({
+  name,
+  a: invented / 10,
+  aLabel: `${invented} of 10`,
+  b: praised / 3,
+  bLabel: `${praised} of 3`,
+});
+
+// a = runs whose sample answer invented details the candidate never said (of 10),
+// b = nonsense answers the feedback praised (of 3)
+export const feedbackMistakes: PairedRow[] = [
+  { ...mistakes("Plain prompt", 10, 0), used: true },
+  mistakes("Few-shot", 10, 1),
+  mistakes("Persona", 10, 1),
+  mistakes("Chain-of-thought", 8, 1),
+  mistakes("Self-critique", 5, 2),
 ];

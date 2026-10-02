@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   cvYears,
   effortLevels,
-  feedbackInventions,
+  feedbackMistakes,
   latency,
   promptFixes,
   sttModels,
@@ -75,18 +75,26 @@ export default function BenchmarksPage() {
           <BeforeAfterBars measures={promptFixes} />
         </QuestionCard>
         <QuestionCard
-          question="Does the feedback's sample answer make things up?"
+          question="Can a better prompt stop the sample answer from making things up?"
           answer={
             <>
-              Often, <strong className="font-semibold text-primary">with every technique</strong>,
-              when the candidate&apos;s own answer was vague. Self-critique invents least but then
-              praises nonsense answers. So the app keeps the plain prompt and tells you to change
-              any detail that isn&apos;t yours.
+              No. Even the best technique still invented details in half the runs, and the ones that
+              invented less{" "}
+              <strong className="font-semibold text-primary">
+                praised nonsense answers more often
+              </strong>
+              . So the app keeps the plain prompt and tells you to change any detail that isn&apos;t
+              yours.
             </>
           }
-          footnote="Bar = runs where the sample answer invented details (lower is better). Nonsense answers praised, of 3: plain prompt 0, few-shot 1, persona 1, chain-of-thought 1, self-critique 2."
+          footnote="Lower is better on both. One vague interview run 10 times, three nonsense interviews. In a second round with a rewritten prompt, the best technique (chain-of-thought) still invented details in 5 of 10 runs."
         >
-          <BarRows rows={feedbackInventions} max={10} valueName="Runs with invented details" />
+          <PairedBars
+            rows={feedbackMistakes}
+            max={1}
+            a={{ label: "Invented details", color: OTHER }}
+            b={{ label: "Praised nonsense", color: OTHER, outline: true }}
+          />
         </QuestionCard>
       </BenchmarkSection>
 
