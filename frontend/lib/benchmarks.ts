@@ -142,7 +142,7 @@ const mistakes = (name: string, invented: number, praised: number): PairedRow =>
 // a = runs whose sample answer invented details the candidate never said (of 10),
 // b = nonsense answers the feedback praised (of 3)
 export const feedbackMistakes: PairedRow[] = [
-  { ...mistakes("Plain prompt", 10, 0), used: true },
+  { ...mistakes("App's prompt", 10, 0), used: true },
   mistakes("Few-shot", 10, 1),
   mistakes("Persona", 10, 1),
   mistakes("Chain-of-thought", 8, 1),

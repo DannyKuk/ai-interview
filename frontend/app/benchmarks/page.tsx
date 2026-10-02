@@ -83,7 +83,7 @@ export default function BenchmarksPage() {
               <strong className="font-semibold text-primary">
                 praised nonsense answers more often
               </strong>
-              . So the app keeps the plain prompt and tells you to change any detail that isn&apos;t
+              . So the app keeps its prompt and tells you to change any detail that isn&apos;t
               yours.
             </>
           }
