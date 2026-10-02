@@ -1,0 +1,411 @@
+{
+  "about": "Lukas (preset CV 09_career_changer: head baker to junior developer), Netflux, 8 questions. Answers simulated once on Oct 2, 2026 with the candidate prompt in scripts/try_feedback.py (one style per interview), then frozen so every feedback prompt scores the same answers.",
+  "settings": {
+    "company": "Netflux",
+    "role": "Junior Software Developer",
+    "question_count": 8
+  },
+  "plan": {
+    "approach": "Career changer: highlight transferable leadership and recent Python project experience, and focus on learning potential.",
+    "questions": [
+      {
+        "type": "motivation",
+        "topic": "career switch to software development",
+        "question": "What motivated you to move from head baker to a career in software development?",
+        "why": "Establishes motivation and commitment to the career change for a junior role.",
+        "rubric": [
+          "Explains concrete reasons for switching",
+          "Mentions learning or projects showing commitment",
+          "Connects past role to software goals"
+        ]
+      },
+      {
+        "type": "experience",
+        "topic": "Bakery stock tracker web app",
+        "question": "What problem did your bakery stock tracker web app solve and what was your role in building it?",
+        "why": "Links the candidate's real project to the backend work required in the job.",
+        "rubric": [
+          "Describes the problem the app addressed",
+          "States their specific contributions",
+          "Names at least one technology they used"
+        ]
+      },
+      {
+        "type": "technical",
+        "topic": "Python and Flask basics",
+        "question": "Describe one technical challenge you faced when building the Flask app and how you solved it.",
+        "why": "Tests practical Python/Flask experience and problem-solving on their project.",
+        "rubric": [
+          "Gives a specific technical challenge",
+          "Explains the steps taken to resolve it",
+          "Mentions a concrete outcome or lesson"
+        ]
+      },
+      {
+        "type": "technical",
+        "topic": "testing and quality",
+        "question": "How have you approached testing or validating your Flask app before deployment?",
+        "why": "Fintech role values testing; assesses familiarity with testing practices even at a beginner level.",
+        "rubric": [
+          "Describes at least one testing or validation method used",
+          "Explains why they chose that method",
+          "Shows awareness of importance of testability"
+        ]
+      },
+      {
+        "type": "technical",
+        "topic": "Git and pull requests",
+        "question": "Tell me about a time you used Git and pull requests while collaborating on your codebase.",
+        "why": "The job involves PR reviews and Git; candidate must show collaboration habits.",
+        "rubric": [
+          "Describes a concrete use of Git/PRs",
+          "Explains how they handled feedback or merges",
+          "Shows awareness of version control best practices"
+        ]
+      },
+      {
+        "type": "technical",
+        "topic": "SQL and data handling",
+        "question": "Have you used SQL or databases in your projects, and how did you model or store bakery data?",
+        "why": "Checks for SQL or data-design knowledge which is nice-to-have for the fintech backend role.",
+        "rubric": [
+          "States whether they used a database or not",
+          "Explains how data was modelled or key tables/fields",
+          "Mentions any trade-offs or limitations"
+        ]
+      },
+      {
+        "type": "behavioural",
+        "topic": "leading under pressure",
+        "question": "Give an example of leading your team under time pressure and how you prioritized tasks to meet a deadline.",
+        "why": "Shows transferable leadership, planning, and prioritisation skills valuable in small agile teams.",
+        "rubric": [
+          "Gives a specific high-pressure example",
+          "Explains prioritisation decisions",
+          "States the outcome or what they learned"
+        ]
+      },
+      {
+        "type": "situational",
+        "topic": "learning on the job",
+        "question": "If you join a fintech team, how would you quickly get up to speed with our codebase, testing standards, and review processes?",
+        "why": "Assesses learning strategy, proactiveness, and fit for onboarding in a small agile team.",
+        "rubric": [
+          "Outlines concrete steps to learn the codebase",
+          "Mentions seeking feedback and using tests/docs",
+          "Shows a timeline or prioritised plan"
+        ]
+      }
+    ]
+  },
+  "interviews": {
+    "weak": {
+      "tests": "A vague story to build on ('a problem getting the app to handle user input'): does the sample answer keep it vague and use placeholders, or invent the specifics?",
+      "answers": [
+        {
+          "question": 0,
+          "exchanges": [
+            {
+              "interviewer": "What motivated you to move from head baker to a career in software development?",
+              "candidate": "Um, I started getting curious about building simple tools to make things easier at work and really enjoyed the problem-solving side, so I want to learn more and move into software. I feel ready to start a new career where I can keep learning and apply that curiosity."
+            }
+          ]
+        },
+        {
+          "question": 1,
+          "exchanges": [
+            {
+              "interviewer": "What problem did your bakery stock tracker web app solve and what was your role in building it?",
+              "candidate": "Um, it basically made tracking ingredients and stock levels easier so we avoided shortages and waste, and I, uh, helped build it using Python and Flask and got it running for the team."
+            }
+          ]
+        },
+        {
+          "question": 2,
+          "exchanges": [
+            {
+              "interviewer": "Describe one technical challenge you faced when building the Flask app and how you solved it.",
+              "candidate": "I ran into a problem getting the app to handle user input correctly and it felt confusing at first. I figured it out by re-reading the docs, trying a few different approaches, and asking for help until it worked."
+            }
+          ]
+        },
+        {
+          "question": 3,
+          "exchanges": [
+            {
+              "interviewer": "How have you approached testing or validating your Flask app before deployment?",
+              "candidate": "Um, I mostly ran the app locally and clicked through the pages to see if things worked, and I fixed things when they broke. I also asked a colleague to try it and gave it another quick once-over before putting it online."
+            }
+          ]
+        },
+        {
+          "question": 4,
+          "exchanges": [
+            {
+              "interviewer": "Tell me about a time you used Git and pull requests while collaborating on your codebase.",
+              "candidate": "I've used Git and made pull requests when working on my small Flask project, creating branches and submitting changes for review. I usually addressed feedback and merged once everyone was happy."
+            }
+          ]
+        },
+        {
+          "question": 5,
+          "exchanges": [
+            {
+              "interviewer": "Have you used SQL or databases in your projects, and how did you model or store bakery data?",
+              "candidate": "I've tinkered with simple databases a little and used basic queries to keep track of stock and recipes. I mostly modeled things in straightforward tables for ingredients, products and inventory, but I'm still learning best practices."
+            }
+          ]
+        },
+        {
+          "question": 6,
+          "exchanges": [
+            {
+              "interviewer": "Give an example of leading your team under time pressure and how you prioritized tasks to meet a deadline.",
+              "candidate": "Um, I had to keep everyone focused during really busy nights, so I quickly broke down what needed doing, told people the most important tasks, and adjusted things as we went. I tried to stay calm, communicate often, and reassign work so we could get everything done on time."
+            }
+          ]
+        },
+        {
+          "question": 7,
+          "exchanges": [
+            {
+              "interviewer": "If you join a fintech team, how would you quickly get up to speed with our codebase, testing standards, and review processes?",
+              "candidate": "I’d start by reading the project docs and poking around the code to get a feel for it, and I’d ask colleagues lots of questions. I’d also pair with teammates and follow the existing tests and review workflow to learn the standards."
+            }
+          ]
+        }
+      ]
+    },
+    "strong": {
+      "tests": "Every detail is there: does the sample answer use them, without placeholders where the candidate gave the fact?",
+      "answers": [
+        {
+          "question": 0,
+          "exchanges": [
+            {
+              "interviewer": "What motivated you to move from head baker to a career in software development?",
+              "candidate": "Situation: as Head Baker I ran night production and tracked ingredients in spreadsheets.  \nTask: I wanted to reduce waste and make planning faster and less error-prone.  \nAction: I taught myself Python (University of Michigan course), built a Flask bakery stock-tracker web app, deployed it on a small VPS, and trained my team to enter daily usage. I also automated a report that compared sales to production.  \nResult: the tool made ordering and shift planning faster, helped cut flour waste by 18%, and showed me I enjoy building software—so I’m transitioning into development."
+            }
+          ]
+        },
+        {
+          "question": 1,
+          "exchanges": [
+            {
+              "interviewer": "What problem did your bakery stock tracker web app solve and what was your role in building it?",
+              "candidate": "Situation: we were still using spreadsheets to guess nightly production, causing frequent overproduction.  \nTask: build a simple, reliable tool to track stock, sales and recommend production.  \nAction: I built a Flask web app (Python) with forms to enter daily sales and current stock, a small SQLite DB, and a page that calculated recommended production per item. I deployed it to Heroku and set up tablet access in the bakery. I also trained my five bakers to use it.  \nResult: we cut overproduction further, reduced unsold rolls by about 12% and saved ~2 hours weekly on shift planning."
+            }
+          ]
+        },
+        {
+          "question": 2,
+          "exchanges": [
+            {
+              "interviewer": "Describe one technical challenge you faced when building the Flask app and how you solved it.",
+              "candidate": "Situation: my Flask bakery stock tracker showed occasional wrong counts when two bakers updated inventory at once. Task: prevent race conditions and keep stock consistent. Action: I moved updates into atomic SQL transactions, added a last_updated timestamp for optimistic locking (rejecting conflicting writes), and put server-side validation in the update endpoint. For deployment I used Gunicorn with a single writer worker to avoid SQLite write contention and later migrated to PostgreSQL when needed. Result: concurrent-update errors dropped to zero, inventory stayed accurate, and ordering decisions became more reliable."
+            }
+          ]
+        },
+        {
+          "question": 3,
+          "exchanges": [
+            {
+              "interviewer": "How have you approached testing or validating your Flask app before deployment?",
+              "candidate": "Situation: I built a Flask bakery stock-tracker to replace a spreadsheet. Task: validate calculations and ensure routes and forms worked before deploying for shop use. Action: I wrote pytest tests using Flask’s test client for key routes (POST stock adjustments, GET summaries), added form validation checks and input sanitization, and ran integration tests with sample CSV exports matching known spreadsheet results. I also did manual end-to-end tests on a Heroku staging instance and asked two colleagues to try common workflows. Result: tests caught a rounding bug and a missing validation that would have allowed negative stock; after fixes accuracy and trust from the team improved."
+            }
+          ]
+        },
+        {
+          "question": 4,
+          "exchanges": [
+            {
+              "interviewer": "Tell me about a time you used Git and pull requests while collaborating on your codebase.",
+              "candidate": "Situation: while building a Flask bakery stock tracker with a coding mentor, we needed to collaborate on features.  \nTask: keep work isolated, review changes, and merge safely.  \nAction: I created feature branches, committed small logical changes with clear messages, and opened pull requests on GitHub. I wrote the PR description, ran tests locally, and responded to my mentor’s review comments—updating code, rebasing to resolve a merge conflict, and squashing minor commits.  \nResult: merges were smooth, the tracker gained a working inventory update feature faster, and I learned practical Git workflows and conflict resolution."
+            }
+          ]
+        },
+        {
+          "question": 5,
+          "exchanges": [
+            {
+              "interviewer": "Have you used SQL or databases in your projects, and how did you model or store bakery data?",
+              "candidate": "Situation: I built a small bakery stock-tracker web app in Flask to reduce waste and track ingredient usage. Task: model ingredients, finished products and daily transactions so bakers could see current stock and consumption. Action: I used SQLite with SQLAlchemy (basic ORM) to create tables: Ingredient(id, name, unit, reorder_level), Product(id, name, recipe_json), Batch(id, product_id, quantity, date), and Transaction(id, ingredient_id, change, reason, timestamp). I wrote queries to calculate current stock and generate reorder alerts. Result: the app produced reliable stock reports that helped us cut flour waste and plan orders more accurately."
+            }
+          ]
+        },
+        {
+          "question": 6,
+          "exchanges": [
+            {
+              "interviewer": "Give an example of leading your team under time pressure and how you prioritized tasks to meet a deadline.",
+              "candidate": "Situation: On busy mornings we needed to produce 1,200 rolls and 150 loaves before 6 am with a skeleton night crew. \nTask: As lead, I had to ensure everything finished on time despite equipment hiccups and a short-staffed shift. \nAction: I prioritized critical-path items (doughs that require long proofing) and scheduled them first. I delegated mixing to my most experienced baker, assigned apprentices to shaping and packaging, and prepared a clear checklist and timing board. I also kept a buffer for oven cycles and reallocated tasks when a machine slowed. \nResult: We consistently met the 6 am deadline, avoided overtime, and maintained product quality."
+            }
+          ]
+        },
+        {
+          "question": 7,
+          "exchanges": [
+            {
+              "interviewer": "If you join a fintech team, how would you quickly get up to speed with our codebase, testing standards, and review processes?",
+              "candidate": "I’d start by cloning the repo, running the app and the test suite locally, and reading CONTRIBUTING/README and any CI configs to learn standards. I’d then pick a small bug or low-risk ticket, add tests that follow the project’s style, and open a PR to learn the review workflow. I’d pair with a senior reviewer for the first cycle to get direct feedback. In my bakery role I used the same approach: I gathered production and sales data, implemented a spreadsheet tracking system myself, taught the team, and cut flour waste by 18%—I use hands-on learning + feedback loops to onboard quickly."
+            }
+          ]
+        }
+      ]
+    },
+    "no_example": {
+      "tests": "No story for the weakest question: does the sample answer take the honest route ('I haven't … yet', 'I would …')?",
+      "answers": [
+        {
+          "question": 0,
+          "exchanges": [
+            {
+              "interviewer": "What motivated you to move from head baker to a career in software development?",
+              "candidate": "I enjoyed automating and improving bakery processes—building spreadsheets to cut flour waste and sketching a simple Flask stock tracker showed me how software can scale those improvements. After taking the Python for Everybody course, I decided to turn that curiosity into a career so I can build tools that help teams work smarter at larger scale."
+            }
+          ]
+        },
+        {
+          "question": 1,
+          "exchanges": [
+            {
+              "interviewer": "What problem did your bakery stock tracker web app solve and what was your role in building it?",
+              "candidate": "The app solved mismatches between production and actual sales by tracking ingredient stock, daily sales and recipes so we could plan batches more accurately and cut waste. I built the Flask backend and simple HTML/CSS frontend, connected it to a spreadsheet-based data store, deployed it on a small server, and trained the night team to enter daily sales and use the reports."
+            }
+          ]
+        },
+        {
+          "question": 2,
+          "exchanges": [
+            {
+              "interviewer": "Describe one technical challenge you faced when building the Flask app and how you solved it.",
+              "candidate": "When multiple bakers updated stock from different phones I ran into race conditions with our CSV-based storage, so counts occasionally got overwritten. I solved it by migrating the app to a lightweight SQLite database accessed through Flask-SQLAlchemy and wrapping updates in transactions with simple input validation so concurrent adjustments are applied safely."
+            }
+          ]
+        },
+        {
+          "question": 3,
+          "exchanges": [
+            {
+              "interviewer": "How have you approached testing or validating your Flask app before deployment?",
+              "candidate": "I tested my Flask app mainly by running it locally with sample production-like data, exercising all forms and workflows in the browser and with curl to check responses and error handling, and I added a few basic pytest unit tests for the core data-processing functions. I haven’t set up full CI/CD yet, but my next steps would be to expand test coverage, add automated tests (unit and integration) and run them in a pipeline before deployment."
+            }
+          ]
+        },
+        {
+          "question": 4,
+          "exchanges": [
+            {
+              "interviewer": "Tell me about a time you used Git and pull requests while collaborating on your codebase.",
+              "candidate": "I haven’t used pull requests in a professional team yet—I’ve only worked with basic Git locally (commits, branches, push). In a collaborative workflow I would create a feature branch, push it to the remote, open a PR with a clear description and testing notes, request reviews, address feedback with follow-up commits, and merge once approvals and CI checks pass."
+            }
+          ]
+        },
+        {
+          "question": 5,
+          "exchanges": [
+            {
+              "interviewer": "Have you used SQL or databases in your projects, and how did you model or store bakery data?",
+              "candidate": "I haven't used SQL or a relational database in my projects yet; I tracked inventory and production with detailed spreadsheets that linked daily sales to production quantities. If I were to model it in a database, I'd create tables for products (id, name, unit), recipes, production_runs (date, product_id, quantity, shift, baker_id), stock_levels (product_id, quantity, location, last_updated) and sales, with foreign keys between them to enable joins and simple reports on waste and turnover."
+            }
+          ]
+        },
+        {
+          "question": 6,
+          "exchanges": [
+            {
+              "interviewer": "Give an example of leading your team under time pressure and how you prioritized tasks to meet a deadline.",
+              "candidate": "When we had to deliver full morning production by 6 am, I prioritized the critical path: dough preparation and proofing schedules first, then oven loading and shaping, so starters that needed long rise times went on earliest. I delegated clear tasks to each baker using written recipe cards and a shift plan, monitored progress, and reallocated people to bottlenecks (e.g., extra shapers when proofing ran long) so we hit the deadline with minimal waste."
+            }
+          ]
+        },
+        {
+          "question": 7,
+          "exchanges": [
+            {
+              "interviewer": "If you join a fintech team, how would you quickly get up to speed with our codebase, testing standards, and review processes?",
+              "candidate": "I’d start by setting up the repo locally and running the app and test suite to see how things work end-to-end, then read any CONTRIBUTING/README and CI configs to learn the testing standards and linters. I’d pair with a teammate on a small bug or review to observe the review process and ask for a lightweight checklist or examples of good reviews, iterating on feedback until I’m comfortable."
+            }
+          ]
+        }
+      ]
+    },
+    "nonsense": {
+      "tests": "Nothing worked: are the strengths empty, with no made-up praise?",
+      "answers": [
+        {
+          "question": 0,
+          "exchanges": [
+            {
+              "interviewer": "What motivated you to move from head baker to a career in software development?",
+              "candidate": "I don't know."
+            }
+          ]
+        },
+        {
+          "question": 1,
+          "exchanges": [
+            {
+              "interviewer": "What problem did your bakery stock tracker web app solve and what was your role in building it?",
+              "candidate": "I don't know, ChatGPT did it for me."
+            }
+          ]
+        },
+        {
+          "question": 2,
+          "exchanges": [
+            {
+              "interviewer": "Describe one technical challenge you faced when building the Flask app and how you solved it.",
+              "candidate": "I don't know."
+            }
+          ]
+        },
+        {
+          "question": 3,
+          "exchanges": [
+            {
+              "interviewer": "How have you approached testing or validating your Flask app before deployment?",
+              "candidate": "I bake sourdough every morning and it's my favorite part of the day."
+            }
+          ]
+        },
+        {
+          "question": 4,
+          "exchanges": [
+            {
+              "interviewer": "Tell me about a time you used Git and pull requests while collaborating on your codebase.",
+              "candidate": "I don't know—I spent this morning perfecting a rye starter for the bakery."
+            }
+          ]
+        },
+        {
+          "question": 5,
+          "exchanges": [
+            {
+              "interviewer": "Have you used SQL or databases in your projects, and how did you model or store bakery data?",
+              "candidate": "I don't know, I was thinking about how good rye bread smells at 4 AM."
+            }
+          ]
+        },
+        {
+          "question": 6,
+          "exchanges": [
+            {
+              "interviewer": "Give an example of leading your team under time pressure and how you prioritized tasks to meet a deadline.",
+              "candidate": "I don't know."
+            }
+          ]
+        },
+        {
+          "question": 7,
+          "exchanges": [
+            {
+              "interviewer": "If you join a fintech team, how would you quickly get up to speed with our codebase, testing standards, and review processes?",
+              "candidate": "I don't know."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

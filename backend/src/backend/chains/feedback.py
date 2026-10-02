@@ -17,10 +17,11 @@ logger = logging.getLogger(__name__)
 FEEDBACK_PROMPT = "feedback"
 
 
-def build_feedback_chain() -> Runnable:
+def build_feedback_chain(system_prompt: str | None = None) -> Runnable:
+    # system_prompt: another prompt's text, for evals/compare_feedback.py
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", load_prompt(FEEDBACK_PROMPT)),
+            ("system", system_prompt or load_prompt(FEEDBACK_PROMPT)),
             ("human", "{interview}"),
         ]
     )
@@ -84,6 +85,7 @@ async def write_feedback(
     answers: list[AnsweredQuestion],
     scores: list[ScoredAnswer],
     weakest: int,
+    system_prompt: str | None = None,
 ) -> Priced[FeedbackText]:
     # scores[i] belongs to answers[i]. weakest: the plan index the sample answer is for
     interview = "\n\n".join(
@@ -91,7 +93,7 @@ async def write_feedback(
         for answer, scored in zip(answers, scores, strict=True)
     )
 
-    result = await build_feedback_chain().ainvoke(
+    result = await build_feedback_chain(system_prompt).ainvoke(
         {
             "company": settings.company,
             "role": wrap("role", settings.role),
