@@ -85,8 +85,15 @@ async def guard_chat(request: ChatRequest) -> GuardVerdict:
         ),
         None,
     )
+    # blocked messages never reach the history, so these already passed the guard
+    earlier_answers = [
+        message.content for message in messages[:-1] if message.role == "user"
+    ]
     return await check_input(
-        request.settings.role, last_question, newest.content if newest else None
+        request.settings.role,
+        last_question,
+        newest.content if newest else None,
+        earlier_answers,
     )
 
 

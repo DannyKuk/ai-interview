@@ -417,6 +417,12 @@ export interface components {
             vague?: number | null;
             /** Wants To End */
             wants_to_end?: number | null;
+            /** Wrong Claim */
+            wrong_claim?: number | null;
+            /** Unverified Claim */
+            unverified_claim?: number | null;
+            /** Contradiction */
+            contradiction?: number | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {

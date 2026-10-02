@@ -74,6 +74,44 @@ WANTS_TO_END_QUESTION = {
     ),
 }
 
+# challenge signals: 28 cases, Oct 2 - wrong 0.94-0.98 vs correct <= 0.72,
+# recent / niche correct claims are "unverified" 0.57-0.87 instead
+WRONG_CLAIM_QUESTION = {
+    "type": "noul",
+    "instructions": (
+        "This is one turn of a job interview. Does the answer in <candidate_message> "
+        "contain a technical claim that is clearly false, i.e. it contradicts "
+        "well-established facts about how a technology, tool or method works? Only "
+        "say yes when the claim is certainly wrong. A claim that is new, niche or "
+        "surprising but could be true does not count. Neither do claims about the "
+        "candidate's own experience, numbers or results, an honest 'I don't know', "
+        "or an answer that is only vague or incomplete."
+    ),
+}
+
+UNVERIFIED_CLAIM_QUESTION = {
+    "type": "noul",
+    "instructions": (
+        "This is one turn of a job interview. Does the answer in <candidate_message> "
+        "contain a technical claim about how a technology, tool or method works that "
+        "you can't confirm as correct, because it is new, niche or you don't know "
+        "it? Claims about the candidate's own experience, numbers or results do not "
+        "count, and neither do well-known correct facts."
+    ),
+}
+
+# real contradictions 0.64-0.97, corrections / changed opinions / new details <= 0.13
+CONTRADICTION_QUESTION = {
+    "type": "noul",
+    "instructions": (
+        "This is one turn of a job interview. <earlier_answers> holds what the "
+        "candidate said before. Does the answer in <candidate_message> contradict a "
+        "fact the candidate stated earlier about themselves or their work, so that "
+        "both can't be true? Openly correcting a small detail ('sorry, I meant…'), "
+        "changing an opinion with a reason, or adding new details does not count."
+    ),
+}
+
 # CV upload
 # normal CVs 0.01-0.02, injections 0.91-0.99, also hidden in the middle or at char 20k
 CV_INJECTION_QUESTION = {
@@ -127,9 +165,31 @@ DOCUMENT_QUESTIONS: dict[DocumentKind, dict] = {
 }
 
 
-def build_state(role: str, last_question: str | None, message: str | None) -> str:
+# a long interview could send up to 50 x 4000 chars on every turn; keep the newest
+# answers, about 15-25 normal ones
+MAX_EARLIER_CHARS = 12_000
+
+
+def recent_answers(answers: list[str]) -> list[str]:
+    kept, size = [], 0
+    for answer in reversed(answers):
+        size += len(answer)
+        if size > MAX_EARLIER_CHARS:
+            break
+        kept.append(answer)
+    return kept[::-1]
+
+
+def build_state(
+    role: str,
+    last_question: str | None,
+    message: str | None,
+    earlier_answers: list[str] | None = None,
+) -> str:
     # using <> tags for safety against injection
     parts = [wrap("role", role)]
+    if earlier_answers:
+        parts.append(wrap("earlier_answers", "\n\n".join(earlier_answers)))
     if last_question:
         parts.append(wrap("interviewer_question", last_question))
     if message:
@@ -202,23 +262,35 @@ def decide(answers: dict, threshold: float) -> GuardVerdict:
         answered=answers.get("answered", {}).get("noul"),
         vague=answers.get("vague", {}).get("noul"),
         wants_to_end=answers.get("wants_to_end", {}).get("noul"),
+        wrong_claim=answers.get("wrong_claim", {}).get("noul"),
+        unverified_claim=answers.get("unverified_claim", {}).get("noul"),
+        contradiction=answers.get("contradiction", {}).get("noul"),
     )
 
 
 async def check_input(
-    role: str, last_question: str | None = None, message: str | None = None
+    role: str,
+    last_question: str | None = None,
+    message: str | None = None,
+    earlier_answers: list[str] | None = None,
 ) -> GuardVerdict:
     # the role is checked on every turn: it's in the system prompt from the start
     questions = {"role_injection": ROLE_QUESTION}
+    earlier_answers = recent_answers(earlier_answers or [])
     if message:
         questions["category"] = CATEGORY_QUESTION
         questions["wants_to_end"] = WANTS_TO_END_QUESTION
-        if last_question:  # both need a question to compare with
+        if last_question:  # these need a question to compare with
             questions["answered"] = ANSWERED_QUESTION
             questions["vague"] = VAGUE_QUESTION
+            questions["wrong_claim"] = WRONG_CLAIM_QUESTION
+            questions["unverified_claim"] = UNVERIFIED_CLAIM_QUESTION
+        if earlier_answers:
+            questions["contradiction"] = CONTRADICTION_QUESTION
 
+    state = build_state(role, last_question, message, earlier_answers)
     try:
-        answers = await ask_jev(build_state(role, last_question, message), questions)
+        answers = await ask_jev(state, questions)
         return decide(answers, settings.guard_threshold)
     except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
         # if we can't check the text, it doesn't reach the interviewer.

@@ -32,3 +32,6 @@ class GuardVerdict(BaseModel):
     answered: float | None = None  # P(the message responds to the last question)
     vague: float | None = None  # P(the answer is too thin, worth one follow-up)
     wants_to_end: float | None = None  # P(the candidate wants to stop the interview)
+    wrong_claim: float | None = None  # P(a technical claim is certainly false)
+    unverified_claim: float | None = None  # P(a technical claim Jev can't confirm)
+    contradiction: float | None = None  # P(it contradicts an earlier answer)
