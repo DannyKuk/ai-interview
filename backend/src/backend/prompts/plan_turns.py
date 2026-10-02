@@ -22,6 +22,19 @@ FOLLOW_UP = (
     "about one thing, for example a concrete example or what the candidate did "
     "themselves."
 )
+# Jev can't say which claim it means, and it might be right after all: ask, don't
+# correct
+CHALLENGE = (
+    "One technical claim in the answer looks wrong. Don't move on yet, and don't "
+    "say it's wrong or correct it: react in a few neutral words, without thanks or "
+    "praise, then ask one short question that makes the candidate explain that "
+    "claim, for example how it works or how they handled it."
+)
+CONTRADICTION = (
+    "The answer doesn't fit something the candidate said earlier. Don't move on "
+    "yet: react in a few neutral words, without thanks or praise, then politely "
+    "name the difference and ask one short question about it."
+)
 DONE = (
     "That was the last question. Thank the candidate, tell them the interview is "
     "over and that their feedback comes next. Don't ask another question."
@@ -65,11 +78,16 @@ def plan_turn(
     if hint in ("off_topic", "not_answered") and extra_turns < MAX_EXTRA_TURNS:
         return PlanTurn(stay, HINTS[hint], hint)
 
-    # one follow-up, and only if we haven't already spent a turn on this question
-    vague = (verdict.vague or 0.0) >= settings.follow_up_threshold
-
-    if vague and extra_turns == 0:
-        return PlanTurn(stay, FOLLOW_UP)
+    # one extra turn per question: a challenge or a follow-up, never both. Also stops
+    # a loop: the old answer stays in the history, so the reply to a contradiction
+    # challenge would be flagged again
+    if extra_turns == 0:
+        if (verdict.contradiction or 0.0) >= settings.contradiction_threshold:
+            return PlanTurn(stay, CONTRADICTION)
+        if (verdict.wrong_claim or 0.0) >= settings.wrong_claim_threshold:
+            return PlanTurn(stay, CHALLENGE)
+        if (verdict.vague or 0.0) >= settings.follow_up_threshold:
+            return PlanTurn(stay, FOLLOW_UP)
 
     next_question = progress.question + 1
     if next_question >= len(plan.questions):

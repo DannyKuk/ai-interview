@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     not_answered_threshold: float = 0.3
     # interview plan: ask one follow-up when P(vague) >= this
     follow_up_threshold: float = 0.5
+    # challenge signals (28-case spike, Oct 2): wrong claims 0.94-0.98, correct but
+    # recent / niche ones up to 0.72 - high, so a right answer is never challenged
+    wrong_claim_threshold: float = 0.9
+    # real contradictions 0.64-0.97, corrections / changed opinions <= 0.13
+    contradiction_threshold: float = 0.5
 
     # reject a CV / job description when P(kind of document) is below this
     document_min_match: float = 0.5
