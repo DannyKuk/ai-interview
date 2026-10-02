@@ -172,3 +172,9 @@ def test_a_wrong_claim_gets_named_in_the_feedback():
     flagged = replace(SCORES[0], wrong_claim=True)
     assert "clearly wrong" in format_question(PLAN, ANSWERS[0], flagged)
     assert "clearly wrong" not in format_question(PLAN, ANSWERS[0], SCORES[0])
+
+
+def test_a_contradiction_gets_named_in_the_feedback():
+    flagged = replace(SCORES[0], contradiction=True)
+    assert "Contradiction:" in format_question(PLAN, ANSWERS[0], flagged)
+    assert "Contradiction:" not in format_question(PLAN, ANSWERS[0], SCORES[0])

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Literal
@@ -6,7 +7,12 @@ import httpx
 
 from backend.config import settings
 from backend.guard.delimiters import wrap
-from backend.guard.jev import ask_jev, describe
+from backend.guard.jev import (
+    CONTRADICTION_QUESTION,
+    ask_jev,
+    describe,
+    recent_answers,
+)
 from backend.schemas.feedback import CriterionScore, Exchange
 from backend.schemas.plan import PlannedQuestion, QuestionType
 
@@ -70,6 +76,10 @@ WRONG_CLAIM_QUESTION = {
 }
 
 
+# only added when the answer contradicts an earlier one, scored 1 - P(contradiction)
+CONSISTENT_CRITERION = "Stays consistent with what they said to earlier questions"
+
+
 def criterion_question(criterion: str) -> dict:
     return {
         "type": "noul",
@@ -91,6 +101,23 @@ def build_state(planned: PlannedQuestion, exchanges: list[Exchange]) -> str:
     return "\n".join(parts)
 
 
+async def contradiction_of(
+    planned: PlannedQuestion, exchanges: list[Exchange], earlier_answers: list[str]
+) -> float:
+    # own Jev call: with the earlier answers in the scoring state, Jev credited the
+    # candidate for them (STAR 0.10 -> 0.94, spike Oct 2)
+    if not earlier_answers:
+        return 0.0
+    state = "\n".join(
+        [
+            wrap("earlier_answers", "\n\n".join(recent_answers(earlier_answers))),
+            build_state(planned, exchanges),
+        ]
+    )
+    answers = await ask_jev(state, {"contradiction": CONTRADICTION_QUESTION})
+    return answers["contradiction"]["noul"]
+
+
 def to_score(met: float) -> float:
     # P(meets the criterion) 0..1 -> 1..5
     return round(1 + 4 * met, 2)
@@ -103,10 +130,13 @@ class ScoredAnswer:
     blocked: Literal["injection", "guard_error"] | None = None
     unverified: bool = False  # claims Jev can't check: correctness isn't scored
     wrong_claim: bool = False  # a technical claim is certainly wrong
+    contradiction: bool = False  # contradicts an answer to an earlier question
 
 
 async def score_answer(
-    planned: PlannedQuestion, exchanges: list[Exchange]
+    planned: PlannedQuestion,
+    exchanges: list[Exchange],
+    earlier_answers: list[str] | None = None,
 ) -> ScoredAnswer:
     criteria = [*planned.rubric, FIXED_CRITERIA[planned.type], SPECIFIC_CRITERION]
     questions = {
@@ -115,7 +145,10 @@ async def score_answer(
         "wrong_claim": WRONG_CLAIM_QUESTION,
     } | {f"criterion_{i}": criterion_question(text) for i, text in enumerate(criteria)}
     try:
-        answers = await ask_jev(build_state(planned, exchanges), questions)
+        answers, contradiction = await asyncio.gather(
+            ask_jev(build_state(planned, exchanges), questions),
+            contradiction_of(planned, exchanges, earlier_answers or []),
+        )
         if answers["injection"]["noul"] >= settings.guard_threshold:
             return ScoredAnswer(criteria=[], score=0.0, blocked="injection")
         # a claim that is certainly wrong still costs points
@@ -130,6 +163,14 @@ async def score_answer(
                 continue
             met = answers[f"criterion_{i}"]["noul"]
             scores.append(CriterionScore(criterion=text, met=met, score=to_score(met)))
+        contradicts = contradiction >= settings.contradiction_threshold
+        if contradicts:
+            met = 1 - contradiction
+            scores.append(
+                CriterionScore(
+                    criterion=CONSISTENT_CRITERION, met=met, score=to_score(met)
+                )
+            )
     except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
         # no score is better than a made-up one: the endpoint answers 503
         logger.warning("scoring failed: %s", describe(error))
@@ -141,4 +182,5 @@ async def score_answer(
         score=round(average, 2),
         unverified=unverified,
         wrong_claim=wrong_claim,
+        contradiction=contradicts,
     )

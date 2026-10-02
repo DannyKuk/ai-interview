@@ -43,11 +43,19 @@ async def create_feedback(
     plan = request.plan.plan
     answers = sorted(request.answers, key=lambda answer: answer.question)
 
+    # each answer is checked against the answers to the questions before it
+    earlier = [
+        [exchange.candidate for answer in answers[:i] for exchange in answer.exchanges]
+        for i in range(len(answers))
+    ]
     # all Jev calls at once (~0.5 s): the role goes into the feedback prompt, and the
     # history comes from the browser, so both are checked again
     role, *scores = await asyncio.gather(
         check_input(request.settings.role),
-        *(score_answer(plan.questions[a.question], a.exchanges) for a in answers),
+        *(
+            score_answer(plan.questions[a.question], a.exchanges, earlier[i])
+            for i, a in enumerate(answers)
+        ),
     )
     blocked = {role.blocked, *(scored.blocked for scored in scores)}
     if "guard_error" in blocked:
@@ -81,6 +89,7 @@ async def create_feedback(
             feedback=feedback_for.get(answer.question, NO_WRITTEN_FEEDBACK),
             unverified=scored.unverified,
             wrong_claim=scored.wrong_claim,
+            contradiction=scored.contradiction,
         )
         for answer, scored in zip(answers, scores)
     ]

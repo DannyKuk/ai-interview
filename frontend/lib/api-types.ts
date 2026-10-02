@@ -219,6 +219,11 @@ export interface components {
              * @default false
              */
             wrong_claim: boolean;
+            /**
+             * Contradiction
+             * @default false
+             */
+            contradiction: boolean;
         };
         /** AnsweredQuestion */
         AnsweredQuestion: {

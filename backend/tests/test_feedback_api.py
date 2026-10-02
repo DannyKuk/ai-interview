@@ -44,6 +44,7 @@ class Calls:
     def __init__(self):
         self.role = []
         self.scored = []  # candidate texts, in call order
+        self.earlier = {}  # candidate text -> the earlier answers it was checked against
         self.written = []  # (answers, scores, weakest) the chain got
 
 
@@ -61,9 +62,10 @@ def fakes(monkeypatch) -> Calls:
         calls.role.append(role)
         return GuardVerdict(role_injection=0.01)
 
-    async def fake_score(planned, exchanges):
+    async def fake_score(planned, exchanges, earlier_answers=None):
         text = exchanges[-1].candidate
         calls.scored.append(text)
+        calls.earlier[text] = earlier_answers
         score = SCORE_BY_ANSWER.get(text, 2.0)
         criterion = CriterionScore(criterion=planned.rubric[0], met=0.5, score=score)
         return ScoredAnswer(criteria=[criterion], score=score)
@@ -114,6 +116,11 @@ def test_scores_and_feedback_come_back_per_question(fakes):
     assert fakes.role == ["Junior Developer"]
 
 
+def test_each_answer_is_checked_against_the_earlier_questions(fakes):
+    post_feedback([answered(2, "weak"), answered(1, "okay"), answered(0, "good")])
+    assert fakes.earlier == {"good": [], "okay": ["good"], "weak": ["good", "okay"]}
+
+
 def test_the_chain_gets_the_answers_sorted_with_their_scores(fakes):
     post_feedback()
     answers, scores, weakest = fakes.written[0]
@@ -144,7 +151,7 @@ def test_over_the_budget_nothing_is_called(fakes, monkeypatch):
 
 
 def block_answer(monkeypatch, reason):
-    async def one_is_blocked(_planned, exchanges):
+    async def one_is_blocked(_planned, exchanges, _earlier_answers=None):
         text = exchanges[-1].candidate
         if text == "bad":
             return ScoredAnswer(criteria=[], score=0.0, blocked=reason)

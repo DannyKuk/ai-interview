@@ -55,6 +55,15 @@ def format_question(
             "A technical claim here is clearly wrong: name it in one sentence and say "
             "what is correct. If the candidate corrected it later, say so."
         )
+    if scored.contradiction:
+        # "name both statements" alone: 0 of 3 did, two praised the honesty instead.
+        # Starting the feedback with it: 3 of 3 (Oct 2)
+        lines.append(
+            "Contradiction: something in this answer can't be true together with an "
+            "answer to an earlier question. Start the feedback for this question with "
+            "one sentence that names both: what the candidate said earlier and what "
+            "they said here. If they cleared it up later, say so."
+        )
     if scored.unverified:
         # else the feedback may call a correct but recent claim wrong
         lines.append(

@@ -4,6 +4,7 @@ import pytest
 from backend.schemas.feedback import Exchange
 from backend.services import answer_scores
 from backend.services.answer_scores import (
+    CONSISTENT_CRITERION,
     FIXED_CRITERIA,
     SPECIFIC_CRITERION,
     build_state,
@@ -27,6 +28,7 @@ def fake_jev(
     met=(0.9, 0.5, 0.0, 0.25),
     unverified=0.1,
     wrong_claim=0.05,
+    contradiction=0.1,
 ) -> list:
     # Jev answers every criterion_i with met[i]. Returns what it was asked
     asked = []
@@ -37,6 +39,7 @@ def fake_jev(
             "injection": noul(injection),
             "unverified": noul(unverified),
             "wrong_claim": noul(wrong_claim),
+            "contradiction": noul(contradiction),
         }
         for i, p in enumerate(met):
             answers[f"criterion_{i}"] = noul(p)
@@ -107,6 +110,46 @@ async def test_an_unverified_claim_keeps_the_other_types_criteria(monkeypatch):
 
     assert scored.unverified
     assert len(scored.criteria) == 4
+
+
+@pytest.mark.anyio
+async def test_a_contradiction_costs_points(monkeypatch):
+    fake_jev(monkeypatch, met=(0.9, 0.5, 0.0, 0.25), contradiction=0.97)
+    scored = await score_answer(QUESTION, EXCHANGES, ["I wrote it myself."])
+
+    assert scored.contradiction
+    assert scored.criteria[-1].criterion == CONSISTENT_CRITERION
+    assert scored.criteria[-1].score == 1.12  # 1 + 4 * (1 - 0.97)
+    assert scored.score == 2.34  # (4.6 + 3 + 1 + 2 + 1.12) / 5
+
+
+@pytest.mark.anyio
+async def test_no_contradiction_adds_no_criterion(monkeypatch):
+    fake_jev(monkeypatch, contradiction=0.18)
+    scored = await score_answer(QUESTION, EXCHANGES, ["I wrote it myself."])
+
+    assert not scored.contradiction
+    assert CONSISTENT_CRITERION not in [c.criterion for c in scored.criteria]
+
+
+@pytest.mark.anyio
+async def test_the_earlier_answers_get_their_own_call(monkeypatch):
+    # in the scoring state Jev credited the candidate for earlier answers (spike)
+    asked = fake_jev(monkeypatch)
+    await score_answer(QUESTION, EXCHANGES, ["I wrote it myself."])
+
+    by_question = {"contradiction" in questions: state for state, questions in asked}
+    assert "earlier_answers" not in by_question[False]
+    assert "<earlier_answers>I wrote it myself.</earlier_answers>" in by_question[True]
+
+
+@pytest.mark.anyio
+async def test_the_first_question_has_nothing_to_contradict(monkeypatch):
+    asked = fake_jev(monkeypatch, contradiction=0.99)
+    scored = await score_answer(QUESTION, EXCHANGES)
+
+    assert len(asked) == 1
+    assert not scored.contradiction
 
 
 def test_every_text_is_wrapped_and_escaped():

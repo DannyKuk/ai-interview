@@ -65,6 +65,7 @@ class AnswerEvaluation(BaseModel):
     feedback: str  # LLM: what went well, what to improve
     unverified: bool = False  # claims Jev can't check: correctness isn't scored
     wrong_claim: bool = False  # a technical claim is certainly wrong: feedback names it
+    contradiction: bool = False  # contradicts an earlier answer: costs points
 
 
 class Scorecard(BaseModel):
