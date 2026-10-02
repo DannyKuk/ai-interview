@@ -21,16 +21,28 @@ export const usd = (value: number) => `$${value.toFixed(4)}`;
 const sum = (costs: (number | null | undefined)[]) =>
   costs.filter((cost) => typeof cost === "number").reduce((total, cost) => total + cost, 0);
 
+function jevCosts(costs: Costs, turnLog: TurnLogEntry[]) {
+  return [
+    costs.cv?.guardCost,
+    costs.plan?.guardCost,
+    ...turnLog.map((entry) => entry.guard?.cost),
+    costs.feedback?.guardCost,
+  ].filter((cost) => typeof cost === "number");
+}
+
 // everything this interview cost so far
 export function totalCost(costs: Costs, turnLog: TurnLogEntry[]) {
-  const all = [
-    costs.cv,
-    costs.plan,
+  const llm = [
+    costs.cv?.cost,
+    costs.plan?.cost,
     ...turnLog.map((entry) => entry.usage?.cost),
     costs.voice,
-    costs.feedback,
+    costs.feedback?.cost,
   ];
-  return { total: sum(all), unreported: all.some((cost) => cost === null) };
+  return {
+    total: sum([...llm, ...jevCosts(costs, turnLog)]),
+    unreported: llm.some((cost) => cost === null),
+  };
 }
 
 function SessionInfo() {
@@ -72,22 +84,31 @@ function CostBreakdown({ costCap }: { costCap: number | null }) {
   const turnLog = useInterviewStore((state) => state.turnLog);
 
   const turnCosts = turnLog.map((entry) => entry.usage?.cost).filter((cost) => cost !== undefined);
+  const jev = jevCosts(costs, turnLog);
   const rows: CostRow[] = [
-    { label: "CV", cost: costs.cv, noCall: "no upload" },
-    { label: "Plan", cost: costs.plan, noCall: "not made yet" },
+    { label: "CV", cost: costs.cv?.cost, noCall: "no upload" },
+    { label: "Plan", cost: costs.plan?.cost, noCall: "not made yet" },
     {
       label: "Interviewer",
       cost: turnCosts.length > 0 ? sum(turnCosts) : undefined,
       noCall: "no turns yet",
       detail: turnLog.length === 1 ? "1 turn" : `${turnLog.length} turns`,
     },
+    { label: "Jev checks", cost: jev.length > 0 ? sum(jev) : undefined, noCall: "none yet" },
     // Gemini's sentences added up; HeadTTS is local and free
     { label: "Voice", cost: costs.voice, noCall: "local voice (free)" },
-    { label: "Feedback", cost: costs.feedback, noCall: "not yet" },
+    { label: "Feedback", cost: costs.feedback?.cost, noCall: "not yet" },
   ];
 
   const { total, unreported } = totalCost(costs, turnLog);
-  const counted = sum([...turnCosts, costs.voice, costs.feedback]);
+  // what the backend's cap counts: everything after the plan
+  const counted = sum([
+    ...turnCosts,
+    ...turnLog.map((entry) => entry.guard?.cost),
+    costs.voice,
+    costs.feedback?.cost,
+    costs.feedback?.guardCost,
+  ]);
 
   return (
     <section className="flex flex-col gap-2 border-t pt-4">
@@ -121,8 +142,7 @@ function CostBreakdown({ costCap }: { costCap: number | null }) {
         ))}
       </dl>
       <p className="text-xs text-muted-foreground">
-        LLM calls and the cloud voice (its cost estimated by the backend); Jev&apos;s checks
-        aren&apos;t in it
+        LLM calls, Jev&apos;s checks and the cloud voice (its cost estimated by the backend)
       </p>
     </section>
   );

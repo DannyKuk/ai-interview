@@ -45,8 +45,8 @@ export function CvUpload({ locked, onUploadingChange }: CvUploadProps) {
     onUploadingChange(true);
 
     try {
-      const { value: profile, cost } = await parseCv(file);
-      setProfile(profile, cost);
+      const { value: profile, ...price } = await parseCv(file);
+      setProfile(profile, price);
     } catch (error) {
       setError(errorMessage(error));
     } finally {

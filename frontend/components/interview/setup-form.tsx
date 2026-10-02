@@ -93,12 +93,12 @@ export function SetupForm() {
     setStartError(null);
     try {
       const { settings, profile, jobDescription } = useInterviewStore.getState();
-      const { value: plan, cost } = await createPlan({
+      const { value: plan, ...price } = await createPlan({
         settings: settings!,
         profile,
         job_description: jobDescription || null,
       });
-      startInterview(plan, cost, config!.interviewers[settings!.company]);
+      startInterview(plan, price, config!.interviewers[settings!.company]);
       router.push("/interview"); // stays "starting" until the page changes
     } catch (error) {
       setStartError(errorMessage(error));

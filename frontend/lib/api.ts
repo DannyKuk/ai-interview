@@ -93,18 +93,22 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-// a reply + its LLM cost in USD
-export type Priced<T> = { value: T; cost: number | null };
+// a reply + its cost in USD: the LLM call and, for CV, plan and feedback, Jev's checks
+export type Priced<T> = { value: T; cost: number | null; guardCost?: number | null };
 
-// for CV, plan and feedback
-function costOf(response: Response): number | null {
-  const cost = response.headers.get("X-Cost");
+function costOf(response: Response, header = "X-Cost"): number | null {
+  const cost = response.headers.get(header);
   return cost === null ? null : Number(cost);
 }
 
+// for CV, plan and feedback
 async function requestPriced<T>(path: string, init?: RequestInit): Promise<Priced<T>> {
   const response = await send(path, init);
-  return { value: (await response.json()) as T, cost: costOf(response) };
+  return {
+    value: (await response.json()) as T,
+    cost: costOf(response),
+    guardCost: costOf(response, "X-Guard-Cost"),
+  };
 }
 
 function jsonPost(body: unknown): RequestInit {

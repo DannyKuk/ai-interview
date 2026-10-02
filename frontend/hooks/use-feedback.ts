@@ -23,7 +23,7 @@ export function useFeedback(enabled: boolean) {
     setError(null);
 
     try {
-      const { value: response, cost } = await createFeedback({
+      const { value: response, ...price } = await createFeedback({
         session_id: sessionId!,
         settings: settings!,
         plan: plan!,
@@ -31,7 +31,7 @@ export function useFeedback(enabled: boolean) {
       });
       // a new interview may have started while we waited: don't give it this one's feedback
       if (useInterviewStore.getState().sessionId === sessionId) {
-        setFeedback(response, cost);
+        setFeedback(response, price);
       }
     } catch (error) {
       const final =

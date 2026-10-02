@@ -13,6 +13,7 @@ import type {
   ModelSettings,
   PlanProgress,
   Preset,
+  Priced,
   SignedPlan,
   Technique,
 } from "@/lib/api";
@@ -32,11 +33,13 @@ export type DevSettings = { technique: Technique; modelSettings: ModelSettings }
 // and what the model call cost (cost breakdown, usage null = no model call)
 export type TurnLogEntry = Pick<StreamedTurn, "guard" | "blocked" | "hint" | "ended" | "usage">;
 
+export type Price = Omit<Priced<unknown>, "value">;
+
 // USD of the paid calls outside the chat, for the cost breakdown.
 export type Costs = {
-  cv?: number | null;
-  plan?: number | null;
-  feedback?: number | null;
+  cv?: Price;
+  plan?: Price;
+  feedback?: Price;
   voice?: number; // the Gemini voice's sentences added up (estimated by the backend)
 };
 
@@ -79,14 +82,14 @@ type InterviewState = {
   choosePreset: (preset: Preset) => void;
   clearCandidate: () => void;
   setJobDescription: (jobDescription: string) => void;
-  setProfile: (profile: CandidateProfile, cost: number | null) => void;
+  setProfile: (profile: CandidateProfile, price: Price) => void;
   updateProfile: (patch: Partial<CandidateProfile>) => void;
-  startInterview: (plan: SignedPlan, cost: number | null, interviewer: string) => void;
+  startInterview: (plan: SignedPlan, price: Price, interviewer: string) => void;
   addMessage: (message: TranscriptMessage) => void;
   setHistorySignature: (historySignature: string | null) => void;
   setProgress: (progress: PlanProgress) => void;
   endInterview: (reason: EndReason) => void;
-  setFeedback: (feedback: FeedbackResponse, cost: number | null) => void;
+  setFeedback: (feedback: FeedbackResponse, price: Price) => void;
   updateDev: (patch: Partial<DevSettings>) => void;
   recordTurn: (turn: StreamedTurn) => void;
   setReviewBeforeSending: (review: boolean) => void;
@@ -140,11 +143,11 @@ export const useInterviewStore = create<InterviewState>()(
       clearCandidate: () => set({ presetId: null, profile: null, jobDescription: "", costs: {} }),
       setJobDescription: (jobDescription) => set({ jobDescription }),
       // an uploaded CV replaces the preset candidate; company, role and JD stay
-      setProfile: (profile, cost) => set({ presetId: null, profile, costs: { cv: cost } }),
+      setProfile: (profile, price) => set({ presetId: null, profile, costs: { cv: price } }),
       // the candidate's own fixes - /plan checks the profile again
       updateProfile: (patch) =>
         set((state) => (state.profile ? { profile: { ...state.profile, ...patch } } : {})),
-      startInterview: (plan, cost, interviewer) =>
+      startInterview: (plan, price, interviewer) =>
         set((state) => ({
           sessionId: crypto.randomUUID(),
           plan,
@@ -157,15 +160,15 @@ export const useInterviewStore = create<InterviewState>()(
           endedAt: null,
           feedback: null,
           turnLog: [],
-          costs: { cv: state.costs.cv, plan: cost },
+          costs: { cv: state.costs.cv, plan: price },
         })),
       addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
       setHistorySignature: (historySignature) => set({ historySignature }),
       setProgress: (progress) => set({ progress }),
       endInterview: (reason) =>
         set((state) => ({ ended: reason, endedAt: state.endedAt ?? Date.now() })),
-      setFeedback: (feedback, cost) =>
-        set((state) => ({ feedback, costs: { ...state.costs, feedback: cost } })),
+      setFeedback: (feedback, price) =>
+        set((state) => ({ feedback, costs: { ...state.costs, feedback: price } })),
       // kept across interviews (not cleared by startInterview): it's the experiment setup
       updateDev: (patch) => set((state) => ({ dev: { ...state.dev, ...patch } as DevSettings })),
       recordTurn: ({ guard, blocked, hint, ended, usage }) =>
