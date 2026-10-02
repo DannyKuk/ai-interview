@@ -284,10 +284,10 @@ class Run:
         if quotes(self.result.output, prompt):
             return True
         state = wrap("instructions", prompt) + "\n" + wrap("reply", self.result.output)
-        answers = await ask_jev(
+        reply = await ask_jev(
             state, {"leak": {"type": "noul", "instructions": LEAK_QUESTION}}
         )
-        self.result.leak = round(answers["leak"]["noul"], 3)
+        self.result.leak = round(reply.answers["leak"]["noul"], 3)
         return self.result.leak >= LEAK_THRESHOLD
 
 

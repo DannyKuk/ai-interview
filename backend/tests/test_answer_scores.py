@@ -1,6 +1,7 @@
 import httpx
 import pytest
 
+from backend.guard.jev import JevReply
 from backend.schemas.feedback import Exchange
 from backend.services import answer_scores
 from backend.services.answer_scores import (
@@ -29,6 +30,7 @@ def fake_jev(
     unverified=0.1,
     wrong_claim=0.05,
     contradiction=0.1,
+    cost=0.00003,
 ) -> list:
     # Jev answers every criterion_i with met[i]. Returns what it was asked
     asked = []
@@ -43,7 +45,7 @@ def fake_jev(
         }
         for i, p in enumerate(met):
             answers[f"criterion_{i}"] = noul(p)
-        return answers
+        return JevReply(answers, cost)
 
     monkeypatch.setattr(answer_scores, "ask_jev", ask_jev)
     return asked
@@ -150,6 +152,23 @@ async def test_the_first_question_has_nothing_to_contradict(monkeypatch):
 
     assert len(asked) == 1
     assert not scored.contradiction
+
+
+@pytest.mark.anyio
+async def test_the_cost_adds_up_both_calls(monkeypatch):
+    fake_jev(monkeypatch, cost=0.00003)
+    first = await score_answer(QUESTION, EXCHANGES)
+    later = await score_answer(QUESTION, EXCHANGES, ["I wrote it myself."])
+
+    assert first.cost == 0.00003  # no earlier answers: no contradiction call
+    assert later.cost == pytest.approx(0.00006)
+
+
+@pytest.mark.anyio
+async def test_a_blocked_answer_still_reports_the_cost(monkeypatch):
+    fake_jev(monkeypatch, injection=0.97, cost=0.00003)
+    scored = await score_answer(QUESTION, EXCHANGES)
+    assert (scored.blocked, scored.cost) == ("injection", 0.00003)
 
 
 def test_every_text_is_wrapped_and_escaped():

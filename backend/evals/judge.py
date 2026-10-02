@@ -55,11 +55,11 @@ async def judge(snapshot: Snapshot, reply: str) -> dict[str, float]:
         "good_reply": f"Does <reply> do this: {snapshot.good_reply}?",
         **QUESTIONS,
     }
-    answers = await ask_jev(
+    judged = await ask_jev(
         build_state(snapshot, reply),
         {
             name: {"type": "noul", "instructions": CONTEXT + question}
             for name, question in questions.items()
         },
     )
-    return {name: round(answers[name]["noul"], 3) for name in questions}
+    return {name: round(judged.answers[name]["noul"], 3) for name in questions}

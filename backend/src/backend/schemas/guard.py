@@ -20,6 +20,7 @@ class DocumentVerdict(BaseModel):
     injection: float | None = None  # P(the text tries to instruct or manipulate an AI)
     is_document: float | None = None  # P(it's the kind of document we asked for)
     blocked: DocumentBlockReason | None = None  # None = allowed
+    cost: float | None = None  # USD for this Jev call
 
 
 class GuardVerdict(BaseModel):
@@ -27,6 +28,7 @@ class GuardVerdict(BaseModel):
     probabilities: dict[GuardCategory, float] = Field(default_factory=dict)
     role_injection: float | None = None  # P(the role field is more than a job title)
     blocked: BlockReason | None = None  # None = allowed
+    cost: float | None = None  # USD for this Jev call
 
     # turn signals from the same Jev call (not used for blocking, see prompts/turn_hints.py)
     answered: float | None = None  # P(the message responds to the last question)

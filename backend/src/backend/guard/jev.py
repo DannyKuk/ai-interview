@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 
 import httpx
 
@@ -215,7 +216,18 @@ def describe(error: Exception) -> str:
     return type(error).__name__
 
 
-async def ask_jev(state: str, questions: dict) -> dict:
+@dataclass
+class JevReply:
+    answers: dict  # {"category": {"choice": "ok", "probabilities": {...}}, ...}
+    cost: float | None  # USD, None if the response has no usage
+
+
+def total_cost(*costs: float | None) -> float | None:
+    reported = [cost for cost in costs if cost is not None]
+    return sum(reported) if reported else None
+
+
+async def ask_jev(state: str, questions: dict) -> JevReply:
     async with httpx.AsyncClient(timeout=settings.guard_timeout_ms / 1000) as client:
         for attempt in range(settings.guard_retries + 1):
             try:
@@ -231,9 +243,8 @@ async def ask_jev(state: str, questions: dict) -> dict:
                     },
                 )
                 response.raise_for_status()
-                return response.json()[
-                    "answers"
-                ]  # {"category": {"choice": "ok", "probabilities": {...}}}
+                body = response.json()
+                return JevReply(body["answers"], body.get("usage", {}).get("cost"))
             except httpx.HTTPError as error:
                 if attempt == settings.guard_retries or not is_retryable(error):
                     raise
@@ -290,8 +301,10 @@ async def check_input(
 
     state = build_state(role, last_question, message, earlier_answers)
     try:
-        answers = await ask_jev(state, questions)
-        return decide(answers, settings.guard_threshold)
+        reply = await ask_jev(state, questions)
+        verdict = decide(reply.answers, settings.guard_threshold)
+        verdict.cost = reply.cost
+        return verdict
     except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
         # if we can't check the text, it doesn't reach the interviewer.
         logger.warning("guard failed: %s", describe(error))
@@ -313,8 +326,10 @@ def decide_document(answers: dict) -> DocumentVerdict:
 
 async def check_document(kind: DocumentKind, text: str) -> DocumentVerdict:
     try:
-        answers = await ask_jev(wrap(kind, text), DOCUMENT_QUESTIONS[kind])
-        return decide_document(answers)
+        reply = await ask_jev(wrap(kind, text), DOCUMENT_QUESTIONS[kind])
+        verdict = decide_document(reply.answers)
+        verdict.cost = reply.cost
+        return verdict
     except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
         logger.warning("%s guard failed: %s", kind, describe(error))
         return DocumentVerdict(blocked="guard_error")

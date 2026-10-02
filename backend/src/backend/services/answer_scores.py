@@ -9,9 +9,11 @@ from backend.config import settings
 from backend.guard.delimiters import wrap
 from backend.guard.jev import (
     CONTRADICTION_QUESTION,
+    JevReply,
     ask_jev,
     describe,
     recent_answers,
+    total_cost,
 )
 from backend.schemas.feedback import CriterionScore, Exchange
 from backend.schemas.plan import PlannedQuestion, QuestionType
@@ -103,19 +105,18 @@ def build_state(planned: PlannedQuestion, exchanges: list[Exchange]) -> str:
 
 async def contradiction_of(
     planned: PlannedQuestion, exchanges: list[Exchange], earlier_answers: list[str]
-) -> float:
+) -> JevReply:
     # own Jev call: with the earlier answers in the scoring state, Jev credited the
     # candidate for them (STAR 0.10 -> 0.94, spike Oct 2)
     if not earlier_answers:
-        return 0.0
+        return JevReply({"contradiction": {"noul": 0.0}}, cost=None)  # no call
     state = "\n".join(
         [
             wrap("earlier_answers", "\n\n".join(recent_answers(earlier_answers))),
             build_state(planned, exchanges),
         ]
     )
-    answers = await ask_jev(state, {"contradiction": CONTRADICTION_QUESTION})
-    return answers["contradiction"]["noul"]
+    return await ask_jev(state, {"contradiction": CONTRADICTION_QUESTION})
 
 
 def to_score(met: float) -> float:
@@ -131,6 +132,7 @@ class ScoredAnswer:
     unverified: bool = False  # claims Jev can't check: correctness isn't scored
     wrong_claim: bool = False  # a technical claim is certainly wrong
     contradiction: bool = False  # contradicts an answer to an earlier question
+    cost: float | None = None  # USD for both Jev calls
 
 
 async def score_answer(
@@ -145,12 +147,15 @@ async def score_answer(
         "wrong_claim": WRONG_CLAIM_QUESTION,
     } | {f"criterion_{i}": criterion_question(text) for i, text in enumerate(criteria)}
     try:
-        answers, contradiction = await asyncio.gather(
+        scored, checked = await asyncio.gather(
             ask_jev(build_state(planned, exchanges), questions),
             contradiction_of(planned, exchanges, earlier_answers or []),
         )
+        cost = total_cost(scored.cost, checked.cost)
+        answers = scored.answers
+        contradiction = checked.answers["contradiction"]["noul"]
         if answers["injection"]["noul"] >= settings.guard_threshold:
-            return ScoredAnswer(criteria=[], score=0.0, blocked="injection")
+            return ScoredAnswer(criteria=[], score=0.0, blocked="injection", cost=cost)
         # a claim that is certainly wrong still costs points
         wrong_claim = answers["wrong_claim"]["noul"] >= settings.wrong_claim_threshold
         unverified = (
@@ -183,4 +188,5 @@ async def score_answer(
         unverified=unverified,
         wrong_claim=wrong_claim,
         contradiction=contradicts,
+        cost=cost,
     )
