@@ -24,7 +24,7 @@ def this_month() -> str:
 def build_profile_chain() -> Runnable:
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", load_prompt("cv_profile/zero_shot_v1")),
+            ("system", load_prompt("cv_profile")),
             ("human", "{cv}"),
         ]
     )

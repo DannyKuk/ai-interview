@@ -14,9 +14,7 @@ from backend.services.answer_scores import ScoredAnswer
 
 logger = logging.getLogger(__name__)
 
-# v2: no made-up praise for bad answers, tone by score. v1 stays for the comparison
-# (scripts/try_feedback.py --prompt feedback/zero_shot_v1)
-FEEDBACK_PROMPT = "feedback/zero_shot_v2"
+FEEDBACK_PROMPT = "feedback"
 
 
 def build_feedback_chain() -> Runnable:

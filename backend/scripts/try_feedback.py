@@ -4,7 +4,7 @@ the real feedback endpoint code scores it (Jev) and writes the feedback (LLM).
 uv run python scripts/try_feedback.py                    # every style, 8 questions
 uv run python scripts/try_feedback.py weak --runs 3      # one style, three runs (latency)
 uv run python scripts/try_feedback.py no_example         # no story to tell: invented details?
-uv run python scripts/try_feedback.py nonsense --prompt feedback/zero_shot_v1   # praises it?
+uv run python scripts/try_feedback.py nonsense           # praises it?
 uv run python scripts/try_feedback.py --questions 5
 
 Needs the cached profile from try_plan.py (out/profiles/09_career_changer.json). The plan is

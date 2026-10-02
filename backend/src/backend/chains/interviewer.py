@@ -23,11 +23,11 @@ def build_interviewer_prompt(
         technique: Technique = "zero_shot", with_plan: bool = False
 ) -> ChatPromptTemplate:
     parts = [
-        load_prompt("interviewer/canary_v1"),  # stop before leaking system prompt
-        load_prompt(f"interviewer/{technique}_v1"),  # technique = file name
+        load_prompt("interviewer/canary"),  # stop before leaking system prompt
+        load_prompt(f"interviewer/{technique}"),  # technique = file name
         # the plan's rules, only when there is one: the per-turn note says what to ask
-        load_prompt("interviewer/plan_v1") if with_plan else None,
-        load_prompt("interviewer/security_v1"),
+        load_prompt("interviewer/plan") if with_plan else None,
+        load_prompt("interviewer/security"),
     ]
     # Build prompt "template" for consistent system prompt + history to be
     return ChatPromptTemplate.from_messages(
@@ -61,7 +61,7 @@ def build_interviewer_input(
         approach: str | None = None,
 ) -> dict:
     # fills every {placeholder} in the prompt + the history slot.
-    # Candidate text is wrapped in tags, so the model sees it as data (see security_v1.md).
+    # Candidate text is wrapped in tags, so the model sees it as data (see security.md).
     # note: what to do this turn (a turn hint or the plan's next step)
     chain_input = {
         "company": settings.company,

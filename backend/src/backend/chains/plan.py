@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def build_plan_chain(effort: Effort = "low") -> Runnable:
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", load_prompt("plan/zero_shot_v1")),
+            ("system", load_prompt("plan")),
             ("human", "{documents}"),
         ]
     )
