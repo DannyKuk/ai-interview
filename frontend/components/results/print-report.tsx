@@ -10,7 +10,7 @@ import {
 } from "@/components/results/scorecard";
 import type { FeedbackResponse } from "@/lib/api";
 import { useInterviewStore } from "@/lib/store";
-import { formatDuration } from "@/lib/time";
+import { formatDate, formatDuration } from "@/lib/time";
 
 // the results as a document: only shown when printing, with every question open
 export function PrintReport({ feedback }: { feedback: FeedbackResponse }) {
@@ -29,10 +29,10 @@ export function PrintReport({ feedback }: { feedback: FeedbackResponse }) {
           <h1 className="text-muted-foreground">{role} interview</h1>
         </div>
         {startedAt && (
-          <span className="text-right text-sm text-muted-foreground">
-            {new Date(startedAt).toLocaleDateString("en-GB", { dateStyle: "long" })}
-            {endedAt && `, ${formatDuration((endedAt - startedAt) / 1000)}`}
-          </span>
+          <div className="flex flex-col gap-1 text-right text-sm text-muted-foreground">
+            <span>{formatDate(startedAt)}</span>
+            {endedAt && <span>ended after {formatDuration((endedAt - startedAt) / 1000)}</span>}
+          </div>
         )}
       </header>
 

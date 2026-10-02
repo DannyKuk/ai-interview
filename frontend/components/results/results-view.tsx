@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDownIcon, PlusIcon } from "lucide-react";
+import { ChevronDownIcon, DownloadIcon, PlusIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -25,7 +25,7 @@ import { useFeedback, type FeedbackError } from "@/hooks/use-feedback";
 import { answersFrom } from "@/lib/answers";
 import type { ChatMessage } from "@/lib/api";
 import { useInterviewStore, useStoreHydrated } from "@/lib/store";
-import { formatDuration } from "@/lib/time";
+import { formatDate, formatDuration } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 // fewer answers than this → no score, "ended early"
@@ -65,7 +65,23 @@ export function ResultsView() {
           {role} interview
           {startedAt && endedAt && ` ended after ${formatDuration((endedAt - startedAt) / 1000)}`}
         </h1>
-        <Link href="/" className={buttonVariants({ size: "lg", className: "ml-auto" })}>
+        {feedback && (
+          <Button
+            variant="outline"
+            size="lg"
+            className="ml-auto"
+            onClick={() =>
+              printReport(`${company} interview feedback, ${formatDate(startedAt ?? Date.now())}`)
+            }
+          >
+            <DownloadIcon data-icon="inline-start" />
+            Download PDF
+          </Button>
+        )}
+        <Link
+          href="/"
+          className={buttonVariants({ size: "lg", className: !feedback && "ml-auto" })}
+        >
           <PlusIcon data-icon="inline-start" />
           New interview
         </Link>
@@ -108,6 +124,14 @@ export function ResultsView() {
       {feedback && <PrintReport feedback={feedback} />}
     </>
   );
+}
+
+// the browser names the saved PDF after the page title
+function printReport(title: string) {
+  const pageTitle = document.title;
+  document.title = title;
+  window.addEventListener("afterprint", () => (document.title = pageTitle), { once: true });
+  window.print();
 }
 
 type FeedbackStatusProps = { error: FeedbackError | null; retry: () => void; answers: number };
