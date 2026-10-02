@@ -30,6 +30,7 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-chart-muted: var(--chart-muted);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -82,6 +83,7 @@
   --chart-3: oklch(0.55 0.07 175);
   --chart-4: oklch(0.42 0.05 180);
   --chart-5: oklch(0.3 0.03 185);
+  --chart-muted: oklch(0.44 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.86 0.1 170);
