@@ -7,7 +7,12 @@ from backend.guard.canary import new_canary
 from backend.guard.delimiters import wrap
 from backend.prompts import load_prompt
 from backend.prompts.interview_settings import DIFFICULTY, PERSONA
-from backend.schemas.chat import InterviewSettings, ModelSettings, Technique
+from backend.schemas.chat import (
+    INTERVIEWERS,
+    InterviewSettings,
+    ModelSettings,
+    Technique,
+)
 from backend.schemas.plan import InterviewPlan
 
 # stands in for the real canary in the dev panel's prompt view
@@ -60,6 +65,7 @@ def build_interviewer_input(
     # note: what to do this turn (a turn hint or the plan's next step)
     chain_input = {
         "company": settings.company,
+        "interviewer": INTERVIEWERS[settings.company],
         "role": wrap("role", settings.role),
         "difficulty": DIFFICULTY[settings.difficulty],
         "persona": PERSONA[settings.persona],

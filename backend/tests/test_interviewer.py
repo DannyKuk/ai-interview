@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
 from backend.prompts.interview_settings import DIFFICULTY, PERSONA
 from backend.prompts.turn_hints import HINTS
-from backend.schemas.chat import InterviewSettings, Technique
+from backend.schemas.chat import INTERVIEWERS, InterviewSettings, Technique
 
 TECHNIQUES = ["zero_shot", "few_shot", "chain_of_thought", "persona", "self_critique"]
 
@@ -51,6 +51,16 @@ def test_settings_are_filled_into_every_prompt(technique):
     assert "Data Analyst" in system_prompt
     assert DIFFICULTY["hard"] in system_prompt
     assert PERSONA["strict"] in system_prompt
+
+
+def test_persona_prompt_uses_the_companys_interviewer():
+    # the name tag in the call shows this name, so the spoken intro must match
+    system_prompt = render_system_prompt(
+        InterviewSettings(company="HeadBook"), "persona"
+    )
+
+    assert INTERVIEWERS["HeadBook"] in system_prompt
+    assert "Sam" not in system_prompt
 
 
 @pytest.mark.parametrize("technique", TECHNIQUES)
