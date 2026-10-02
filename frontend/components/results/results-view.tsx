@@ -7,6 +7,7 @@ import { useEffect } from "react";
 
 import { Transcript } from "@/components/interview/transcript";
 import { InterviewSummary } from "@/components/results/interview-summary";
+import { PrintReport } from "@/components/results/print-report";
 import { QuestionResults, ScoreSkeleton, ScoreSummary } from "@/components/results/scorecard";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,7 +59,7 @@ export function ResultsView() {
 
   return (
     <>
-      <header className="flex flex-wrap items-center gap-x-4 gap-y-2 pr-12 pl-2 sm:pr-28">
+      <header className="flex flex-wrap items-center gap-x-4 gap-y-2 pr-12 pl-2 sm:pr-28 print:hidden">
         <span className="font-semibold">{company}</span>
         <h1 className="order-last basis-full text-muted-foreground sm:order-none sm:basis-auto">
           {role} interview
@@ -70,7 +71,7 @@ export function ResultsView() {
         </Link>
       </header>
 
-      <div className="grid items-start gap-3 lg:grid-cols-[340px_minmax(0,1fr)]">
+      <div className="grid items-start gap-3 lg:grid-cols-[340px_minmax(0,1fr)] print:hidden">
         <div className="flex min-w-0 flex-col gap-3">
           {(!scored || feedback || loading) && (
             <Card>
@@ -103,6 +104,8 @@ export function ResultsView() {
           <TranscriptCard messages={messages} />
         </div>
       </div>
+
+      {feedback && <PrintReport feedback={feedback} />}
     </>
   );
 }

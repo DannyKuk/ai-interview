@@ -2,7 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* screen only: the printed report uses the light palette, so dark: styles mustn't apply there */
+@custom-variant dark {
+  @media screen {
+    &:is(.dark *) {
+      @slot;
+    }
+  }
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -83,6 +90,36 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.86 0.1 170);
+}
+
+/* The PDF of the results: shadcn's neutral light palette on paper, mint darkened to read on white. */
+@media print {
+  :root,
+  .dark {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.55 0.1 170);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.205 0 0);
+    --muted: oklch(0.97 0 0);
+    --muted-foreground: oklch(0.556 0 0);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.922 0 0);
+  }
+
+  html {
+    color-scheme: light;
+    /* browsers drop background colours when printing; the score bars and tags need them */
+    print-color-adjust: exact;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 16mm;
 }
 
 @layer base {

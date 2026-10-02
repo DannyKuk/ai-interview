@@ -30,7 +30,7 @@ function percentOf(score: number): number {
   return ((score - 1) / 4) * 100;
 }
 
-function weakestOf({ scorecard, evaluations }: FeedbackResponse): Evaluation | undefined {
+export function weakestOf({ scorecard, evaluations }: FeedbackResponse): Evaluation | undefined {
   return evaluations.find((evaluation) => evaluation.question === scorecard.weakest_question);
 }
 
@@ -169,38 +169,56 @@ function QuestionRow({ evaluation, weakest }: { evaluation: Evaluation; weakest:
   return (
     <AccordionItem value={evaluation.question}>
       <AccordionTrigger className="min-w-0 items-center gap-3 py-3 hover:no-underline">
-        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold tabular-nums">
-          {evaluation.question + 1}
-        </span>
-        {/* phones: the badges get their own line, else the topic shrinks to "Fr…" */}
-        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="truncate max-sm:basis-full">{evaluation.topic}</span>
-          {weakest && <Badge variant="warning">Weakest</Badge>}
-          {evaluation.wrong_claim && <Badge variant="destructive">Wrong claim</Badge>}
-          {evaluation.contradiction && <Badge variant="destructive">Contradiction</Badge>}
-          {evaluation.unverified && <Badge variant="outline">Couldn&apos;t verify</Badge>}
-        </span>
-        <Progress value={percentOf(evaluation.score)} className="hidden w-16 shrink-0 sm:flex" />
-        <span className="w-8 shrink-0 text-right font-heading text-lg font-semibold tabular-nums">
-          {formatScore(evaluation.score)}
-        </span>
+        <QuestionHeading evaluation={evaluation} weakest={weakest} />
       </AccordionTrigger>
-      <AccordionContent className="flex flex-col gap-3 pl-10 [&_p:not(:last-child)]:mb-0">
-        <p className="text-muted-foreground">{evaluation.asked}</p>
-        <p>{evaluation.feedback}</p>
-        {evaluation.unverified && (
-          <p className="text-muted-foreground">
-            Some technical claims here are too new or niche for us to check, so correctness
-            isn&apos;t part of this score. In a real interview, be ready to explain how you know.
-          </p>
-        )}
-        <ul className="flex flex-col gap-2">
-          {evaluation.criteria.map((criterion) => (
-            <CriterionLine key={criterion.criterion} criterion={criterion} />
-          ))}
-        </ul>
+      <AccordionContent className="pl-10 [&_p:not(:last-child)]:mb-0">
+        <QuestionDetails evaluation={evaluation} />
       </AccordionContent>
     </AccordionItem>
+  );
+}
+
+type QuestionHeadingProps = { evaluation: Evaluation; weakest: boolean };
+
+export function QuestionHeading({ evaluation, weakest }: QuestionHeadingProps) {
+  return (
+    <>
+      <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold tabular-nums">
+        {evaluation.question + 1}
+      </span>
+      {/* phones: the badges get their own line, else the topic shrinks to "Fr…" */}
+      <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="truncate max-sm:basis-full">{evaluation.topic}</span>
+        {weakest && <Badge variant="warning">Weakest</Badge>}
+        {evaluation.wrong_claim && <Badge variant="destructive">Wrong claim</Badge>}
+        {evaluation.contradiction && <Badge variant="destructive">Contradiction</Badge>}
+        {evaluation.unverified && <Badge variant="outline">Couldn&apos;t verify</Badge>}
+      </span>
+      <Progress value={percentOf(evaluation.score)} className="hidden w-16 shrink-0 sm:flex" />
+      <span className="w-8 shrink-0 text-right font-heading text-lg font-semibold tabular-nums">
+        {formatScore(evaluation.score)}
+      </span>
+    </>
+  );
+}
+
+export function QuestionDetails({ evaluation }: { evaluation: Evaluation }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-muted-foreground">{evaluation.asked}</p>
+      <p>{evaluation.feedback}</p>
+      {evaluation.unverified && (
+        <p className="text-muted-foreground">
+          Some technical claims here are too new or niche for us to check, so correctness isn&apos;t
+          part of this score. In a real interview, be ready to explain how you know.
+        </p>
+      )}
+      <ul className="flex flex-col gap-2">
+        {evaluation.criteria.map((criterion) => (
+          <CriterionLine key={criterion.criterion} criterion={criterion} />
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -215,7 +233,7 @@ function CriterionLine({ criterion }: { criterion: Criterion }) {
 }
 
 // the [placeholders] the candidate fills in stand out
-function SampleAnswer({ text }: { text: string }) {
+export function SampleAnswer({ text }: { text: string }) {
   // split with a capture group keeps the matches: "a [b] c" → ["a ", "[b]", " c"]
   const parts = text.split(/(\[[^\]]+\])/);
 

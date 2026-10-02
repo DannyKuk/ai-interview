@@ -40,10 +40,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col">
         {children}
-        <Toaster position="top-center" />
-        <Suspense>
-          <DevPanel />
-        </Suspense>
+        <div className="print:hidden">
+          <Toaster position="top-center" />
+          <Suspense>
+            <DevPanel />
+          </Suspense>
+        </div>
       </body>
     </html>
   );
