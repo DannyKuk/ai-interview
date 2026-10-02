@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { BarRows } from "@/components/benchmarks/bar-rows";
+import { QuestionCard } from "@/components/benchmarks/question-card";
+import { BenchmarkSection } from "@/components/benchmarks/section";
 import { Card, CardContent } from "@/components/ui/card";
-import { tiles } from "@/lib/benchmarks";
+import { sttModels, tiles, writeUps } from "@/lib/benchmarks";
 
 export const metadata: Metadata = { title: "Benchmarks · Interview Practice" };
 
@@ -40,6 +43,22 @@ export default function BenchmarksPage() {
           ))}
         </div>
       </div>
+
+      <BenchmarkSection id="voice" title="Voice" writeUps={writeUps.voice}>
+        <QuestionCard
+          question="Which speech-to-text model hears you best?"
+          answer={
+            <>
+              <strong className="font-semibold text-primary">Parakeet</strong>: the fewest misheard
+              words of the 9 models tested, and one of the fastest. It runs on your machine, so your
+              voice never leaves it.
+            </>
+          }
+          footnote="Bar = words misheard on a real voice (lower is better). Time = how long a 15-second answer takes to transcribe on the CPU."
+        >
+          <BarRows rows={sttModels} max={31} valueName="Misheard words (%)" />
+        </QuestionCard>
+      </BenchmarkSection>
     </main>
   );
 }

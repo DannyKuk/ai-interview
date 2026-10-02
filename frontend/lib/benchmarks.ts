@@ -30,3 +30,17 @@ export const tiles: Tile[] = [
   { value: "45", unit: "/ 45", label: "Jailbreak tests the app passed, 5 runs each" },
   { value: "2.3 %", label: "Words misheard in voice answers, on your own machine" },
 ];
+
+export type BarRow = { name: string; value: number; label: string; used?: boolean };
+
+export const sttModels: BarRow[] = [
+  { name: "Parakeet v2", value: 2.3, label: "2.3 % · 0.3 s", used: true },
+  { name: "Whisper small.en", value: 4.7, label: "4.7 % · 1.1 s" },
+  { name: "Whisper large-v3-turbo", value: 4.7, label: "4.7 % · 4.4 s" },
+  { name: "Moonshine medium", value: 7.0, label: "7.0 % · 0.7 s" },
+  { name: "Whisper distil-large-v3", value: 7.0, label: "7.0 % · 4.3 s" },
+  { name: "Moonshine small", value: 14.0, label: "14.0 % · 0.5 s" },
+  { name: "Moonshine base", value: 18.6, label: "18.6 % · 0.3 s" },
+  { name: "Whisper tiny.en", value: 27.9, label: "27.9 % · 0.2 s" },
+  { name: "Whisper base.en", value: 30.2, label: "30.2 % · 0.4 s" },
+];
