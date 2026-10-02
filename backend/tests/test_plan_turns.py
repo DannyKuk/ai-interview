@@ -1,6 +1,12 @@
 import pytest
 
-from backend.prompts.plan_turns import DONE, FOLLOW_UP, plan_turn
+from backend.prompts.plan_turns import (
+    CHALLENGE,
+    CONTRADICTION,
+    DONE,
+    FOLLOW_UP,
+    plan_turn,
+)
 from backend.prompts.turn_hints import HINTS
 from backend.schemas.guard import GuardVerdict
 from backend.schemas.plan import MAX_EXTRA_TURNS, InterviewPlan, PlanProgress
@@ -79,6 +85,46 @@ def test_wanting_to_end_ends_anywhere():
         "candidate_left",
         at(1),
     )
+
+
+def test_a_wrong_claim_gets_challenged():
+    verdict = CLEAR.model_copy(update={"wrong_claim": 0.95})
+    turn = plan_turn(THREE, at(0), verdict, None)
+    assert (turn.progress, turn.note) == (at(0, 1), CHALLENGE)
+
+
+def test_a_claim_jev_only_doubts_is_not_challenged():
+    # correct but recent / niche claims reached 0.72 in the spike
+    verdict = CLEAR.model_copy(update={"wrong_claim": 0.72, "unverified_claim": 0.87})
+    assert plan_turn(THREE, at(0), verdict, None).progress == at(1)
+
+
+def test_a_contradiction_gets_challenged():
+    verdict = CLEAR.model_copy(update={"contradiction": 0.64})
+    turn = plan_turn(THREE, at(0), verdict, None)
+    assert (turn.progress, turn.note) == (at(0, 1), CONTRADICTION)
+
+
+def test_a_contradiction_beats_a_wrong_claim_and_a_vague_answer():
+    verdict = VAGUE.model_copy(update={"contradiction": 0.9, "wrong_claim": 0.95})
+    assert plan_turn(THREE, at(0), verdict, None).note == CONTRADICTION
+
+
+def test_a_wrong_claim_beats_a_vague_answer():
+    verdict = VAGUE.model_copy(update={"wrong_claim": 0.95})
+    assert plan_turn(THREE, at(0), verdict, None).note == CHALLENGE
+
+
+def test_no_second_challenge_on_the_same_question():
+    # the reply to a contradiction challenge still contradicts the old answer
+    verdict = CLEAR.model_copy(update={"contradiction": 0.9})
+    assert plan_turn(THREE, at(0, 1), verdict, None).progress == at(1)
+
+
+def test_steering_back_beats_a_challenge():
+    verdict = GuardVerdict(answered=0.1, wrong_claim=0.95)
+    turn = plan_turn(THREE, at(0), verdict, "not_answered")
+    assert turn.note == HINTS["not_answered"]
 
 
 def test_no_vague_signal_counts_as_clear():
