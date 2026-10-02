@@ -1,9 +1,12 @@
+import { CircleHelpIcon } from "lucide-react";
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -13,6 +16,9 @@ import { cn } from "@/lib/utils";
 
 type Evaluation = FeedbackResponse["evaluations"][number];
 type Criterion = Evaluation["criteria"][number];
+
+// from this many answers with claims Jev couldn't check, the summary says so
+const SEVERAL_UNVERIFIED = 2;
 
 // scores are 1-5 with two decimals from the backend, one is enough to read
 function formatScore(score: number): string {
@@ -29,7 +35,13 @@ function weakestOf({ scorecard, evaluations }: FeedbackResponse): Evaluation | u
 }
 
 // the left column
-export function ScoreSummary({ feedback: { scorecard } }: { feedback: FeedbackResponse }) {
+export function ScoreSummary({
+  feedback: { scorecard, evaluations },
+}: {
+  feedback: FeedbackResponse;
+}) {
+  const unverified = evaluations.filter((evaluation) => evaluation.unverified).length;
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -49,6 +61,16 @@ export function ScoreSummary({ feedback: { scorecard } }: { feedback: FeedbackRe
           ))}
         </div>
       </div>
+      {unverified >= SEVERAL_UNVERIFIED && (
+        <Alert>
+          <CircleHelpIcon />
+          <AlertTitle>{unverified} answers we couldn&apos;t check</AlertTitle>
+          <AlertDescription>
+            They contain technical claims too new or niche for us to verify, so they didn&apos;t
+            lower your score. A real interviewer may ask how you know: be ready to back them up.
+          </AlertDescription>
+        </Alert>
+      )}
       <Points
         title="What went well"
         points={scorecard.strengths}
@@ -149,9 +171,11 @@ function QuestionRow({ evaluation, weakest }: { evaluation: Evaluation; weakest:
         <span className="grid size-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold tabular-nums">
           {evaluation.question + 1}
         </span>
-        <span className="flex min-w-0 flex-1 items-center gap-2">
-          <span className="truncate">{evaluation.topic}</span>
+        {/* phones: the badges get their own line, else the topic shrinks to "Fr…" */}
+        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="truncate max-sm:basis-full">{evaluation.topic}</span>
           {weakest && <Badge variant="secondary">Weakest</Badge>}
+          {evaluation.unverified && <Badge variant="outline">Couldn&apos;t verify</Badge>}
         </span>
         <Progress value={percentOf(evaluation.score)} className="hidden w-16 shrink-0 sm:flex" />
         <span className="w-8 shrink-0 text-right font-heading text-lg font-semibold tabular-nums">
@@ -161,6 +185,12 @@ function QuestionRow({ evaluation, weakest }: { evaluation: Evaluation; weakest:
       <AccordionContent className="flex flex-col gap-3 pl-10 [&_p:not(:last-child)]:mb-0">
         <p className="text-muted-foreground">{evaluation.asked}</p>
         <p>{evaluation.feedback}</p>
+        {evaluation.unverified && (
+          <p className="text-muted-foreground">
+            Some technical claims here are too new or niche for us to check, so correctness
+            isn&apos;t part of this score. In a real interview, be ready to explain how you know.
+          </p>
+        )}
         <ul className="flex flex-col gap-2">
           {evaluation.criteria.map((criterion) => (
             <CriterionLine key={criterion.criterion} criterion={criterion} />

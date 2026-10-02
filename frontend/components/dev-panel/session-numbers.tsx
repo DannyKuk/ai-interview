@@ -195,6 +195,12 @@ function GuardLogRow({
           {prob(guard.wants_to_end)}
         </p>
       )}
+      {guard?.category && (
+        <p className="text-muted-foreground">
+          wrong claim {prob(guard.wrong_claim)} · unverified {prob(guard.unverified_claim)} ·
+          contradiction {prob(guard.contradiction)}
+        </p>
+      )}
     </li>
   );
 }
