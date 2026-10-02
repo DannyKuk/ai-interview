@@ -93,6 +93,12 @@ def test_a_wrong_claim_gets_challenged():
     assert (turn.progress, turn.note) == (at(0, 1), CHALLENGE)
 
 
+def test_a_wrong_claim_at_0_82_is_challenged():
+    # a real interview (Oct 2): the SQLite claim got 0.82 and slipped past 0.9
+    verdict = CLEAR.model_copy(update={"wrong_claim": 0.82})
+    assert plan_turn(THREE, at(0), verdict, None).note == CHALLENGE
+
+
 def test_a_claim_jev_only_doubts_is_not_challenged():
     # correct but recent / niche claims reached 0.72 in the spike
     verdict = CLEAR.model_copy(update={"wrong_claim": 0.72, "unverified_claim": 0.87})

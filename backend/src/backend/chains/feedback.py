@@ -50,10 +50,13 @@ def format_question(
         *[f"- {c.criterion}: {c.score:.1f}" for c in scored.criteria],
     ]
     if scored.wrong_claim:
-        # Jev can't say which claim it means, the LLM has to find it
+        # Jev can't say which claim it means, the LLM has to find it. The softer
+        # "name it and say what is correct" gave the correct fact 1 of 3 times (Oct 2)
         lines.append(
-            "A technical claim here is clearly wrong: name it in one sentence and say "
-            "what is correct. If the candidate corrected it later, say so."
+            "Wrong claim: a technical claim in this answer is clearly wrong. Start the "
+            "feedback for this question with one sentence that names the claim and "
+            "says what is actually correct. If the candidate corrected it later, say "
+            "so."
         )
     if scored.contradiction:
         # "name both statements" alone: 0 of 3 did, two praised the honesty instead.
