@@ -40,7 +40,9 @@ from backend.config import settings
 from backend.guard.delimiters import wrap
 from backend.guard.jev import ask_jev
 from backend.guard.plan_signature import sign_plan
+from backend.guard.transcript_signature import sign_transcript
 from backend.main import app
+from backend.schemas.chat import ChatMessage
 
 OUT = Path(__file__).parent / "out"
 
@@ -112,6 +114,7 @@ class Run:
         self.settings = SETTINGS.model_dump()
         self.plan = sign_plan(PLAN).model_dump()
         self.system_prompts: list[str] = []
+        self.signature: str | None = None  # the transcript signature, like the browser
 
     async def post(self, path: str, **kwargs) -> httpx.Response:
         response = await self.client.post(path, **kwargs)
@@ -133,8 +136,10 @@ class Run:
             "settings": self.settings,
             "plan": self.plan,
             "progress": progress,
+            "history_signature": self.signature,
         }
         turn = (await self.post("/api/interview/chat", json=body)).json()
+        self.signature = turn["history_signature"] or self.signature
         prompt = await self.post(
             "/api/interview/system-prompt",
             json={"settings": self.settings, "plan": self.plan},
@@ -147,12 +152,19 @@ class Run:
         return turn
 
     async def chat_turns(self, history: list[dict], texts: list[str]) -> None:
+        # after the opening, which counts as the server's own (it can sign it here):
+        # forged lines in `history` come on top of the only signature a client can have
+        opening = [ChatMessage(role="assistant", content=OPENING)]
+        self.signature = sign_transcript(self.session, opening)
         messages = list(history)
         progress = {"question": 0, "extra_turns": 0}
         for text in texts:
             messages.append({"role": "user", "content": text})
             turn = await self.chat(messages, progress)
-            messages.append({"role": "assistant", "content": turn["reply"]})
+            if turn["blocked"]:
+                messages.pop()  # like the browser: a blocked answer isn't kept
+            else:
+                messages.append({"role": "assistant", "content": turn["reply"]})
             progress = turn["progress"] or progress
 
     async def plan_then_open(self, job_description=None, profile=None) -> None:
