@@ -24,7 +24,8 @@ import { cn } from "@/lib/utils";
 // request for the next interviewer turn: the whole transcript goes along every time,
 // the plan unchanged (it's signed) and where we are in it
 function buildRequest(messages: ChatMessage[]): ChatRequest {
-  const { sessionId, settings, dev, plan, progress } = useInterviewStore.getState();
+  const { sessionId, settings, dev, plan, progress, historySignature } =
+    useInterviewStore.getState();
   return {
     session_id: sessionId!,
     // without our question tags: the backend rejects unknown fields
@@ -34,6 +35,7 @@ function buildRequest(messages: ChatMessage[]): ChatRequest {
     model_settings: dev!.modelSettings,
     plan,
     progress,
+    history_signature: historySignature,
   };
 }
 
@@ -48,6 +50,7 @@ export function InterviewChat() {
   const messages = useInterviewStore((state) => state.messages);
   const ended = useInterviewStore((state) => state.ended);
   const addMessage = useInterviewStore((state) => state.addMessage);
+  const setHistorySignature = useInterviewStore((state) => state.setHistorySignature);
   const endInterview = useInterviewStore((state) => state.endInterview);
   const recordTurn = useInterviewStore((state) => state.recordTurn);
   const setProgress = useInterviewStore((state) => state.setProgress);
@@ -83,11 +86,12 @@ export function InterviewChat() {
     (finished: StreamedTurn) => {
       const question = finished.ended ? undefined : finished.progress?.question;
       addMessage({ role: "assistant", content: finished.reply, question });
+      setHistorySignature(finished.historySignature);
       if (finished.progress) {
         setProgress(finished.progress);
       }
     },
-    [addMessage, setProgress],
+    [addMessage, setHistorySignature, setProgress],
   );
 
   const firstTurn = useCallback(async () => {

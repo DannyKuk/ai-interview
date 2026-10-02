@@ -24,6 +24,7 @@ export type StreamedTurn = {
   progress: PlanProgress | null; // the plan question this reply asks
   guard: GuardVerdict | null;
   usage: Usage | null;
+  historySignature: string | null; // the server's signature over the transcript + this reply
 };
 
 // status: the HTTP status, null when the request never got an answer (network)
@@ -61,6 +62,7 @@ export function useChatStream({ onEvent }: ChatStreamOptions = {}) {
       progress: null,
       guard: null,
       usage: null,
+      historySignature: null,
     };
 
     setTurn(current);
@@ -120,6 +122,10 @@ function applyEvent(turn: StreamedTurn, event: ChatStreamEvent): StreamedTurn {
     case "usage":
       return { ...turn, usage: event.data };
     case "done":
-      return { ...turn, streaming: false };
+      return {
+        ...turn,
+        streaming: false,
+        historySignature: event.data.history_signature ?? null,
+      };
   }
 }

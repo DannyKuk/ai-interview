@@ -193,7 +193,7 @@ export type ChatStreamEvent =
       event: "blocked";
       data: { reason: NonNullable<ChatResponse["blocked"]>; reply: string; guard?: GuardVerdict };
     }
-  | { event: "done"; data: { finish_reason: string | null } };
+  | { event: "done"; data: { finish_reason: string | null; history_signature?: string } };
 
 // one interviewer turn, streamed - yields each event as it arrives.
 export async function* streamChat(

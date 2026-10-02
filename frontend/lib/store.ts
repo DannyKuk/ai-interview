@@ -49,6 +49,9 @@ type InterviewState = {
   plan: SignedPlan | null; // the question list, sent back unchanged on every turn (signed)
   progress: PlanProgress | null; // where we are in the plan, from the last turn's meta
   messages: TranscriptMessage[]; // the transcript, sent as history on every turn
+  // the server's signature over the transcript, sent back with the next turn: a changed
+  // earlier line is rejected. null = no reply yet
+  historySignature: string | null;
   ended: EndReason | null; // set once the interviewer has said goodbye
   interviewer: string | null; // the interviewer's name at the picked company
   startedAt: number | null; // ms timestamps, for the call's clock
@@ -80,6 +83,7 @@ type InterviewState = {
   updateProfile: (patch: Partial<CandidateProfile>) => void;
   startInterview: (plan: SignedPlan, cost: number | null, interviewer: string) => void;
   addMessage: (message: TranscriptMessage) => void;
+  setHistorySignature: (historySignature: string | null) => void;
   setProgress: (progress: PlanProgress) => void;
   endInterview: (reason: EndReason) => void;
   setFeedback: (feedback: FeedbackResponse, cost: number | null) => void;
@@ -106,6 +110,7 @@ export const useInterviewStore = create<InterviewState>()(
       plan: null,
       progress: null,
       messages: [],
+      historySignature: null,
       ended: null,
       interviewer: null,
       startedAt: null,
@@ -145,6 +150,7 @@ export const useInterviewStore = create<InterviewState>()(
           plan,
           progress: null,
           messages: [],
+          historySignature: null,
           ended: null,
           interviewer,
           startedAt: Date.now(),
@@ -154,6 +160,7 @@ export const useInterviewStore = create<InterviewState>()(
           costs: { cv: state.costs.cv, plan: cost },
         })),
       addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+      setHistorySignature: (historySignature) => set({ historySignature }),
       setProgress: (progress) => set({ progress }),
       endInterview: (reason) =>
         set((state) => ({ ended: reason, endedAt: state.endedAt ?? Date.now() })),
@@ -183,6 +190,7 @@ export const useInterviewStore = create<InterviewState>()(
           plan: null,
           progress: null,
           messages: [],
+          historySignature: null,
           ended: null,
           interviewer: null,
           startedAt: null,

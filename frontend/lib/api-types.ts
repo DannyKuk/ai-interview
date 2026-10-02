@@ -327,6 +327,8 @@ export interface components {
             model_settings?: components["schemas"]["ModelSettings"];
             plan?: components["schemas"]["SignedPlan-Input"] | null;
             progress?: components["schemas"]["PlanProgress"] | null;
+            /** History Signature */
+            history_signature?: string | null;
         };
         /** ChatResponse */
         ChatResponse: {
@@ -340,6 +342,8 @@ export interface components {
             ended?: ("candidate_left" | "limit_reached" | "completed") | null;
             progress?: components["schemas"]["PlanProgress"] | null;
             guard?: components["schemas"]["GuardVerdict"] | null;
+            /** History Signature */
+            history_signature?: string | null;
         };
         /** CriterionScore */
         CriterionScore: {
