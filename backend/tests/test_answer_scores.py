@@ -21,13 +21,23 @@ def noul(p: float) -> dict:
     return {"type": "noul", "noul": p}
 
 
-def fake_jev(monkeypatch, injection=0.01, met=(0.9, 0.5, 0.0, 0.25)) -> list:
+def fake_jev(
+    monkeypatch,
+    injection=0.01,
+    met=(0.9, 0.5, 0.0, 0.25),
+    unverified=0.1,
+    wrong_claim=0.05,
+) -> list:
     # Jev answers every criterion_i with met[i]. Returns what it was asked
     asked = []
 
     async def ask_jev(state, questions):
         asked.append((state, questions))
-        answers = {"injection": noul(injection)}
+        answers = {
+            "injection": noul(injection),
+            "unverified": noul(unverified),
+            "wrong_claim": noul(wrong_claim),
+        }
         for i, p in enumerate(met):
             answers[f"criterion_{i}"] = noul(p)
         return answers
@@ -58,9 +68,44 @@ async def test_the_rubric_and_the_fixed_criterion_are_asked(monkeypatch, questio
     expected = [*QUESTION.rubric, FIXED_CRITERIA[question_type], SPECIFIC_CRITERION]
     assert [c.criterion for c in scored.criteria] == expected
     _, questions = asked[0]
-    assert set(questions) == {"injection"} | {f"criterion_{i}" for i in range(4)}
+    assert set(questions) == {"injection", "unverified", "wrong_claim"} | {
+        f"criterion_{i}" for i in range(4)
+    }
     assert FIXED_CRITERIA[question_type] in questions["criterion_2"]["instructions"]
     assert SPECIFIC_CRITERION in questions["criterion_3"]["instructions"]
+
+
+TECHNICAL = QUESTION.model_copy(update={"type": "technical"})
+
+
+@pytest.mark.anyio
+async def test_a_claim_jev_cant_check_is_not_scored_for_correctness(monkeypatch):
+    # correct but recent / niche: "technically correct" would score it ~1.8
+    fake_jev(monkeypatch, met=(0.9, 0.5, 0.2, 0.25), unverified=0.8, wrong_claim=0.7)
+    scored = await score_answer(TECHNICAL, EXCHANGES)
+
+    assert scored.unverified
+    assert FIXED_CRITERIA["technical"] not in [c.criterion for c in scored.criteria]
+    assert scored.score == 3.2  # (4.6 + 3 + 2) / 3, without the 1.8
+
+
+@pytest.mark.anyio
+async def test_a_certainly_wrong_claim_is_still_scored(monkeypatch):
+    fake_jev(monkeypatch, met=(0.9, 0.5, 0.02, 0.25), unverified=0.8, wrong_claim=0.95)
+    scored = await score_answer(TECHNICAL, EXCHANGES)
+
+    assert not scored.unverified
+    assert len(scored.criteria) == 4
+
+
+@pytest.mark.anyio
+async def test_an_unverified_claim_keeps_the_other_types_criteria(monkeypatch):
+    # only the technical type has the correctness criterion; the mark still shows
+    fake_jev(monkeypatch, unverified=0.8)
+    scored = await score_answer(QUESTION, EXCHANGES)
+
+    assert scored.unverified
+    assert len(scored.criteria) == 4
 
 
 def test_every_text_is_wrapped_and_escaped():

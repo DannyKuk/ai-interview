@@ -209,6 +209,11 @@ export interface components {
             score: number;
             /** Feedback */
             feedback: string;
+            /**
+             * Unverified
+             * @default false
+             */
+            unverified: boolean;
         };
         /** AnsweredQuestion */
         AnsweredQuestion: {

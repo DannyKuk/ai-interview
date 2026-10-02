@@ -63,6 +63,7 @@ class AnswerEvaluation(BaseModel):
     criteria: list[CriterionScore]
     score: float  # 1-5, the average of the criteria
     feedback: str  # LLM: what went well, what to improve
+    unverified: bool = False  # claims Jev can't check: correctness isn't scored
 
 
 class Scorecard(BaseModel):

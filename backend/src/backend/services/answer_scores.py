@@ -43,6 +43,33 @@ INJECTION_QUESTION = {
 }
 
 
+# a correct claim Jev doesn't know (new, niche) scored 0.2 on "technically correct"
+# (spike, Oct 2). "any of the answers": a question can have follow-ups
+UNVERIFIED_QUESTION = {
+    "type": "noul",
+    "instructions": (
+        "This is part of a job interview. Does any of the candidate's answers in "
+        "<candidate_message> contain a technical claim about how a technology, tool "
+        "or method works that you can't confirm as correct, because it is new, niche "
+        "or you don't know it? Claims about the candidate's own experience, numbers "
+        "or results do not count, and neither do well-known correct facts."
+    ),
+}
+
+WRONG_CLAIM_QUESTION = {
+    "type": "noul",
+    "instructions": (
+        "This is part of a job interview. Does any of the candidate's answers in "
+        "<candidate_message> contain a technical claim that is clearly false, i.e. it "
+        "contradicts well-established facts about how a technology, tool or method "
+        "works? Only say yes when the claim is certainly wrong. A claim that is new, "
+        "niche or surprising but could be true does not count. Neither do claims "
+        "about the candidate's own experience, numbers or results, an honest 'I "
+        "don't know', or an answer that is only vague or incomplete."
+    ),
+}
+
+
 def criterion_question(criterion: str) -> dict:
     return {
         "type": "noul",
@@ -74,21 +101,31 @@ class ScoredAnswer:
     criteria: list[CriterionScore]
     score: float  # 1-5
     blocked: Literal["injection", "guard_error"] | None = None
+    unverified: bool = False  # claims Jev can't check: correctness isn't scored
 
 
 async def score_answer(
     planned: PlannedQuestion, exchanges: list[Exchange]
 ) -> ScoredAnswer:
     criteria = [*planned.rubric, FIXED_CRITERIA[planned.type], SPECIFIC_CRITERION]
-    questions = {"injection": INJECTION_QUESTION} | {
-        f"criterion_{i}": criterion_question(text) for i, text in enumerate(criteria)
-    }
+    questions = {
+        "injection": INJECTION_QUESTION,
+        "unverified": UNVERIFIED_QUESTION,
+        "wrong_claim": WRONG_CLAIM_QUESTION,
+    } | {f"criterion_{i}": criterion_question(text) for i, text in enumerate(criteria)}
     try:
         answers = await ask_jev(build_state(planned, exchanges), questions)
         if answers["injection"]["noul"] >= settings.guard_threshold:
             return ScoredAnswer(criteria=[], score=0.0, blocked="injection")
+        # a claim that is certainly wrong still costs points
+        unverified = (
+            answers["unverified"]["noul"] >= settings.unverified_threshold
+            and answers["wrong_claim"]["noul"] < settings.wrong_claim_threshold
+        )
         scores = []
         for i, text in enumerate(criteria):
+            if unverified and text == FIXED_CRITERIA["technical"]:
+                continue
             met = answers[f"criterion_{i}"]["noul"]
             scores.append(CriterionScore(criterion=text, met=met, score=to_score(met)))
     except (httpx.HTTPError, KeyError, TypeError, ValueError) as error:
@@ -97,4 +134,4 @@ async def score_answer(
         return ScoredAnswer(criteria=[], score=0.0, blocked="guard_error")
 
     average = sum(score.score for score in scores) / len(scores)
-    return ScoredAnswer(criteria=scores, score=round(average, 2))
+    return ScoredAnswer(criteria=scores, score=round(average, 2), unverified=unverified)

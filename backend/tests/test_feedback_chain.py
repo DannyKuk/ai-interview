@@ -1,11 +1,12 @@
 import logging
+from dataclasses import replace
 
 import pytest
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableLambda
 
 from backend.chains import feedback as feedback_chain
-from backend.chains.feedback import write_feedback
+from backend.chains.feedback import format_question, write_feedback
 from backend.config import settings as app_settings
 from backend.schemas.chat import InterviewSettings
 from backend.schemas.feedback import (
@@ -159,3 +160,9 @@ def test_strengths_may_be_empty():
     # nothing worked -> no strength instead of a made-up one
     empty = FeedbackText.model_validate(TEXT.model_dump() | {"strengths": []})
     assert empty.strengths == []
+
+
+def test_unverified_claims_are_neither_called_right_nor_wrong():
+    flagged = replace(SCORES[0], unverified=True)
+    assert "too new or niche" in format_question(PLAN, ANSWERS[0], flagged)
+    assert "too new or niche" not in format_question(PLAN, ANSWERS[0], SCORES[0])

@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     wrong_claim_threshold: float = 0.9
     # real contradictions 0.64-0.97, corrections / changed opinions <= 0.13
     contradiction_threshold: float = 0.5
+    # feedback: correct but recent / niche claims 0.51-0.89, everything else that isn't
+    # wrong <= 0.44 -> correctness isn't scored for that answer
+    unverified_threshold: float = 0.45
 
     # reject a CV / job description when P(kind of document) is below this
     document_min_match: float = 0.5

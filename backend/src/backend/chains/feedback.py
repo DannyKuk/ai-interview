@@ -49,6 +49,12 @@ def format_question(
         "Criteria and scores:",
         *[f"- {c.criterion}: {c.score:.1f}" for c in scored.criteria],
     ]
+    if scored.unverified:
+        # else the feedback may call a correct but recent claim wrong
+        lines.append(
+            "Some technical claims here are too new or niche to check: don't call "
+            "them right or wrong."
+        )
     for exchange in answer.exchanges:
         lines.append(wrap("interviewer", exchange.interviewer))
         lines.append(wrap("candidate_message", exchange.candidate))
