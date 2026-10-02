@@ -91,3 +91,42 @@ export const cvYears: PairedRow[] = [
   pair("“2022 – present”", 4, 2),
   pair("“2021 – present”", 5, 3),
 ];
+
+export type BeforeAfterMeasure = { name: string; hint: string; rows: PairedRow[] };
+
+// Jev's probability per reply, mean; a = before the two prompt fixes, b = after
+export const promptFixes: BeforeAfterMeasure[] = [
+  {
+    name: "Praises weak answers",
+    hint: 'Lower is better. Mean over the vague and "don\'t know" answers.',
+    rows: [
+      { ...pair("Zero-shot", 0.69, 0.07, 2), used: true },
+      pair("Few-shot", 0.53, 0.04, 2),
+      pair("Chain-of-thought", 0.88, 0.05, 2),
+      pair("Persona", 0.72, 0.05, 2),
+      pair("Self-critique", 0.67, 0.08, 2),
+    ],
+  },
+  {
+    name: "Invents team facts",
+    hint: "Lower is better. When the candidate asks about the team.",
+    rows: [
+      { ...pair("Zero-shot", 0.96, 0.04, 2), used: true },
+      pair("Few-shot", 0.96, 0.03, 2),
+      pair("Chain-of-thought", 0.96, 0.03, 2),
+      pair("Persona", 0.96, 0.04, 2),
+      pair("Self-critique", 0.97, 0.03, 2),
+    ],
+  },
+  {
+    name: "Overall quality",
+    hint: 'Higher is better. Jev\'s "good reply" score, mean over all 90 replies.',
+    rows: [
+      { ...pair("Zero-shot", 0.83, 0.93, 2), used: true },
+      pair("Few-shot", 0.84, 0.92, 2),
+      pair("Chain-of-thought", 0.84, 0.93, 2),
+      pair("Persona", 0.83, 0.92, 2),
+      pair("Self-critique", 0.83, 0.93, 2),
+    ],
+  },
+];

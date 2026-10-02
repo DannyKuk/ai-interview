@@ -22,11 +22,17 @@ const LEGEND_HEIGHT = 32;
 
 type Props = { rows: PairedRow[]; max: number; a: Series; b: Series };
 
+// an outlined bar has no fill, so the legend and tooltip need an outlined square of their own
+function OutlineSwatch() {
+  return <span className="size-2.5 shrink-0 rounded-[2px] border-[1.5px] border-chart-muted" />;
+}
+
+function seriesConfig({ label, color, outline }: Series) {
+  return { label, color, icon: outline ? OutlineSwatch : undefined };
+}
+
 export function PairedBars({ rows, max, a, b }: Props) {
-  const config = {
-    a: { label: a.label, color: a.color },
-    b: { label: b.label, color: b.color },
-  } satisfies ChartConfig;
+  const config = { a: seriesConfig(a), b: seriesConfig(b) } satisfies ChartConfig;
 
   return (
     <ChartContainer

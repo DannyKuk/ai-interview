@@ -2,13 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { BarRows } from "@/components/benchmarks/bar-rows";
+import { BeforeAfterBars } from "@/components/benchmarks/before-after-bars";
 import { OTHER, USED } from "@/components/benchmarks/chart-style";
 import { LatencyBars } from "@/components/benchmarks/latency-bars";
 import { PairedBars } from "@/components/benchmarks/paired-bars";
 import { QuestionCard } from "@/components/benchmarks/question-card";
 import { BenchmarkSection } from "@/components/benchmarks/section";
 import { Card, CardContent } from "@/components/ui/card";
-import { cvYears, effortLevels, latency, sttModels, tiles, writeUps } from "@/lib/benchmarks";
+import {
+  cvYears,
+  effortLevels,
+  latency,
+  promptFixes,
+  sttModels,
+  tiles,
+  writeUps,
+} from "@/lib/benchmarks";
 
 export const metadata: Metadata = { title: "Benchmarks · Interview Practice" };
 
@@ -46,6 +55,25 @@ export default function BenchmarksPage() {
           ))}
         </div>
       </div>
+
+      <BenchmarkSection id="prompts" title="Prompt techniques" writeUps={writeUps.prompts}>
+        <QuestionCard
+          question="Which prompt technique makes the best interviewer?"
+          answer={
+            <>
+              None stands out:{" "}
+              <strong className="font-semibold text-primary">
+                all five behave almost the same.
+              </strong>{" "}
+              What helped was fixing two mistakes they all made. The app uses zero-shot, the
+              cheapest.
+            </>
+          }
+          footnote="Jev scores each reply; 90 replies per run, 18 per technique."
+        >
+          <BeforeAfterBars measures={promptFixes} />
+        </QuestionCard>
+      </BenchmarkSection>
 
       <BenchmarkSection
         id="settings"
