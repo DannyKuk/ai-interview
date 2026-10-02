@@ -71,12 +71,14 @@ export function ScoreSummary({
           </AlertDescription>
         </Alert>
       )}
-      <Points
-        title="What went well"
-        points={scorecard.strengths}
-        empty="Nothing to build on yet. Start with the points under “What to work on”."
-      />
-      <Points title="What to work on" points={scorecard.improvements} hollow />
+      <div className="flex flex-col gap-6 print:grid print:grid-cols-2">
+        <Points
+          title="What went well"
+          points={scorecard.strengths}
+          empty="Nothing to build on yet. Start with the points under “What to work on”."
+        />
+        <Points title="What to work on" points={scorecard.improvements} hollow />
+      </div>
     </div>
   );
 }
