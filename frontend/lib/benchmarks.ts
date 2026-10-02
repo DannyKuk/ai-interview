@@ -130,3 +130,12 @@ export const promptFixes: BeforeAfterMeasure[] = [
     ],
   },
 ];
+
+// runs (of 10) whose sample answer invented details the candidate never said
+export const feedbackInventions: BarRow[] = [
+  { name: "Plain prompt", value: 10, label: "10 of 10", used: true },
+  { name: "Few-shot", value: 10, label: "10 of 10" },
+  { name: "Persona", value: 10, label: "10 of 10" },
+  { name: "Chain-of-thought", value: 8, label: "8 of 10" },
+  { name: "Self-critique", value: 5, label: "5 of 10" },
+];

@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   cvYears,
   effortLevels,
+  feedbackInventions,
   latency,
   promptFixes,
   sttModels,
@@ -72,6 +73,20 @@ export default function BenchmarksPage() {
           footnote="Jev scores each reply; 90 replies per run, 18 per technique."
         >
           <BeforeAfterBars measures={promptFixes} />
+        </QuestionCard>
+        <QuestionCard
+          question="Does the feedback's sample answer make things up?"
+          answer={
+            <>
+              Often, <strong className="font-semibold text-primary">with every technique</strong>,
+              when the candidate&apos;s own answer was vague. Self-critique invents least but then
+              praises nonsense answers. So the app keeps the plain prompt and tells you to change
+              any detail that isn&apos;t yours.
+            </>
+          }
+          footnote="Bar = runs where the sample answer invented details (lower is better). Nonsense answers praised, of 3: plain prompt 0, few-shot 1, persona 1, chain-of-thought 1, self-critique 2."
+        >
+          <BarRows rows={feedbackInventions} max={10} valueName="Runs with invented details" />
         </QuestionCard>
       </BenchmarkSection>
 
