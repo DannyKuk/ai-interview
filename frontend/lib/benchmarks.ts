@@ -44,3 +44,18 @@ export const sttModels: BarRow[] = [
   { name: "Whisper tiny.en", value: 27.9, label: "27.9 % · 0.2 s" },
   { name: "Whisper base.en", value: 30.2, label: "30.2 % · 0.4 s" },
 ];
+
+export type LatencyRow = {
+  name: string;
+  stt: number;
+  reply: number;
+  speech: number;
+  range: string;
+  used?: boolean;
+};
+
+// typical seconds per step; range = the whole wait, fastest to slowest
+export const latency: LatencyRow[] = [
+  { name: "Default voice", stt: 0.3, reply: 1.45, speech: 0.6, range: "1.8–2.9 s", used: true },
+  { name: "Cloud voice", stt: 0.3, reply: 1.45, speech: 2.6, range: "2.8–5.9 s" },
+];

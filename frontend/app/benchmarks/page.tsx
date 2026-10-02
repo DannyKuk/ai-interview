@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { BarRows } from "@/components/benchmarks/bar-rows";
+import { LatencyBars } from "@/components/benchmarks/latency-bars";
 import { QuestionCard } from "@/components/benchmarks/question-card";
 import { BenchmarkSection } from "@/components/benchmarks/section";
 import { Card, CardContent } from "@/components/ui/card";
-import { sttModels, tiles, writeUps } from "@/lib/benchmarks";
+import { latency, sttModels, tiles, writeUps } from "@/lib/benchmarks";
 
 export const metadata: Metadata = { title: "Benchmarks · Interview Practice" };
 
@@ -57,6 +58,18 @@ export default function BenchmarksPage() {
           footnote="Bar = words misheard on a real voice (lower is better). Time = how long a 15-second answer takes to transcribe on the CPU."
         >
           <BarRows rows={sttModels} max={31} valueName="Misheard words (%)" />
+        </QuestionCard>
+        <QuestionCard
+          question="How long until the interviewer answers you?"
+          answer={
+            <>
+              About <strong className="font-semibold text-primary">2–3 seconds</strong> with the
+              default voice. The cloud voice sounds more natural but adds 1–3 seconds.
+            </>
+          }
+          footnote="Default voice = HeadTTS on your machine, cloud voice = Gemini TTS. Bars show typical times per step at the app's reasoning effort; the number is the whole wait, fastest to slowest."
+        >
+          <LatencyBars rows={latency} />
         </QuestionCard>
       </BenchmarkSection>
     </main>

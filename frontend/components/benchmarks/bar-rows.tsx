@@ -1,7 +1,6 @@
 "use client";
 
-import { cn } from "cn";
-import { Bar, BarChart, LabelList, Text, XAxis, YAxis, type YAxisTickContentProps } from "recharts";
+import { Bar, BarChart, LabelList, XAxis, YAxis } from "recharts";
 
 import {
   type ChartConfig,
@@ -12,6 +11,7 @@ import {
 import type { BarRow } from "@/lib/benchmarks";
 
 import { LABEL_SPACE, OTHER, USED } from "./chart-style";
+import { nameTick } from "./name-tick";
 
 const ROW_HEIGHT = 36;
 
@@ -36,22 +36,7 @@ export function BarRows({ rows, max, valueName }: Props) {
           width="auto"
           tickLine={false}
           axisLine={false}
-          tick={({ x, y, textAnchor, index, payload }: YAxisTickContentProps) => (
-            <Text
-              x={x}
-              y={y}
-              textAnchor={textAnchor}
-              verticalAnchor="middle"
-              fontSize={13}
-              // width="auto" measures only the names that carry this class
-              className={cn(
-                "recharts-cartesian-axis-tick-value",
-                rows[index]?.used && "fill-primary! font-semibold",
-              )}
-            >
-              {String(payload.value)}
-            </Text>
-          )}
+          tick={nameTick(rows)}
         />
         <ChartTooltip cursor={false} content={<ChartTooltipContent className="min-w-48" />} />
         <Bar dataKey="value" radius={4} isAnimationActive={false}>
