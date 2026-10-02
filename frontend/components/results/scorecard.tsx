@@ -174,7 +174,7 @@ function QuestionRow({ evaluation, weakest }: { evaluation: Evaluation; weakest:
         {/* phones: the badges get their own line, else the topic shrinks to "Fr…" */}
         <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
           <span className="truncate max-sm:basis-full">{evaluation.topic}</span>
-          {weakest && <Badge variant="secondary">Weakest</Badge>}
+          {weakest && <Badge variant="warning">Weakest</Badge>}
           {evaluation.unverified && <Badge variant="outline">Couldn&apos;t verify</Badge>}
         </span>
         <Progress value={percentOf(evaluation.score)} className="hidden w-16 shrink-0 sm:flex" />
