@@ -159,6 +159,7 @@ async def prepare_chat(request: ChatRequest) -> PreparedChat:
         )
 
     verdict = await guard_chat(request)
+    add_cost(request.session_id, verdict.cost)
     progress = (request.progress or PlanProgress()) if request.messages else None
     plan = request.plan.plan if request.plan else None
     turn = plan_this_turn(plan, progress, verdict)

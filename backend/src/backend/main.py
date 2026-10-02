@@ -5,7 +5,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.api import config, cv, feedback, health, interview, plan, presets, voice
-from backend.api.cost_cap import COST_HEADER
+from backend.api.cost_cap import COST_HEADER, GUARD_COST_HEADER
 from backend.config import settings
 from backend.services.stt import load_model
 
@@ -25,7 +25,7 @@ app.add_middleware(
     allow_origins=settings.cors_origins,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
-    expose_headers=["Retry-After", COST_HEADER],  # Reach it to the browser
+    expose_headers=["Retry-After", COST_HEADER, GUARD_COST_HEADER],
 )
 
 app.include_router(health.router)

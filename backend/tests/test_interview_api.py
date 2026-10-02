@@ -1,5 +1,6 @@
 import json
 import re
+from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
@@ -442,6 +443,16 @@ def test_session_over_the_cost_cap_ends_without_calling_any_model(monkeypatch):
         ("done", {"finish_reason": "limit_reached"}),
     ]
     assert len(calls) == 2  # the guard (Jev) ran only for the first two turns
+
+
+def test_jev_counts_for_the_session_even_on_a_blocked_turn(monkeypatch):
+    use_fake_model(monkeypatch, ["Hi."])  # 0.0003
+    use_fake_guard(monkeypatch, cost=0.00005)
+    post_chat([])
+    use_fake_guard(monkeypatch, blocked="message", cost=0.00005)
+    post_chat_stream([])  # refused: no model call, but Jev was asked
+
+    assert cost_cap.spent[UUID(SESSION_ID)] == pytest.approx(0.0004)
 
 
 def test_cost_cap_is_per_session(monkeypatch):

@@ -7,6 +7,8 @@ from backend.config import settings
 # the LLM cost of a non-chat call (CV, plan, feedback) for the dev panel's breakdown.
 # The chat sends its cost in the "usage" event instead
 COST_HEADER = "X-Cost"
+# the same call's Jev checks. The chat sends them on the guard verdict
+GUARD_COST_HEADER = "X-Guard-Cost"
 
 # USD spent per interview session. In memory like the rate limit: resets on restart
 spent: dict[UUID, float] = {}
@@ -28,6 +30,8 @@ def add_cost(session_id: UUID, cost: float | None) -> None:
         spent[session_id] = spent.get(session_id, 0.0) + cost
 
 
-def report_cost(response: Response, cost: float | None) -> None:
+def report_cost(
+    response: Response, cost: float | None, header: str = COST_HEADER
+) -> None:
     if cost is not None:
-        response.headers[COST_HEADER] = str(cost)
+        response.headers[header] = str(cost)

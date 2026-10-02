@@ -3,11 +3,11 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 
-from backend.api.cost_cap import report_cost
+from backend.api.cost_cap import GUARD_COST_HEADER, report_cost
 from backend.api.interview import REFUSALS as CHAT_REFUSALS
 from backend.api.rate_limit import chat_rate_limit
 from backend.chains.plan import make_plan, profile_text
-from backend.guard.jev import check_document, check_input
+from backend.guard.jev import check_document, check_input, total_cost
 from backend.guard.plan_signature import sign_plan
 from backend.schemas.chat import PlanRequest
 from backend.schemas.plan import SignedPlan
@@ -47,7 +47,7 @@ PLAN_FAILED = "We couldn't prepare your interview right now. Please try again."
 PROFILE_TOO_LONG = "Your CV profile is too long. Please upload your CV again."
 
 
-async def guard_plan(request: PlanRequest) -> None:
+async def guard_plan(request: PlanRequest) -> float | None:
     # everything here ends up in the plan prompt, so all of it is checked, in parallel
     checks = {"role": check_input(request.settings.role)}
     if request.job_description:
@@ -65,6 +65,7 @@ async def guard_plan(request: PlanRequest) -> None:
             raise HTTPException(
                 status_code=422, detail=PLAN_REFUSALS[source][verdict.blocked]
             )
+    return total_cost(*(verdict.cost for verdict in verdicts))
 
 
 @router.post("/plan")
@@ -74,7 +75,7 @@ async def create_plan(request: PlanRequest, response: Response) -> SignedPlan:
     # "" or only spaces (stripped by the schema) = no job description
     request.job_description = request.job_description or None
 
-    await guard_plan(request)
+    guard_cost = await guard_plan(request)
 
     try:
         planned = await make_plan(
@@ -84,5 +85,6 @@ async def create_plan(request: PlanRequest, response: Response) -> SignedPlan:
         logger.warning("plan failed: %s", type(error).__name__)
         raise HTTPException(status_code=503, detail=PLAN_FAILED) from error
     report_cost(response, planned.cost)
+    report_cost(response, guard_cost, GUARD_COST_HEADER)
     # the chat only accepts the plan back with this signature
     return sign_plan(planned.value)

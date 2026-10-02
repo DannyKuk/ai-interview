@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 
-from backend.api.cost_cap import report_cost
+from backend.api.cost_cap import GUARD_COST_HEADER, report_cost
 from backend.api.rate_limit import cv_rate_limit
 from backend.chains.cv_profile import extract_profile
 from backend.guard.jev import check_document
@@ -53,4 +53,5 @@ async def parse_cv(file: UploadFile, response: Response) -> CandidateProfile:
         logger.warning("cv profile failed: %s", type(error).__name__)
         raise HTTPException(status_code=503, detail=PROFILE_FAILED) from error
     report_cost(response, profile.cost)
+    report_cost(response, verdict.cost, GUARD_COST_HEADER)
     return profile.value

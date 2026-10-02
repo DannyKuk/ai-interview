@@ -3,11 +3,11 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 
-from backend.api.cost_cap import add_cost, over_cap, report_cost
+from backend.api.cost_cap import GUARD_COST_HEADER, add_cost, over_cap, report_cost
 from backend.api.interview import REFUSALS as CHAT_REFUSALS
 from backend.api.rate_limit import chat_rate_limit
 from backend.chains.feedback import write_feedback
-from backend.guard.jev import check_input
+from backend.guard.jev import check_input, total_cost
 from backend.schemas.feedback import (
     AnswerEvaluation,
     FeedbackRequest,
@@ -36,7 +36,7 @@ NO_WRITTEN_FEEDBACK = "No written feedback for this answer, but its scores still
 
 @router.post("/feedback")
 async def create_feedback(
-    request: FeedbackRequest, response: Response
+        request: FeedbackRequest, response: Response
 ) -> FeedbackResponse:
     if over_cap(request.session_id):
         raise HTTPException(status_code=429, detail=OVER_BUDGET)
@@ -57,6 +57,8 @@ async def create_feedback(
             for i, a in enumerate(answers)
         ),
     )
+    guard_cost = total_cost(role.cost, *(scored.cost for scored in scores))
+    add_cost(request.session_id, guard_cost)
     blocked = {role.blocked, *(scored.blocked for scored in scores)}
     if "guard_error" in blocked:
         raise HTTPException(status_code=503, detail=FEEDBACK_FAILED)
@@ -74,6 +76,7 @@ async def create_feedback(
         raise HTTPException(status_code=503, detail=FEEDBACK_FAILED) from error
     add_cost(request.session_id, written.cost)
     report_cost(response, written.cost)
+    report_cost(response, guard_cost, GUARD_COST_HEADER)
 
     # the LLM numbers the questions as shown (1-based)
     feedback_for = {

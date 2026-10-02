@@ -426,6 +426,8 @@ export interface components {
             role_injection?: number | null;
             /** Blocked */
             blocked?: ("message" | "role" | "guard_error" | "leak") | null;
+            /** Cost */
+            cost?: number | null;
             /** Answered */
             answered?: number | null;
             /** Vague */

@@ -60,7 +60,7 @@ def fakes(monkeypatch) -> Calls:
 
     async def role_passes(role):
         calls.role.append(role)
-        return GuardVerdict(role_injection=0.01)
+        return GuardVerdict(role_injection=0.01, cost=0.00001)
 
     async def fake_score(planned, exchanges, earlier_answers=None):
         text = exchanges[-1].candidate
@@ -68,7 +68,7 @@ def fakes(monkeypatch) -> Calls:
         calls.earlier[text] = earlier_answers
         score = SCORE_BY_ANSWER.get(text, 2.0)
         criterion = CriterionScore(criterion=planned.rubric[0], met=0.5, score=score)
-        return ScoredAnswer(criteria=[criterion], score=score)
+        return ScoredAnswer(criteria=[criterion], score=score, cost=0.0001)
 
     async def fake_write(settings, plan, answers, scores, weakest):
         calls.written.append((answers, scores, weakest))
@@ -137,9 +137,19 @@ def test_a_question_without_written_feedback_gets_a_fallback(fakes):
 
 
 def test_the_cost_counts_for_the_session_and_goes_to_the_browser(fakes):
-    response = post_feedback()
-    assert cost_cap.spent[UUID(SESSION_ID)] == 0.002
+    response = post_feedback()  # Jev: the role + two answers
+    assert cost_cap.spent[UUID(SESSION_ID)] == pytest.approx(0.002 + 0.00021)
     assert response.headers["X-Cost"] == "0.002"
+    assert float(response.headers["X-Guard-Cost"]) == pytest.approx(0.00021)
+
+
+def test_a_refused_interview_still_counts_jev(monkeypatch):
+    async def role_blocked(_role):
+        return GuardVerdict(blocked="role", cost=0.00001)
+
+    monkeypatch.setattr(feedback_api, "check_input", role_blocked)
+    assert post_feedback().status_code == 422
+    assert cost_cap.spent[UUID(SESSION_ID)] == pytest.approx(0.00021)
 
 
 def test_over_the_budget_nothing_is_called(fakes, monkeypatch):

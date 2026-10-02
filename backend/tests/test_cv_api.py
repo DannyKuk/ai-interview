@@ -32,7 +32,7 @@ def fakes(monkeypatch):
     calls = Calls()
 
     async def guard_passes(_kind, _text):
-        return DocumentVerdict(injection=0.01, is_document=0.99)
+        return DocumentVerdict(injection=0.01, is_document=0.99, cost=0.00003)
 
     async def fake_profile(_text):
         calls.profile += 1
@@ -55,6 +55,7 @@ def test_returns_the_profile_and_its_cost():
     assert response.status_code == 200
     assert response.json() == PROFILE.model_dump()
     assert response.headers["X-Cost"] == "0.0008"  # the dev panel's cost breakdown
+    assert float(response.headers["X-Guard-Cost"]) == 0.00003
 
 
 def test_no_cost_header_when_openrouter_sent_none(monkeypatch):

@@ -33,11 +33,11 @@ def fakes(monkeypatch):
 
     async def role_passes(_role):
         calls.guard.append("role")
-        return GuardVerdict(role_injection=0.01)
+        return GuardVerdict(role_injection=0.01, cost=0.00001)
 
     async def document_passes(kind, _text):
         calls.guard.append(kind)
-        return DocumentVerdict(injection=0.01, is_document=0.99)
+        return DocumentVerdict(injection=0.01, is_document=0.99, cost=0.00003)
 
     async def fake_plan(settings, profile, job_description):
         calls.plan.append((settings, profile, job_description))
@@ -64,6 +64,7 @@ def test_returns_the_plan_and_checks_everything(fakes):
     assert signed.plan == PLAN
     assert is_signed(signed)
     assert response.headers["X-Cost"] == "0.0012"
+    assert float(response.headers["X-Guard-Cost"]) == pytest.approx(0.00007)
     assert sorted(fakes.guard) == ["cv", "job_description", "role"]
     _, profile, job_description = fakes.plan[0]
     assert (profile, job_description) == (PROFILE, JD)
