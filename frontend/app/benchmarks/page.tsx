@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BarRows } from "@/components/benchmarks/bar-rows";
 import { BeforeAfterBars } from "@/components/benchmarks/before-after-bars";
 import { OTHER, USED } from "@/components/benchmarks/chart-style";
+import { JailbreakResults } from "@/components/benchmarks/jailbreak-results";
 import { LatencyBars } from "@/components/benchmarks/latency-bars";
 import { PairedBars } from "@/components/benchmarks/paired-bars";
 import { QuestionCard } from "@/components/benchmarks/question-card";
@@ -13,6 +14,8 @@ import {
   cvYears,
   effortLevels,
   feedbackMistakes,
+  guards,
+  jailbreakStats,
   latency,
   promptFixes,
   sttModels,
@@ -135,6 +138,21 @@ export default function BenchmarksPage() {
             a={{ label: "low (correct)", color: USED }}
             b={{ label: "minimal", color: OTHER }}
           />
+        </QuestionCard>
+      </BenchmarkSection>
+
+      <BenchmarkSection id="security" title="Security" writeUps={writeUps.security}>
+        <QuestionCard
+          question="Can the interviewer be tricked?"
+          answer={
+            <>
+              37 attacks, each run 5 times through the real backend. Round 1 found{" "}
+              <strong className="font-semibold text-primary">one hole</strong>: a faked chat
+              history. After the server started signing the transcript, everything passed.
+            </>
+          }
+        >
+          <JailbreakResults stats={jailbreakStats} guards={guards} />
         </QuestionCard>
       </BenchmarkSection>
 

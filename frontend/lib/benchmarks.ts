@@ -148,3 +148,25 @@ export const feedbackMistakes: PairedRow[] = [
   mistakes("Chain-of-thought", 8, 1),
   mistakes("Self-critique", 5, 2),
 ];
+
+export const jailbreakStats: Tile[] = [
+  { value: "43 / 44", label: "Round 1. The faked history worked in 1 of 5 runs." },
+  { value: "45 / 45", label: "Round 2, after signing the transcript", used: true },
+  { value: "0", label: "Normal answers blocked by mistake" },
+  { value: "$0.03", label: "Cost of a full test round" },
+];
+
+export type GuardRow = { way: string; guard: string };
+
+export const guards: GuardRow[] = [
+  {
+    way: "Chat message (typed or spoken)",
+    guard: "Jev checks it → sent to the model as data, not instructions → reply checked for leaks",
+  },
+  { way: "Earlier messages", guard: "Signed by the server, edits are rejected" },
+  {
+    way: "CV (PDF) and job description",
+    guard: "File type and size checked → Jev checks the text",
+  },
+  { way: "Interview plan", guard: "Signed by the server" },
+];
