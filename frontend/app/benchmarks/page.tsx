@@ -6,7 +6,7 @@ import { LatencyBars } from "@/components/benchmarks/latency-bars";
 import { QuestionCard } from "@/components/benchmarks/question-card";
 import { BenchmarkSection } from "@/components/benchmarks/section";
 import { Card, CardContent } from "@/components/ui/card";
-import { latency, sttModels, tiles, writeUps } from "@/lib/benchmarks";
+import { effortLevels, latency, sttModels, tiles, writeUps } from "@/lib/benchmarks";
 
 export const metadata: Metadata = { title: "Benchmarks · Interview Practice" };
 
@@ -44,6 +44,26 @@ export default function BenchmarksPage() {
           ))}
         </div>
       </div>
+
+      <BenchmarkSection
+        id="settings"
+        title="Settings & reasoning effort"
+        writeUps={writeUps.settings}
+      >
+        <QuestionCard
+          question="How long should the interviewer think before answering?"
+          answer={
+            <>
+              Barely. With <strong className="font-semibold text-primary">minimal</strong> reasoning
+              it starts answering in 1.3 s, and the replies are just as good as at medium, which
+              takes 3× as long.
+            </>
+          }
+          footnote="gpt-5-mini, median time and cost per 100 replies. Reply quality is 0.93 at every level. gpt-5-nano is 5× cheaper, but at medium effort 16 of 18 replies came back empty."
+        >
+          <BarRows rows={effortLevels} max={5} valueName="Median seconds" />
+        </QuestionCard>
+      </BenchmarkSection>
 
       <BenchmarkSection id="voice" title="Voice" writeUps={writeUps.voice}>
         <QuestionCard

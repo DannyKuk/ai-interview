@@ -59,3 +59,10 @@ export const latency: LatencyRow[] = [
   { name: "Default voice", stt: 0.3, reply: 1.45, speech: 0.6, range: "1.8–2.9 s", used: true },
   { name: "Cloud voice", stt: 0.3, reply: 1.45, speech: 2.6, range: "2.8–5.9 s" },
 ];
+
+// gpt-5-mini: median seconds, cost per 100 replies
+export const effortLevels: BarRow[] = [
+  { name: "Minimal", value: 1.3, label: "1.3 s · $0.03", used: true },
+  { name: "Low", value: 2.4, label: "2.4 s · $0.05" },
+  { name: "Medium", value: 4.3, label: "4.3 s · $0.09" },
+];
