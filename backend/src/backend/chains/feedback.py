@@ -27,6 +27,7 @@ def build_feedback_chain() -> Runnable:
         ]
     )
     # include_raw: the raw message carries the cost, the session's cost cap counts it.
+    # Not minimal: 1 of 4 runs came back as "placeholder" text, without an error (Oct 2)
     llm = get_chat_model(
         max_tokens=6000, effort="low", timeout_ms=app_settings.feedback_timeout_ms
     ).with_structured_output(

@@ -14,6 +14,7 @@ from backend.schemas.plan import InterviewPlan
 logger = logging.getLogger(__name__)
 
 
+# not minimal: ~2 s faster and fine in 6 runs, too few to trust it with the rubric (Oct 2)
 def build_plan_chain(effort: Effort = "low") -> Runnable:
     prompt = ChatPromptTemplate.from_messages(
         [

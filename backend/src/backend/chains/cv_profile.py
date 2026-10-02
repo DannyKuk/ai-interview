@@ -30,7 +30,8 @@ def build_profile_chain() -> Runnable:
     )
     # strict: the API forces the reply into CandidateProfile's schema, so it always parses.
     # max_tokens includes the reasoning tokens, the JSON itself is ~500.
-    # include_raw: the raw message carries the cost (the dev panel's cost breakdown)
+    # include_raw: the raw message carries the cost (the dev panel's cost breakdown).
+    # Not minimal: it counted the years 1-3 short on 11 of 12 sample CVs (Oct 2)
     llm = get_chat_model(max_tokens=3000, effort="low").with_structured_output(
         CandidateProfile, method="function_calling", strict=True, include_raw=True
     )
