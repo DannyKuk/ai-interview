@@ -102,6 +102,7 @@ class ScoredAnswer:
     score: float  # 1-5
     blocked: Literal["injection", "guard_error"] | None = None
     unverified: bool = False  # claims Jev can't check: correctness isn't scored
+    wrong_claim: bool = False  # a technical claim is certainly wrong
 
 
 async def score_answer(
@@ -118,9 +119,10 @@ async def score_answer(
         if answers["injection"]["noul"] >= settings.guard_threshold:
             return ScoredAnswer(criteria=[], score=0.0, blocked="injection")
         # a claim that is certainly wrong still costs points
+        wrong_claim = answers["wrong_claim"]["noul"] >= settings.wrong_claim_threshold
         unverified = (
             answers["unverified"]["noul"] >= settings.unverified_threshold
-            and answers["wrong_claim"]["noul"] < settings.wrong_claim_threshold
+            and not wrong_claim
         )
         scores = []
         for i, text in enumerate(criteria):
@@ -134,4 +136,9 @@ async def score_answer(
         return ScoredAnswer(criteria=[], score=0.0, blocked="guard_error")
 
     average = sum(score.score for score in scores) / len(scores)
-    return ScoredAnswer(criteria=scores, score=round(average, 2), unverified=unverified)
+    return ScoredAnswer(
+        criteria=scores,
+        score=round(average, 2),
+        unverified=unverified,
+        wrong_claim=wrong_claim,
+    )

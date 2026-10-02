@@ -84,7 +84,7 @@ async def test_a_claim_jev_cant_check_is_not_scored_for_correctness(monkeypatch)
     fake_jev(monkeypatch, met=(0.9, 0.5, 0.2, 0.25), unverified=0.8, wrong_claim=0.7)
     scored = await score_answer(TECHNICAL, EXCHANGES)
 
-    assert scored.unverified
+    assert scored.unverified and not scored.wrong_claim
     assert FIXED_CRITERIA["technical"] not in [c.criterion for c in scored.criteria]
     assert scored.score == 3.2  # (4.6 + 3 + 2) / 3, without the 1.8
 
@@ -95,6 +95,7 @@ async def test_a_certainly_wrong_claim_is_still_scored(monkeypatch):
     scored = await score_answer(TECHNICAL, EXCHANGES)
 
     assert not scored.unverified
+    assert scored.wrong_claim
     assert len(scored.criteria) == 4
 
 

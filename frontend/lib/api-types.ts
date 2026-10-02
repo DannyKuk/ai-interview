@@ -214,6 +214,11 @@ export interface components {
              * @default false
              */
             unverified: boolean;
+            /**
+             * Wrong Claim
+             * @default false
+             */
+            wrong_claim: boolean;
         };
         /** AnsweredQuestion */
         AnsweredQuestion: {

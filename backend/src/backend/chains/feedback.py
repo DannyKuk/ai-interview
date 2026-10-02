@@ -49,6 +49,12 @@ def format_question(
         "Criteria and scores:",
         *[f"- {c.criterion}: {c.score:.1f}" for c in scored.criteria],
     ]
+    if scored.wrong_claim:
+        # Jev can't say which claim it means, the LLM has to find it
+        lines.append(
+            "A technical claim here is clearly wrong: name it in one sentence and say "
+            "what is correct. If the candidate corrected it later, say so."
+        )
     if scored.unverified:
         # else the feedback may call a correct but recent claim wrong
         lines.append(

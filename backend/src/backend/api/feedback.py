@@ -80,6 +80,7 @@ async def create_feedback(
             score=scored.score,
             feedback=feedback_for.get(answer.question, NO_WRITTEN_FEEDBACK),
             unverified=scored.unverified,
+            wrong_claim=scored.wrong_claim,
         )
         for answer, scored in zip(answers, scores)
     ]
