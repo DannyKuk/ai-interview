@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Self-contained server in .next/standalone for the Docker image (F6).
   output: "standalone",
+  // the dev-only "N" badge covers the call bar's Session button; errors still show in the overlay
+  devIndicators: false,
   turbopack: {
     ignoreIssue: [
       // TalkingHead loads its lip-sync language files by a computed path (import(path +
