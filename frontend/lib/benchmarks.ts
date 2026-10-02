@@ -66,3 +66,28 @@ export const effortLevels: BarRow[] = [
   { name: "Low", value: 2.4, label: "2.4 s · $0.05" },
   { name: "Medium", value: 4.3, label: "4.3 s · $0.09" },
 ];
+
+export type PairedRow = {
+  name: string;
+  a: number;
+  aLabel: string;
+  b: number;
+  bLabel: string;
+  used?: boolean;
+};
+
+const pair = (name: string, a: number, b: number, digits = 0): PairedRow => ({
+  name,
+  a,
+  aLabel: a.toFixed(digits),
+  b,
+  bLabel: b.toFixed(digits),
+});
+
+// years of experience the CV profile counted; a = low effort (correct), b = minimal
+export const cvYears: PairedRow[] = [
+  pair("“2018 – present”", 8, 6),
+  pair("“2016 – now”", 10, 7),
+  pair("“2022 – present”", 4, 2),
+  pair("“2021 – present”", 5, 3),
+];

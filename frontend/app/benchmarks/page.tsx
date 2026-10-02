@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { BarRows } from "@/components/benchmarks/bar-rows";
+import { OTHER, USED } from "@/components/benchmarks/chart-style";
 import { LatencyBars } from "@/components/benchmarks/latency-bars";
+import { PairedBars } from "@/components/benchmarks/paired-bars";
 import { QuestionCard } from "@/components/benchmarks/question-card";
 import { BenchmarkSection } from "@/components/benchmarks/section";
 import { Card, CardContent } from "@/components/ui/card";
-import { effortLevels, latency, sttModels, tiles, writeUps } from "@/lib/benchmarks";
+import { cvYears, effortLevels, latency, sttModels, tiles, writeUps } from "@/lib/benchmarks";
 
 export const metadata: Metadata = { title: "Benchmarks · Interview Practice" };
 
@@ -62,6 +64,26 @@ export default function BenchmarksPage() {
           footnote="gpt-5-mini, median time and cost per 100 replies. Reply quality is 0.93 at every level. gpt-5-nano is 5× cheaper, but at medium effort 16 of 18 replies came back empty."
         >
           <BarRows rows={effortLevels} max={5} valueName="Median seconds" />
+        </QuestionCard>
+        <QuestionCard
+          question="Then why not minimal everywhere?"
+          answer={
+            <>
+              Because it gets the maths wrong. Reading a CV with minimal effort counted{" "}
+              <strong className="font-semibold text-primary">
+                1–3 years too few on 11 of 12 CVs
+              </strong>
+              , so the CV, plan and feedback calls keep low.
+            </>
+          }
+          footnote="Years of experience the CV profile counted for one job period, two runs each; both runs gave the same number."
+        >
+          <PairedBars
+            rows={cvYears}
+            max={10}
+            a={{ label: "low (correct)", color: USED }}
+            b={{ label: "minimal", color: OTHER }}
+          />
         </QuestionCard>
       </BenchmarkSection>
 
