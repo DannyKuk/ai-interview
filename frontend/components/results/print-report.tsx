@@ -38,7 +38,7 @@ export function PrintReport({ feedback }: { feedback: FeedbackResponse }) {
 
       <ScoreSummary feedback={feedback} />
 
-      <section className="flex flex-col gap-4">
+      <section className="flex break-before-page flex-col gap-4">
         <h2 className="font-heading text-xl font-semibold">Your answers</h2>
         {feedback.evaluations.map((evaluation) => (
           <div
