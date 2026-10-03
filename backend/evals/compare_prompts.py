@@ -10,6 +10,10 @@ uv run python evals/compare_prompts.py --techniques zero_shot \
     --models openai/gpt-5-mini openai/gpt-5-nano \
     --efforts minimal low medium --max-tokens 500 1000
 
+# open-weight models in LM Studio (another machine on the network): --models are its ids
+uv run python evals/compare_prompts.py --techniques zero_shot \
+    --local http://192.168.1.20:1234/v1 --models google/gemma-4-31b
+
 Every reply goes through the real turn code (guard verdict -> plan note -> chain). The
 defaults are the app's model settings. The guard runs once per snapshot, so every config
 gets the same verdict and note: only the config differs. Checks in code, then Jev
@@ -32,6 +36,8 @@ from typing import get_args
 
 import httpx
 from judge import LOWER_IS_BETTER, QUESTIONS, judge
+from langchain_core.runnables import Runnable
+from langchain_openai import ChatOpenAI
 from snapshots import PLAN, SNAPSHOTS, Snapshot
 
 from backend.api.interview import (
@@ -40,7 +46,11 @@ from backend.api.interview import (
     plan_this_turn,
     to_langchain_messages,
 )
-from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
+from backend.chains.interviewer import (
+    build_interviewer_chain,
+    build_interviewer_input,
+    build_interviewer_prompt,
+)
 from backend.config import settings as app_settings
 from backend.guard.canary import leaked
 from backend.guard.jev import describe
@@ -65,19 +75,40 @@ PARALLEL = 6  # model calls at once, to stay clear of rate limits
 MARKDOWN = re.compile(r"\*\*|__|`|^\s*(#|[-*] |\d+\. )", re.MULTILINE)
 # chain-of-thought / self-critique must think silently: signs they wrote the steps out
 SHOWN_STEPS = re.compile(r"\b(draft|critique|checklist|step \d)\b", re.IGNORECASE)
+# a local thinking model can write its thoughts into the reply (the app would speak them)
+THINKING = re.compile(r"<think>.*?(</think>|$)", re.DOTALL)
 
 
 @dataclass(frozen=True)
 class Config:
     technique: Technique
     model: str
-    effort: Effort
+    effort: Effort | None  # None = not sent: LM Studio's own thinking setting applies
     max_tokens: int
+    base_url: str | None = None  # an LM Studio server, None = OpenRouter
 
     @property
     def label(self) -> str:
         model = self.model.removeprefix("openai/")
-        return f"{self.technique} {model} {self.effort} {self.max_tokens}"
+        where = " local" if self.base_url else ""
+        return f"{self.technique} {model}{where} {self.effort or '-'} {self.max_tokens}"
+
+    def chain(self) -> Runnable:
+        if not self.base_url:
+            return build_interviewer_chain(
+                self.technique, self.model_settings(), with_plan=True
+            )
+        # the app's prompt, only the model is swapped: LM Studio speaks OpenAI's API
+        llm = ChatOpenAI(
+            model=self.model,
+            base_url=self.base_url,
+            api_key="lm-studio",  # LM Studio ignores it, the client needs one
+            max_tokens=self.max_tokens,
+            reasoning_effort=self.effort,
+            stream_usage=True,
+            timeout=300,  # a model half in RAM is slow
+        )
+        return build_interviewer_prompt(self.technique, with_plan=True) | llm
 
     def model_settings(self) -> ModelSettings:
         return ModelSettings(
@@ -96,6 +127,7 @@ class Reply:
     run: int
     text: str
     seconds: float
+    first_token: float | None  # seconds until the first words: the app speaks from there
     input_tokens: int
     output_tokens: int  # reasoning included
     cost: float | None
@@ -106,6 +138,7 @@ class Reply:
     markdown: bool
     shows_steps: bool
     leaked: bool
+    thought: bool  # <think> in the reply, removed before the other checks
     # Jev: P(yes) per question (judge.py), {} = no judgment (empty reply, Jev failed)
     judged: dict[str, float] = field(default_factory=dict)
 
@@ -131,21 +164,27 @@ async def prepare(snapshot: Snapshot) -> TurnPlan:
 async def reply(
         config: Config, snapshot: Snapshot, turn: TurnPlan, run: int
 ) -> Reply:
-    chain = build_interviewer_chain(
-        config.technique, config.model_settings(), with_plan=True
-    )
+    chain = config.chain()
     chain_input = build_interviewer_input(
         snapshot.settings,
         to_langchain_messages(snapshot.messages),
         turn.note,
         PLAN.approach,
     )
+    # streamed like the app's chat, so the first words can be timed
+    raw, first_token, finish_reason, usage, cost = "", None, None, {}, None
     start = time.perf_counter()
-    result = await chain.ainvoke(chain_input)
+    async for chunk in chain.astream(chain_input):
+        if chunk.text and first_token is None:
+            first_token = round(time.perf_counter() - start, 2)
+        raw += chunk.text
+        finish_reason = chunk.response_metadata.get("finish_reason", finish_reason)
+        if chunk.usage_metadata:
+            usage = chunk.usage_metadata
+            cost = chunk.response_metadata.get("cost")
     seconds = time.perf_counter() - start
 
-    text = result.text
-    usage = result.usage_metadata or {}
+    text = THINKING.sub("", raw).strip()
     return Reply(
         config=config.label,
         technique=config.technique,
@@ -156,15 +195,17 @@ async def reply(
         run=run,
         text=text,
         seconds=round(seconds, 2),
+        first_token=first_token,
         input_tokens=usage.get("input_tokens", 0),
         output_tokens=usage.get("output_tokens", 0),
-        cost=result.response_metadata.get("cost"),
-        finish_reason=result.response_metadata.get("finish_reason"),
+        cost=cost,
+        finish_reason=finish_reason,
         questions=text.count("?"),
         words=len(text.split()),
         markdown=bool(MARKDOWN.search(text)),
         shows_steps=bool(SHOWN_STEPS.search(text)),
-        leaked=leaked(text, chain_input["canary"]),
+        leaked=leaked(raw, chain_input["canary"]),
+        thought=bool(THINKING.search(raw)),
     )
 
 
@@ -191,22 +232,26 @@ def summary(replies: list[Reply]) -> None:
     width = max(len(label) for label in configs) + 1
 
     print(
-        f"\n{'config':{width}} {'n':>3} {'1 question':>10} {'words':>6} {'s':>5} "
-        f"{'max s':>5} {'out tok':>7} {'$ total':>8} {'md':>3} {'steps':>5} "
-        f"{'leak':>4} {'empty':>5} {'length':>6}"
+        f"\n{'config':{width}} {'n':>3} {'1 question':>10} {'words':>6} {'1st s':>5} "
+        f"{'s':>5} {'max s':>5} {'out tok':>7} {'$ total':>8} {'md':>3} {'steps':>5} "
+        f"{'leak':>4} {'empty':>5} {'length':>6} {'think':>5}"
     )
     for label, mine in by_config.items():
         one = sum(r.questions == 1 for r in mine)
         cost = sum(r.cost or 0 for r in mine)
+        firsts = [r.first_token for r in mine if r.first_token is not None]
+        first = f"{mean(firsts):>5.1f}" if firsts else f"{'-':>5}"
 
         print(
             f"{label:{width}} {len(mine):>3} {one:>6}/{len(mine):<3} "
-            f"{mean(r.words for r in mine):>6.0f} {mean(r.seconds for r in mine):>5.1f} "
+            f"{mean(r.words for r in mine):>6.0f} {first} "
+            f"{mean(r.seconds for r in mine):>5.1f} "
             f"{max(r.seconds for r in mine):>5.1f} "
             f"{mean(r.output_tokens for r in mine):>7.0f} {cost:>8.4f} "
             f"{sum(r.markdown for r in mine):>3} {sum(r.shows_steps for r in mine):>5} "
             f"{sum(r.leaked for r in mine):>4} {sum(not r.text for r in mine):>5} "
-            f"{sum(r.finish_reason == 'length' for r in mine):>6}"
+            f"{sum(r.finish_reason == 'length' for r in mine):>6} "
+            f"{sum(r.thought for r in mine):>5}"
         )
 
     # Jev: mean P(yes). good_reply: higher is better, the rest lower
@@ -236,24 +281,28 @@ async def main() -> None:
     )
     names = [snapshot.name for snapshot in SNAPSHOTS]
     parser.add_argument("--snapshots", nargs="*", default=names, choices=names)
+    parser.add_argument("--models", nargs="*", default=[app_settings.default_model])
     parser.add_argument(
-        "--models",
-        nargs="*",
-        default=[app_settings.default_model],
-        choices=app_settings.allowed_models,
+        "--local",
+        metavar="URL",
+        help="an LM Studio server (http://<ip>:1234/v1); --models are its model ids",
     )
-    parser.add_argument(
-        "--efforts", nargs="*", default=[DEFAULTS.reasoning_effort], choices=EFFORTS
-    )
+    # local: not sent unless given, the model's thinking is switched off in LM Studio
+    parser.add_argument("--efforts", nargs="*", choices=EFFORTS)
     parser.add_argument(
         "--max-tokens", nargs="*", type=int, default=[DEFAULTS.max_tokens]
     )
     args = parser.parse_args()
 
+    unknown = set(args.models) - set(app_settings.allowed_models)
+    if unknown and not args.local:
+        parser.error(f"not in the app's model list: {', '.join(sorted(unknown))}")
+    efforts = args.efforts or [None if args.local else DEFAULTS.reasoning_effort]
+
     configs = [
-        Config(technique, model, effort, max_tokens)
+        Config(technique, model, effort, max_tokens, args.local)
         for technique, model, effort, max_tokens in product(
-            args.techniques, args.models, args.efforts, args.max_tokens
+            args.techniques, args.models, efforts, args.max_tokens
         )
     ]
 
@@ -262,7 +311,8 @@ async def main() -> None:
     for snapshot, turn in zip(snapshots, turns):
         print(f"{snapshot.name}: hint {turn.hint}, note: {turn.note}")
 
-    limit = asyncio.Semaphore(PARALLEL)
+    # local: one reply at a time, so the seconds are what one candidate would wait
+    limit = asyncio.Semaphore(1 if args.local else PARALLEL)
 
     async def limited(config, snapshot, turn, run):
         async with limit:

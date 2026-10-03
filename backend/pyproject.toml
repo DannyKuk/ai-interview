@@ -29,6 +29,7 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "langchain-openai>=1.6.7",
     "openpyxl>=3.1.5",
     "pytest>=9.1.1",
     "ruff>=0.16.9",
