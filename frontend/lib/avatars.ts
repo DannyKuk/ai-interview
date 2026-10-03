@@ -9,6 +9,8 @@ export type Retarget = Record<string, Record<string, number> | number>;
 
 export type AvatarModel = Pick<AvatarOptions, "url" | "body" | "baseline"> & {
   retarget?: Retarget;
+  blinkStrength?: number; // < 1: the model's blink shapes close the eyes too far per value
+  skipPoses?: string[]; // TalkingHead's body poses that break the model: "side" instead
 };
 
 type Avatar = {
@@ -40,6 +42,12 @@ export const AVATARS: Record<Interviewer["gender"], Avatar> = {
         origin: { y: -0.1 },
       },
       baseline: { headRotateX: -0.04, eyeBlinkLeft: 0.05, eyeBlinkRight: 0.05 },
+      // TalkingHead's resting lids (~0.2) already look sleepy on him; 0.6 still closes
+      // them fully on a blink. Measured against the brunette at fixed lid values
+      blinkStrength: 0.6,
+      // the pose TalkingHead picks only for men: his arms go behind his back and the
+      // shoulders fold in
+      skipPoses: ["wide"],
     },
     portrait: "/avatars/avatarsdk.png",
     voice: { headtts: "am_michael", gemini: "Charon" },

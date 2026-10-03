@@ -1,6 +1,6 @@
 // TalkingHead ships plain JavaScript without types: only the parts we use
 declare module "@met4citizen/talkinghead" {
-  import type { Object3D } from "three";
+  import type { Mesh, Object3D } from "three";
 
   export type TalkingHeadOptions = {
     lipsyncLang?: string;
@@ -48,6 +48,8 @@ declare module "@met4citizen/talkinghead" {
     objectLeftEye: Object3D;
     avatarHeight: number; // eye height + 0.2: the camera frames by it
     viewName: "full" | "mid" | "upper" | "head";
+    morphs: Mesh[]; // the meshes with morph targets (face shapes)
+    poseTemplates: Record<string, object>; // body poses by name
     setView(view: "full" | "mid" | "upper" | "head"): void;
     animEmojis: Record<string, object>;
     showAvatar(avatar: AvatarOptions): Promise<void>;

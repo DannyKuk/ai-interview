@@ -33,10 +33,30 @@ function retarget(head: TalkingHead, transforms: Retarget) {
   head.setView(head.viewName);
 }
 
+function scaleBlinks(head: TalkingHead, strength: number) {
+  for (const mesh of head.morphs) {
+    for (const name of ["eyeBlinkLeft", "eyeBlinkRight"]) {
+      const index = mesh.morphTargetDictionary?.[name];
+      if (index === undefined) {
+        continue;
+      }
+      for (const kind of ["position", "normal"] as const) {
+        const shape = mesh.geometry.morphAttributes[kind]?.[index];
+        if (shape) {
+          for (let i = 0; i < shape.array.length; i++) {
+            shape.array[i] *= strength;
+          }
+          shape.needsUpdate = true;
+        }
+      }
+    }
+  }
+}
+
 // The 3D interviewer. three.js and TalkingHead need the browser, so load this
 // only through next/dynamic with ssr: false
 export function TalkingHeadAvatar({ onReady, placeholder, mood, model }: Props) {
-  const { url, body, baseline, retarget: transforms } = model;
+  const { url, body, baseline, retarget: transforms, blinkStrength, skipPoses } = model;
   const containerRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<TalkingHead | null>(null); // once it's on screen
   const [status, setStatus] = useState<Status>("loading");
@@ -70,6 +90,10 @@ export function TalkingHeadAvatar({ onReady, placeholder, mood, model }: Props) 
         if (transforms) {
           retarget(head, transforms);
         }
+        if (blinkStrength) {
+          scaleBlinks(head, blinkStrength);
+        }
+        skipPoses?.forEach((pose) => (head.poseTemplates[pose] = head.poseTemplates.side));
         addInterviewGestures(head);
         if (!disposed) {
           headRef.current = head;
@@ -98,7 +122,7 @@ export function TalkingHeadAvatar({ onReady, placeholder, mood, model }: Props) 
       reportHead(null);
       void loading.then((loaded) => loaded && head.dispose());
     };
-  }, [url, body, baseline, transforms]);
+  }, [url, body, baseline, transforms, blinkStrength, skipPoses]);
 
   useEffect(() => {
     if (status === "ready" && mood) {
