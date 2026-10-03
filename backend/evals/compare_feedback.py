@@ -4,6 +4,9 @@ uv run python evals/compare_feedback.py                       # the app's prompt
 uv run python evals/compare_feedback.py --runs 1              # a quick look
 uv run python evals/compare_feedback.py --prompts path/a.md path/b.md --interviews weak
 uv run python evals/compare_feedback.py --effort medium
+# an open-weight model in LM Studio (load it first, context ≥ 12k: ~3k in + up to 6k out)
+uv run python evals/compare_feedback.py --local http://localhost:1234/v1 \
+    --model qwen/qwen3.8-27b --effort low
 
 --prompts takes prompt files, so a change can be measured before it goes into
 src/backend/prompts/feedback.md. The interviews (evals/feedback_interviews.json) were simulated once and frozen. Jev scores
@@ -24,6 +27,7 @@ from statistics import median
 from typing import get_args
 
 from langchain_core.callbacks import get_usage_metadata_callback
+from langchain_openai import ChatOpenAI
 
 from backend.chains import feedback as feedback_chain
 from backend.chains import llm
@@ -42,7 +46,7 @@ INTERVIEWS = HERE / "feedback_interviews.json"
 APP_PROMPT = PROMPTS_DIR / "feedback.md"
 # weak is the case the sample answer fails on: more runs, so 1 of 5 and 3 of 5 differ
 RUNS = {"weak": 10, "strong": 3, "no_example": 3, "nonsense": 3}
-PARALLEL = asyncio.Semaphore(6)
+PARALLEL = 6  # feedback calls at once; a local model: one at a time
 EFFORTS: list[Effort] = list(get_args(Effort))
 
 PLACEHOLDER = re.compile(r"\[[^\]]*\]")
@@ -52,6 +56,33 @@ WORD = re.compile(r"[a-z][a-z'-]{4,}")
 EXAMPLE_WORDS = re.compile(
     r"\b(newsletter|invoice|billing|refund\w*|charged twice|monday)\b", re.IGNORECASE
 )
+
+
+class LMStudioChat(ChatOpenAI):
+    # LM Studio takes tool_choice only as a string, not {"type": "function", ...};
+    # with_structured_output binds one tool, so "required" forces the same one
+    def bind_tools(self, tools, *, tool_choice=None, **kwargs):
+        return super().bind_tools(
+            tools, tool_choice="required" if tool_choice else None, **kwargs
+        )
+
+
+def priced_or_why(result: dict, what: str) -> llm.Priced:
+    # the app's check, but a failed run says why: cut off, no tool call, or broken JSON
+    try:
+        return llm.priced(result, what)
+    except ValueError as error:
+        raw = result["raw"]
+        why = (
+            f"finish {raw.response_metadata.get('finish_reason')}, "
+            f"{len(raw.tool_calls)} tool calls, "
+            f"{raw.usage_metadata and raw.usage_metadata.get('output_tokens')} tokens out, "
+            f"parse error: {str(result['parsing_error'])[:150]}"
+        )
+        raise ValueError(f"{error} ({why})") from error
+
+
+feedback_chain.priced = priced_or_why
 
 
 @dataclass
@@ -67,7 +98,8 @@ class Row:
     prompt: str
     interview: str
     run: int
-    effort: Effort | None = None  # None = the app's (low)
+    effort: str | None = None  # None = the app's (low); local also "none" = no thinking
+    model: str | None = None  # None = the app's model; else an LM Studio model id
     error: str | None = None
     seconds: float | None = None
     cost: float | None = None
@@ -140,9 +172,10 @@ async def run_one(
     run: int,
     settings: InterviewSettings,
     plan: InterviewPlan,
+    limit: asyncio.Semaphore,
 ) -> Row:
     row = Row(prompt, interview.name, run, weakest=interview.weakest + 1)
-    async with PARALLEL:
+    async with limit:
         start = time.perf_counter()
         with get_usage_metadata_callback() as usage:
             try:
@@ -155,7 +188,7 @@ async def run_one(
                     system_prompt,
                 )
             except Exception as error:  # noqa: BLE001 - a failed run is a result here
-                row.error = f"{type(error).__name__}: {error}"[:200]
+                row.error = f"{type(error).__name__}: {error}"[:400]
                 return row
         row.seconds = round(time.perf_counter() - start, 1)
     tokens = next(iter(usage.usage_metadata.values()), {})
@@ -222,9 +255,33 @@ async def main() -> None:
         "--interviews", nargs="+", default=list(RUNS), choices=list(RUNS)
     )
     parser.add_argument("--runs", type=int, help="runs per interview (default: RUNS)")
-    parser.add_argument("--effort", choices=EFFORTS, help="default: the app's")
+    parser.add_argument(
+        "--effort", choices=["none", *EFFORTS], help="default: the app's"
+    )
+    parser.add_argument("--local", metavar="URL", help="an LM Studio server, with --model")
+    parser.add_argument("--model", help="the LM Studio model id")
     args = parser.parse_args()
-    if args.effort:
+    if bool(args.local) != bool(args.model):
+        parser.error("--local and --model go together")
+    if args.effort == "none" and not args.local:
+        parser.error("--effort none is for local models")
+
+    if args.local:
+        # same chain and schema, only the model is swapped (LM Studio speaks OpenAI's API)
+        def local_model(max_tokens: int, effort: Effort, **_) -> ChatOpenAI:
+            return LMStudioChat(
+                model=args.model,
+                base_url=args.local,
+                api_key="lm-studio",  # LM Studio ignores it, the client needs one
+                max_tokens=max_tokens,
+                reasoning_effort=args.effort or effort,
+                timeout=900,  # a long feedback on a model half in RAM
+            )
+
+        feedback_chain.get_chat_model = local_model
+        # LM Studio loads a model on its first request: load it before the clock runs
+        await local_model(max_tokens=10, effort="low").ainvoke("Hi")
+    elif args.effort:
         # the chain has its effort written in; swap it for this run
         feedback_chain.get_chat_model = lambda **kwargs: llm.get_chat_model(
             **{**kwargs, "effort": args.effort}
@@ -243,9 +300,10 @@ async def main() -> None:
             f"weakest Q{interview.weakest + 1}"
         )
 
+    limit = asyncio.Semaphore(1 if args.local else PARALLEL)
     rows = await asyncio.gather(
         *(
-            run_one(prompt, text, interview, run, settings, plan)
+            run_one(prompt, text, interview, run, settings, plan, limit)
             for prompt, text in prompts.items()
             for interview in interviews
             for run in range(args.runs or RUNS[interview.name])
@@ -253,10 +311,12 @@ async def main() -> None:
     )
     for row in rows:
         row.effort = args.effort
+        row.model = args.model
     summary(rows, list(prompts), args.interviews)
     llm_cost = sum(r.cost or 0 for r in rows)
     print(
-        f"\n{len(rows)} feedback calls, effort {args.effort or 'app default'}: "
+        f"\n{len(rows)} feedback calls, {args.model or 'app model'}, "
+        f"effort {args.effort or 'app default'}: "
         f"LLM ${llm_cost:.4f} + Jev ${jev_cost or 0:.4f}"
     )
 
