@@ -15,7 +15,7 @@ export const writeUps = {
   local: [writeUp("local models", "local-models.md")],
   security: [
     writeUp("jailbreak tests", "jailbreak-tests.md"),
-    writeUp("challenge signal", "challenge-signal.md"),
+    writeUp("challenge signal", "decisions/challenge-signal.md"),
   ],
   voice: [
     writeUp("speech-to-text", "decisions/speech-to-text.md"),
