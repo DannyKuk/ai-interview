@@ -60,7 +60,7 @@ class Settings(BaseSettings):
     stt_model: str = "nemo-parakeet-tdt-0.6b-v2"
     stt_threads: int = 4  # the spike's setting: 0.3 s for a 15 s answer
 
-    # text-to-speech when the switch is on (docs/tts-decision.md). Off = HeadTTS, local
+    # text-to-speech when the switch is on (docs/decisions/text-to-speech.md). Off = HeadTTS, local
     tts_model: str = "google/gemini-3.8-flash-lite-tts"
     tts_timeout_ms: int = 15_000  # 1.4-3.8 s per sentence in the spike
     # estimate, the response has no cost: $6 per 1M audio tokens x 25 tokens per second.

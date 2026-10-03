@@ -19,7 +19,7 @@ export const writeUps = {
   ],
   voice: [
     writeUp("speech-to-text", "stt-decision.md"),
-    writeUp("text-to-speech", "tts-decision.md"),
+    writeUp("text-to-speech", "decisions/text-to-speech.md"),
   ],
 } satisfies Record<string, WriteUp[]>;
 
