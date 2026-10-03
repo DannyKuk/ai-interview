@@ -12,6 +12,7 @@ export const writeUps = {
     writeUp("feedback comparison", "feedback-prompt-comparison.md"),
   ],
   settings: [writeUp("settings experiments", "settings-experiments.md")],
+  local: [writeUp("local models", "local-models.md")],
   security: [
     writeUp("jailbreak tests", "jailbreak-tests.md"),
     writeUp("challenge signal", "challenge-signal.md"),
@@ -65,6 +66,18 @@ export const effortLevels: BarRow[] = [
   { name: "Minimal", value: 1.3, label: "1.3 s · $0.03", used: true },
   { name: "Low", value: 2.4, label: "2.4 s · $0.05" },
   { name: "Medium", value: 4.3, label: "4.3 s · $0.09" },
+];
+
+// Jev's good-reply score, 27 replies each; first words = median seconds.
+// Local = one AMD RX 7900 XTX (24 GB) in LM Studio; gpt-oss-120b only partly on the card
+export const localModels: BarRow[] = [
+  { name: "gpt-oss-120b", value: 0.94, label: "0.94 · 6.6 s" },
+  { name: "gpt-5-mini (cloud)", value: 0.93, label: "0.93 · 0.8 s", used: true },
+  { name: "Qwen 3.8 27B", value: 0.93, label: "0.93 · 1.6 s" },
+  { name: "Gemma 4 31B", value: 0.93, label: "0.93 · 2.4 s" },
+  { name: "gpt-oss-20b", value: 0.91, label: "0.91 · 0.5 s" },
+  { name: "Bonsai 27B (1-bit)", value: 0.87, label: "0.87 · 2.3 s" },
+  { name: "GLM 4.7 Flash", value: 0.86, label: "0.86 · 0.3 s" },
 ];
 
 export type PairedRow = {

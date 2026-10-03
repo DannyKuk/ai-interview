@@ -19,6 +19,7 @@ import {
   guards,
   jailbreakSteps,
   latency,
+  localModels,
   promptFixes,
   promptTechniques,
   sttModels,
@@ -156,6 +157,25 @@ export default function BenchmarksPage() {
             a={{ label: "low (correct)", color: USED }}
             b={{ label: "minimal", color: OTHER }}
           />
+        </QuestionCard>
+      </BenchmarkSection>
+
+      <BenchmarkSection id="local" title="Local models" writeUps={writeUps.local}>
+        <QuestionCard
+          question="Could the interviewer run on your own PC instead?"
+          answer={
+            <>
+              Yes, on one gaming graphics card.{" "}
+              <strong className="font-semibold text-primary">Qwen 3.8 27B</strong> matches the
+              app&apos;s model if you wait about a second longer;{" "}
+              <strong className="font-semibold text-primary">gpt-oss-20b</strong> starts even faster
+              than the app&apos;s model, with a small drop in quality. The app stays on gpt-5-mini,
+              the brief&apos;s model.
+            </>
+          }
+          footnote="Bar = Jev’s good-reply score (higher is better), 27 replies per model, same prompt and test cases. Seconds = median wait until the interviewer starts answering. Local models on one AMD RX 7900 XTX (24 GB) in LM Studio; gpt-oss-120b only partly fits on it. Interviewer replies only: reading the CV, the plan and the feedback weren’t tested locally."
+        >
+          <BarRows rows={localModels} max={1} valueName="Quality" />
         </QuestionCard>
       </BenchmarkSection>
 
