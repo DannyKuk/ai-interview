@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { BarRows } from "@/components/benchmarks/bar-rows";
 import { BeforeAfterBars } from "@/components/benchmarks/before-after-bars";
+import { ChallengeExamples } from "@/components/benchmarks/challenge-examples";
 import { OTHER, USED } from "@/components/benchmarks/chart-style";
 import { JailbreakResults } from "@/components/benchmarks/jailbreak-results";
 import { LatencyBars } from "@/components/benchmarks/latency-bars";
@@ -11,6 +12,7 @@ import { QuestionCard } from "@/components/benchmarks/question-card";
 import { BenchmarkSection } from "@/components/benchmarks/section";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  challengeExamples,
   cvYears,
   effortLevels,
   feedbackMistakes,
@@ -153,6 +155,21 @@ export default function BenchmarksPage() {
           }
         >
           <JailbreakResults steps={jailbreakSteps} guards={guards} />
+        </QuestionCard>
+        <QuestionCard
+          question="When does the interviewer push back on an answer?"
+          answer={
+            <>
+              Only when Jev is sure:{" "}
+              <strong className="font-semibold text-primary">
+                a clearly wrong claim, or a contradiction
+              </strong>{" "}
+              of an earlier answer. Facts that are true but new or odd don&apos;t trigger it.
+            </>
+          }
+          footnote="The white line is where the interviewer starts pushing back: 0.8 for wrong claims, 0.5 for contradictions. 6 of the 28 test answers."
+        >
+          <ChallengeExamples examples={challengeExamples} />
         </QuestionCard>
       </BenchmarkSection>
 

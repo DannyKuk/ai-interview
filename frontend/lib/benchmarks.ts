@@ -184,3 +184,73 @@ export const guards: GuardRow[] = [
   },
   { way: "Interview plan", guard: "Signed by the server" },
 ];
+
+// Jev's probability for test answers; the interviewer pushes back at a wrong claim ≥ 0.8
+// or a contradiction ≥ 0.5
+export type ChallengeExample = {
+  quote: string;
+  kind: string;
+  signal: string;
+  value: number;
+  threshold: number;
+  outcome: string;
+  tone: "push" | "note" | "none";
+};
+
+export const challengeExamples: ChallengeExample[] = [
+  {
+    quote:
+      "SQLite handles any number of simultaneous writes without locking, so I never had to think about concurrency.",
+    kind: "Wrong: SQLite lets only one writer in at a time",
+    signal: "wrong claim",
+    value: 0.94,
+    threshold: 0.8,
+    outcome: "Asks how they handled it",
+    tone: "push",
+  },
+  {
+    quote: "Since HTTP is a stateful protocol, … I wouldn't need cookies or tokens for that.",
+    kind: "Wrong: HTTP is stateless",
+    signal: "wrong claim",
+    value: 0.98,
+    threshold: 0.8,
+    outcome: "Asks how they handled it",
+    tone: "push",
+  },
+  {
+    quote: "typeof null returns 'object', which is an old bug in the language.",
+    kind: "True, but sounds odd",
+    signal: "wrong claim",
+    value: 0.05,
+    threshold: 0.8,
+    outcome: "Moves on",
+    tone: "none",
+  },
+  {
+    quote: "With React 19 I'd use an Action and the useActionState hook.",
+    kind: "True, but newer than the model",
+    signal: "wrong claim",
+    value: 0.2,
+    threshold: 0.8,
+    outcome: "Moves on · “couldn't verify”",
+    tone: "note",
+  },
+  {
+    quote: "Honestly, I've never written any Python myself. A friend built the whole tracker.",
+    kind: "After saying they built it in Flask",
+    signal: "contradiction",
+    value: 0.97,
+    threshold: 0.5,
+    outcome: "Asks which is true",
+    tone: "push",
+  },
+  {
+    quote: "A friend … reviewed my code once …, but I wrote the app myself.",
+    kind: "A new detail, not a contradiction",
+    signal: "contradiction",
+    value: 0.07,
+    threshold: 0.5,
+    outcome: "Moves on",
+    tone: "none",
+  },
+];
