@@ -2,9 +2,11 @@
 
 import { TalkingHead, type Mood } from "@met4citizen/talkinghead";
 import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
+import { Bone, Vector3 } from "three";
 
 import { addInterviewGestures } from "@/lib/avatar-gestures";
-import type { AvatarModel } from "@/lib/avatars";
+import type { AvatarModel, Retarget } from "@/lib/avatars";
+import { retarget as retargetSkeleton } from "@/lib/retargeter.mjs";
 
 type Status = "loading" | "ready" | "error";
 
@@ -16,10 +18,25 @@ type Props = {
   model: AvatarModel; // a new one rebuilds the head
 };
 
+// TalkingHead's newer versions do this inside showAvatar(); on 1.7 it runs right after.
+// That holds: of the bones, 1.7 only animates the hips' position, never the rest pose
+function retarget(head: TalkingHead, transforms: Retarget) {
+  retargetSkeleton(head.armature, transforms);
+  // what 1.7 took from the old skeleton at load: the arm solver's bones, and the eye
+  // height the camera frames by
+  head.ikMesh.traverse((object) => {
+    if (object instanceof Bone) {
+      object.position.copy(head.armature.getObjectByName(object.name)!.position);
+    }
+  });
+  head.avatarHeight = head.objectLeftEye.getWorldPosition(new Vector3()).y + 0.2;
+  head.setView(head.viewName);
+}
+
 // The 3D interviewer. three.js and TalkingHead need the browser, so load this
 // only through next/dynamic with ssr: false
 export function TalkingHeadAvatar({ onReady, placeholder, mood, model }: Props) {
-  const { url, body, baseline } = model;
+  const { url, body, baseline, retarget: transforms } = model;
   const containerRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<TalkingHead | null>(null); // once it's on screen
   const [status, setStatus] = useState<Status>("loading");
@@ -50,6 +67,9 @@ export function TalkingHeadAvatar({ onReady, placeholder, mood, model }: Props) 
           avatarMood: "neutral",
           lipsyncLang: "en",
         });
+        if (transforms) {
+          retarget(head, transforms);
+        }
         addInterviewGestures(head);
         if (!disposed) {
           headRef.current = head;
@@ -78,7 +98,7 @@ export function TalkingHeadAvatar({ onReady, placeholder, mood, model }: Props) 
       reportHead(null);
       void loading.then((loaded) => loaded && head.dispose());
     };
-  }, [url, body, baseline]);
+  }, [url, body, baseline, transforms]);
 
   useEffect(() => {
     if (status === "ready" && mood) {

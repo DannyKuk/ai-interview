@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // vendored: HeadAudio's minified worklet, copied from node_modules
     "public/headaudio/**",
+    // vendored: TalkingHead's retargeter, copied from its GitHub
+    "lib/retargeter.mjs",
   ]),
 ]);
 

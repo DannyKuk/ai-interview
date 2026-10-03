@@ -3,7 +3,13 @@ import type { AvatarOptions } from "@met4citizen/talkinghead";
 import type { Interviewer, SpeakRequest } from "@/lib/api";
 import type { HeadTtsVoice } from "@/lib/headtts";
 
-export type AvatarModel = Pick<AvatarOptions, "url" | "body" | "baseline">;
+// rest-pose fixes for a skeleton that isn't shaped like TalkingHead's reference one:
+// bone name -> offsets (x, y, z in m, rx, ry, rz in rad), plus scaling + origin options
+export type Retarget = Record<string, Record<string, number> | number>;
+
+export type AvatarModel = Pick<AvatarOptions, "url" | "body" | "baseline"> & {
+  retarget?: Retarget;
+};
 
 type Avatar = {
   model: AvatarModel;
@@ -22,9 +28,18 @@ export const AVATARS: Record<Interviewer["gender"], Avatar> = {
     model: {
       url: "/avatars/avatarsdk.glb",
       body: "M",
-      // his neck bends forward. TalkingHead's demo straightens it with a neck retarget,
-      // which 1.7 doesn't have yet, so the head is lifted further instead
-      baseline: { headRotateX: -0.3, eyeBlinkLeft: 0.05, eyeBlinkRight: 0.05 },
+      // TalkingHead's own settings for this model (its demo's siteconfig.js): his neck
+      // bends forward and his shoulders sit differently from the reference skeleton
+      retarget: {
+        Neck: { z: -0.01, rx: -0.15 },
+        Neck1: { z: -0.01, rx: -0.15 },
+        Neck2: { z: -0.01, rx: -0.15 },
+        LeftShoulder: { rz: -0.3 },
+        RightShoulder: { rz: 0.3 },
+        scaleToEyesLevel: 1.0,
+        origin: { y: -0.1 },
+      },
+      baseline: { headRotateX: -0.04, eyeBlinkLeft: 0.05, eyeBlinkRight: 0.05 },
     },
     portrait: "/avatars/avatarsdk.png",
     voice: { headtts: "am_michael", gemini: "Charon" },

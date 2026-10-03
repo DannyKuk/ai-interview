@@ -1,5 +1,7 @@
 // TalkingHead ships plain JavaScript without types: only the parts we use
 declare module "@met4citizen/talkinghead" {
+  import type { Object3D } from "three";
+
   export type TalkingHeadOptions = {
     lipsyncLang?: string;
     // language files it loads by a computed path, which a bundler can't follow
@@ -40,6 +42,13 @@ declare module "@met4citizen/talkinghead" {
     // the morph targets (mouth shapes, …) by name: newvalue is applied on the next frame
     mtAvatar: Record<string, { newvalue?: number; needsUpdate?: boolean }>;
     opt: { update: ((dt: number) => void) | null };
+    // the loaded model and what TalkingHead derived from it at load (for the retarget)
+    armature: Object3D;
+    ikMesh: Object3D; // the arm solver's copy of the skeleton
+    objectLeftEye: Object3D;
+    avatarHeight: number; // eye height + 0.2: the camera frames by it
+    viewName: "full" | "mid" | "upper" | "head";
+    setView(view: "full" | "mid" | "upper" | "head"): void;
     animEmojis: Record<string, object>;
     showAvatar(avatar: AvatarOptions): Promise<void>;
     speakAudio(speech: SpeakAudioInput): void;
