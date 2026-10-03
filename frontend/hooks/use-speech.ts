@@ -5,9 +5,10 @@ import type { TalkingHead } from "@met4citizen/talkinghead";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { speak, type ChatStreamEvent, type SpeakRequest } from "@/lib/api";
+import { speak, type ChatStreamEvent } from "@/lib/api";
 import { createAudioLipsync } from "@/lib/audio-lipsync";
-import { synthesizeHeadTts, type HeadTtsSpeech, type HeadTtsVoice } from "@/lib/headtts";
+import { avatarOf } from "@/lib/avatars";
+import { synthesizeHeadTts, type HeadTtsSpeech } from "@/lib/headtts";
 import { SentenceSplitter } from "@/lib/sentences";
 import { SpeechQueue } from "@/lib/speech-queue";
 import { useInterviewStore } from "@/lib/store";
@@ -18,11 +19,6 @@ type Engine = "gemini" | "headtts";
 // the avatar's lips (Gemini has none)
 type Clip = { buffer: AudioBuffer; lipsync?: Omit<HeadTtsSpeech, "audio"> };
 
-// until the avatar picks the interviewer - the same person in both engines
-const VOICE: { headtts: HeadTtsVoice; gemini: SpeakRequest["voice"] } = {
-  headtts: "af_heart",
-  gemini: "Kore",
-};
 // Gemini's raw PCM: 24 kHz mono 16-bit (backend services/tts.py)
 const GEMINI_SAMPLE_RATE = 24000;
 // Gemini takes ~1.5 s per sentence: shorter ones go out with the next
@@ -168,8 +164,10 @@ export function useSpeech(head: TalkingHead | null) {
   useEffect(() => {
     const context = new AudioContext();
 
+    const voice = () => avatarOf(useInterviewStore.getState().interviewer).voice;
+
     const headtts = async (text: string, signal: AbortSignal): Promise<Clip> => {
-      const { audio, ...lipsync } = await synthesizeHeadTts(text, VOICE.headtts, signal);
+      const { audio, ...lipsync } = await synthesizeHeadTts(text, voice().headtts, signal);
 
       return { buffer: await context.decodeAudioData(audio), lipsync };
     };
@@ -177,7 +175,7 @@ export function useSpeech(head: TalkingHead | null) {
     const gemini = async (text: string, signal: AbortSignal): Promise<Clip> => {
       const { sessionId, addVoiceCost } = useInterviewStore.getState();
       const { value, cost } = await speak(
-        { text, voice: VOICE.gemini, session_id: sessionId! },
+        { text, voice: voice().gemini, session_id: sessionId! },
         signal,
       );
 

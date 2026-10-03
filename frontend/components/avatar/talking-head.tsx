@@ -1,27 +1,24 @@
 "use client";
 
-import { TalkingHead, type AvatarOptions, type Mood } from "@met4citizen/talkinghead";
+import { TalkingHead, type Mood } from "@met4citizen/talkinghead";
 import { useEffect, useEffectEvent, useRef, useState, type ReactNode } from "react";
 
 import { addInterviewGestures } from "@/lib/avatar-gestures";
+import type { AvatarModel } from "@/lib/avatars";
 
 type Status = "loading" | "ready" | "error";
-
-export type AvatarModel = Pick<AvatarOptions, "url" | "body" | "baseline">;
-
-const BRUNETTE: AvatarModel = { url: "/avatars/brunette.glb", body: "F" };
 
 type Props = {
   // the head once the avatar is on screen (to make it speak), null after unmount
   onReady?: (head: TalkingHead | null) => void;
   placeholder?: ReactNode;
   mood?: Mood; // the face's base expression, also when it changes later
-  model?: AvatarModel; // a new one rebuilds the head
+  model: AvatarModel; // a new one rebuilds the head
 };
 
 // The 3D interviewer. three.js and TalkingHead need the browser, so load this
 // only through next/dynamic with ssr: false
-export function TalkingHeadAvatar({ onReady, placeholder, mood, model = BRUNETTE }: Props) {
+export function TalkingHeadAvatar({ onReady, placeholder, mood, model }: Props) {
   const { url, body, baseline } = model;
   const containerRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<TalkingHead | null>(null); // once it's on screen

@@ -3,15 +3,15 @@
 import type { Mood, TalkingHead } from "@met4citizen/talkinghead";
 import { useEffect, useState } from "react";
 
-import type { AvatarModel } from "@/components/avatar/talking-head";
 import { InterviewStage } from "@/components/interview/interview-stage";
 import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useRecorder } from "@/hooks/use-recorder";
-import type { InterviewSettings } from "@/lib/api";
+import type { Interviewer, InterviewSettings } from "@/lib/api";
 import { listenTo, stopThinking, THINKING } from "@/lib/avatar-gestures";
-import { synthesizeHeadTts, type HeadTtsVoice } from "@/lib/headtts";
+import { AVATARS } from "@/lib/avatars";
+import { synthesizeHeadTts } from "@/lib/headtts";
 
 // Avatar playground: the interview's stage, any office, any sentence straight to HeadTTS,
 // thinking and listening as in the interview. No LLM, no backend, no interview needed
@@ -29,22 +29,9 @@ const COMPANIES: Company[] = [
   "Starbacks",
 ];
 
-type AvatarName = "Brunette" | "Businessman" | "AvatarSDK";
-
-// candidates for the interviewer, each with its HeadTTS voice
-const AVATARS: Record<AvatarName, { model: AvatarModel; voice: HeadTtsVoice }> = {
-  Brunette: { model: { url: "/avatars/brunette.glb", body: "F" }, voice: "af_heart" },
-  Businessman: { model: { url: "/avatars/businessman.glb", body: "M" }, voice: "am_michael" },
-  AvatarSDK: {
-    model: {
-      url: "/avatars/avatarsdk.glb",
-      body: "M",
-      // his neck bends forward. TalkingHead's demo straightens it with a neck retarget,
-      // which 1.7 doesn't have yet, so the head is lifted further instead
-      baseline: { headRotateX: -0.3, eyeBlinkLeft: 0.05, eyeBlinkRight: 0.05 },
-    },
-    voice: "am_michael",
-  },
+const INTERVIEWERS: Record<Interviewer["gender"], Interviewer> = {
+  female: { name: "Mia Laurent", gender: "female" },
+  male: { name: "David Okafor", gender: "male" },
 };
 
 const MOODS: Mood[] = ["neutral", "happy", "angry", "sad", "fear", "disgust", "love", "sleep"];
@@ -82,7 +69,7 @@ const SAMPLE =
 export default function AvatarTestPage() {
   const [head, setHead] = useState<TalkingHead | null>(null);
   const [company, setCompany] = useState<Company>("Netflux");
-  const [avatar, setAvatar] = useState<AvatarName>("Brunette");
+  const [gender, setGender] = useState<Interviewer["gender"]>("female");
   const [mood, setMood] = useState<Mood>("neutral");
   const [text, setText] = useState(SAMPLE);
   const [busy, setBusy] = useState(false);
@@ -124,7 +111,7 @@ export default function AvatarTestPage() {
       await head.audioCtx.resume();
       const [speech] = await Promise.all([
         // nothing cancels it here: HeadTTS's own time limit still applies
-        synthesizeHeadTts(text, AVATARS[avatar].voice, new AbortController().signal),
+        synthesizeHeadTts(text, AVATARS[gender].voice.headtts, new AbortController().signal),
         new Promise((resolve) => setTimeout(resolve, parseFloat(extraWait) * 1000)),
       ]);
       const audio = await head.audioCtx.decodeAudioData(speech.audio);
@@ -142,9 +129,8 @@ export default function AvatarTestPage() {
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-16">
       <InterviewStage
         company={company}
-        model={AVATARS[avatar].model}
         onReady={setHead}
-        interviewer="Mia Laurent"
+        interviewer={INTERVIEWERS[gender]}
         speaking={busy}
         candidate={null}
         mic={null}
@@ -153,10 +139,10 @@ export default function AvatarTestPage() {
         <OptionSelect
           id="avatar"
           label="Avatar"
-          options={Object.keys(AVATARS) as AvatarName[]}
-          value={avatar}
+          options={["female", "male"]}
+          value={gender}
           onChange={(next) => {
-            setAvatar(next);
+            setGender(next);
             setMood("neutral"); // the new head starts neutral
           }}
           disabled={busy}

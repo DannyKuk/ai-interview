@@ -9,6 +9,7 @@ import type {
   ChatMessage,
   ChatResponse,
   FeedbackResponse,
+  Interviewer,
   InterviewSettings,
   ModelSettings,
   PlanProgress,
@@ -56,7 +57,7 @@ type InterviewState = {
   // earlier line is rejected. null = no reply yet
   historySignature: string | null;
   ended: EndReason | null; // set once the interviewer has said goodbye
-  interviewer: string | null; // the interviewer's name at the picked company
+  interviewer: Interviewer | null; // the picked company's interviewer
   startedAt: number | null; // ms timestamps, for the call's clock
   endedAt: number | null;
   feedback: FeedbackResponse | null; // kept, so a reload of /results doesn't recall the API
@@ -84,7 +85,7 @@ type InterviewState = {
   setJobDescription: (jobDescription: string) => void;
   setProfile: (profile: CandidateProfile, price: Price) => void;
   updateProfile: (patch: Partial<CandidateProfile>) => void;
-  startInterview: (plan: SignedPlan, price: Price, interviewer: string) => void;
+  startInterview: (plan: SignedPlan, price: Price, interviewer: Interviewer) => void;
   addMessage: (message: TranscriptMessage) => void;
   setHistorySignature: (historySignature: string | null) => void;
   setProgress: (progress: PlanProgress) => void;

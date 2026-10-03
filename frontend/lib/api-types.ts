@@ -249,7 +249,7 @@ export interface components {
             companies: ("Guugle" | "HeadBook" | "Instakilogram" | "Netflux" | "Amazin" | "Goldman Sax" | "Tesler" | "Starbacks")[];
             /** Interviewers */
             interviewers: {
-                [key: string]: string;
+                [key: string]: components["schemas"]["Interviewer"];
             };
             /** Difficulties */
             difficulties: ("easy" | "medium" | "hard")[];
@@ -486,6 +486,16 @@ export interface components {
              * @default 5
              */
             question_count: number;
+        };
+        /** Interviewer */
+        Interviewer: {
+            /** Name */
+            name: string;
+            /**
+             * Gender
+             * @enum {string}
+             */
+            gender: "female" | "male";
         };
         /** ModelInfo */
         ModelInfo: {

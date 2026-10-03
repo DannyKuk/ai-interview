@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from backend.schemas.chat import (
     Company,
     Difficulty,
+    Interviewer,
     InterviewSettings,
     ModelSettings,
     Persona,
@@ -26,7 +27,7 @@ class AppConfig(BaseModel):
     techniques: list[Technique]
     default_technique: Technique
     companies: list[Company]
-    interviewers: dict[Company, str]
+    interviewers: dict[Company, Interviewer]
     difficulties: list[Difficulty]
     personas: list[Persona]
     default_settings: InterviewSettings

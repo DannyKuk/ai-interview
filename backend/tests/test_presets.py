@@ -23,7 +23,8 @@ def test_one_preset_per_company():
 
 def test_one_interviewer_per_company():
     assert sorted(INTERVIEWERS) == sorted(get_args(Company))
-    assert len(set(INTERVIEWERS.values())) == len(INTERVIEWERS)
+    names = {interviewer.name for interviewer in INTERVIEWERS.values()}
+    assert len(names) == len(INTERVIEWERS)
 
 
 def test_every_preset_cv_is_in_the_frontend():

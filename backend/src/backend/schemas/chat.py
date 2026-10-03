@@ -47,15 +47,23 @@ Company = Literal[
     "Starbacks",
 ]
 
-INTERVIEWERS: dict[Company, str] = {
-    "Guugle": "Hannah Park",
-    "HeadBook": "Mia Laurent",
-    "Instakilogram": "Zoe Martins",
-    "Netflux": "Leah Okafor",
-    "Amazin": "Clara Weiss",
-    "Goldman Sax": "Eleanor Hart",
-    "Tesler": "Nina Kovač",
-    "Starbacks": "Rosa Delgado",
+Gender = Literal["female", "male"]
+
+
+class Interviewer(BaseModel):
+    name: str
+    gender: Gender
+
+
+INTERVIEWERS: dict[Company, Interviewer] = {
+    "Guugle": Interviewer(name="Hannah Park", gender="female"),
+    "HeadBook": Interviewer(name="Mia Laurent", gender="female"),
+    "Instakilogram": Interviewer(name="Zoe Martins", gender="female"),
+    "Netflux": Interviewer(name="David Okafor", gender="male"),
+    "Amazin": Interviewer(name="Lukas Weiss", gender="male"),
+    "Goldman Sax": Interviewer(name="Edward Hart", gender="male"),
+    "Tesler": Interviewer(name="Marko Kovač", gender="male"),
+    "Starbacks": Interviewer(name="Rosa Delgado", gender="female"),
 }
 Difficulty = Literal["easy", "medium", "hard"]
 Persona = Literal["friendly", "neutral", "strict"]

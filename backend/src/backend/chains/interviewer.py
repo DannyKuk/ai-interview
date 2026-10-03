@@ -65,7 +65,7 @@ def build_interviewer_input(
     # note: what to do this turn (a turn hint or the plan's next step)
     chain_input = {
         "company": settings.company,
-        "interviewer": INTERVIEWERS[settings.company],
+        "interviewer": INTERVIEWERS[settings.company].name,
         "role": wrap("role", settings.role),
         "difficulty": DIFFICULTY[settings.difficulty],
         "persona": PERSONA[settings.persona],

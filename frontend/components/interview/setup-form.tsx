@@ -188,7 +188,7 @@ export function SetupForm() {
             </CardContent>
           </Card>
 
-          <InviteCard settings={settings} interviewer={config.interviewers[settings.company]}>
+          <InviteCard settings={settings} interviewer={config.interviewers[settings.company].name}>
             <div className="flex flex-wrap items-center gap-4">
               <Button type="submit" size="lg" className="flex-1 basis-48">
                 {starting ? "Preparing your interview…" : "Start interview"}

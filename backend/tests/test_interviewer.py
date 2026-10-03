@@ -59,7 +59,7 @@ def test_persona_prompt_uses_the_companys_interviewer():
         InterviewSettings(company="HeadBook"), "persona"
     )
 
-    assert INTERVIEWERS["HeadBook"] in system_prompt
+    assert INTERVIEWERS["HeadBook"].name in system_prompt
     assert "Sam" not in system_prompt
 
 
