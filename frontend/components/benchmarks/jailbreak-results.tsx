@@ -41,7 +41,7 @@ export function JailbreakResults({ steps, guards }: Props) {
           ))}
         </div>
         <p className="text-sm text-muted-foreground">
-          In both rounds no normal answer was blocked by mistake. A full round costs $0.03.
+          In every round no normal answer was blocked by mistake. A full round costs about $0.04.
         </p>
       </div>
       <Table>

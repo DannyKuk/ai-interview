@@ -20,6 +20,7 @@ import {
   jailbreakSteps,
   latency,
   promptFixes,
+  promptTechniques,
   sttModels,
   tiles,
   writeUps,
@@ -67,15 +68,29 @@ export default function BenchmarksPage() {
           question="Which prompt technique makes the best interviewer?"
           answer={
             <>
-              None stands out:{" "}
-              <strong className="font-semibold text-primary">
-                all five behave almost the same.
-              </strong>{" "}
-              What helped was fixing two mistakes they all made. The app uses zero-shot, the
-              cheapest.
+              Overall all five score about the same, but only{" "}
+              <strong className="font-semibold text-primary">zero-shot</strong> never thanks you for
+              a weak answer. The others often open with &ldquo;I appreciate the honesty&rdquo; when
+              you admit you didn&apos;t do the work. The app uses zero-shot.
             </>
           }
-          footnote="Jev scores each reply; 90 replies per run, 18 per technique."
+          footnote="Bar = Jev’s probability that the reply praises an answer that missed the question, mean over the vague and “don’t know” answers (lower is better). Quality = Jev’s good-reply score over all replies. 135 replies at the app’s settings, 27 per technique, Oct 3."
+        >
+          <BarRows rows={promptTechniques} max={1} valueName="Praises weak answers" />
+        </QuestionCard>
+        <QuestionCard
+          question="What made the interviewer better?"
+          answer={
+            <>
+              Not the technique:{" "}
+              <strong className="font-semibold text-primary">
+                fixing two mistakes all five made
+              </strong>
+              . They praised weak answers and made up facts about the team, until two rules in the
+              shared prompt stopped it.
+            </>
+          }
+          footnote="Measured Sep 30, before the challenge signal: 90 replies per run, 18 per technique."
         >
           <BeforeAfterBars measures={promptFixes} />
         </QuestionCard>

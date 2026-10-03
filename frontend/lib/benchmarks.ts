@@ -92,6 +92,16 @@ export const cvYears: PairedRow[] = [
   pair("“2021 – present”", 5, 3),
 ];
 
+// at the app's settings (minimal, challenge signal on): Jev's P that the reply praises a
+// weak answer, mean over the vague and "don't know" answers; quality = good reply, all
+export const promptTechniques: BarRow[] = [
+  { name: "Zero-shot", value: 0.05, label: "0.05 · quality 0.93", used: true },
+  { name: "Persona", value: 0.28, label: "0.28 · quality 0.92" },
+  { name: "Few-shot", value: 0.39, label: "0.39 · quality 0.92" },
+  { name: "Chain-of-thought", value: 0.39, label: "0.39 · quality 0.93" },
+  { name: "Self-critique", value: 0.43, label: "0.43 · quality 0.94" },
+];
+
 export type BeforeAfterMeasure = { name: string; hint: string; rows: PairedRow[] };
 
 // Jev's probability per reply, mean; a = before the two prompt fixes, b = after
@@ -165,7 +175,7 @@ export const jailbreakSteps: JailbreakStep[] = [
   {
     title: "Round 2 · after the fix",
     value: "45 / 45",
-    label: "passed, the faked history included.",
+    label: "passed, the faked history included, and again in a final round on Oct 3.",
     used: true,
   },
 ];
