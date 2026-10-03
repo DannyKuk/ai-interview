@@ -16,6 +16,8 @@ declare module "@met4citizen/talkinghead" {
     body: "M" | "F";
     avatarMood?: Mood;
     lipsyncLang?: string;
+    // resting values of morph targets and head pose (e.g. headRotateX), to fit a model
+    baseline?: Record<string, number>;
   };
 
   // audio plus word and viseme (mouth shape) timings in ms, as HeadTTS returns them

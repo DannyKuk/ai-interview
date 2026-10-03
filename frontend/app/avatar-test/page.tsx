@@ -3,6 +3,7 @@
 import type { Mood, TalkingHead } from "@met4citizen/talkinghead";
 import { useEffect, useState } from "react";
 
+import type { AvatarModel } from "@/components/avatar/talking-head";
 import { InterviewStage } from "@/components/interview/interview-stage";
 import { OptionSelect } from "@/components/option-select";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useRecorder } from "@/hooks/use-recorder";
 import type { InterviewSettings } from "@/lib/api";
 import { listenTo, stopThinking, THINKING } from "@/lib/avatar-gestures";
-import { synthesizeHeadTts } from "@/lib/headtts";
+import { synthesizeHeadTts, type HeadTtsVoice } from "@/lib/headtts";
 
 // Avatar playground: the interview's stage, any office, any sentence straight to HeadTTS,
 // thinking and listening as in the interview. No LLM, no backend, no interview needed
@@ -27,6 +28,24 @@ const COMPANIES: Company[] = [
   "Tesler",
   "Starbacks",
 ];
+
+type AvatarName = "Brunette" | "Businessman" | "AvatarSDK";
+
+// candidates for the interviewer, each with its HeadTTS voice
+const AVATARS: Record<AvatarName, { model: AvatarModel; voice: HeadTtsVoice }> = {
+  Brunette: { model: { url: "/avatars/brunette.glb", body: "F" }, voice: "af_heart" },
+  Businessman: { model: { url: "/avatars/businessman.glb", body: "M" }, voice: "am_michael" },
+  AvatarSDK: {
+    model: {
+      url: "/avatars/avatarsdk.glb",
+      body: "M",
+      // his neck bends forward. TalkingHead's demo straightens it with a neck retarget,
+      // which 1.7 doesn't have yet, so the head is lifted further instead
+      baseline: { headRotateX: -0.3, eyeBlinkLeft: 0.05, eyeBlinkRight: 0.05 },
+    },
+    voice: "am_michael",
+  },
+};
 
 const MOODS: Mood[] = ["neutral", "happy", "angry", "sad", "fear", "disgust", "love", "sleep"];
 
@@ -63,6 +82,7 @@ const SAMPLE =
 export default function AvatarTestPage() {
   const [head, setHead] = useState<TalkingHead | null>(null);
   const [company, setCompany] = useState<Company>("Netflux");
+  const [avatar, setAvatar] = useState<AvatarName>("Brunette");
   const [mood, setMood] = useState<Mood>("neutral");
   const [text, setText] = useState(SAMPLE);
   const [busy, setBusy] = useState(false);
@@ -104,7 +124,7 @@ export default function AvatarTestPage() {
       await head.audioCtx.resume();
       const [speech] = await Promise.all([
         // nothing cancels it here: HeadTTS's own time limit still applies
-        synthesizeHeadTts(text, "af_heart", new AbortController().signal),
+        synthesizeHeadTts(text, AVATARS[avatar].voice, new AbortController().signal),
         new Promise((resolve) => setTimeout(resolve, parseFloat(extraWait) * 1000)),
       ]);
       const audio = await head.audioCtx.decodeAudioData(speech.audio);
@@ -122,13 +142,25 @@ export default function AvatarTestPage() {
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-6 py-16">
       <InterviewStage
         company={company}
+        model={AVATARS[avatar].model}
         onReady={setHead}
         interviewer="Mia Laurent"
         speaking={busy}
         candidate={null}
         mic={null}
       />
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
+        <OptionSelect
+          id="avatar"
+          label="Avatar"
+          options={Object.keys(AVATARS) as AvatarName[]}
+          value={avatar}
+          onChange={(next) => {
+            setAvatar(next);
+            setMood("neutral"); // the new head starts neutral
+          }}
+          disabled={busy}
+        />
         <OptionSelect
           id="company"
           label="Office"

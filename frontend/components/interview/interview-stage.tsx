@@ -4,6 +4,7 @@ import type { Mood, TalkingHead } from "@met4citizen/talkinghead";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 
+import type { AvatarModel } from "@/components/avatar/talking-head";
 import { Equalizer } from "@/components/interview/equalizer";
 import { SelfView } from "@/components/interview/self-view";
 import { StageCaption } from "@/components/interview/stage-caption";
@@ -51,6 +52,7 @@ type Props = {
   company?: InterviewSettings["company"]; // none: a plain backdrop
   persona?: Persona; // none: TalkingHead's default mood (neutral)
   avatar?: boolean; // false: only the still image, three.js isn't loaded
+  model?: AvatarModel; // none: the brunette
   onReady?: (head: TalkingHead | null) => void; // to make it speak
   interviewer: string | null;
   speaking: boolean;
@@ -63,6 +65,7 @@ export function InterviewStage({
   company,
   persona,
   avatar = true,
+  model,
   onReady,
   interviewer,
   speaking,
@@ -88,6 +91,7 @@ export function InterviewStage({
             onReady={onReady}
             placeholder={<Portrait />}
             mood={persona && MOOD[persona]}
+            model={model}
           />
         ) : (
           <RoundPortrait speaking={speaking} />
