@@ -68,10 +68,11 @@ export default function BenchmarksPage() {
           question="Which prompt technique makes the best interviewer?"
           answer={
             <>
-              Overall all five score about the same, but only{" "}
-              <strong className="font-semibold text-primary">zero-shot</strong> never thanks you for
-              a weak answer. The others often open with &ldquo;I appreciate the honesty&rdquo; when
-              you admit you didn&apos;t do the work. The app uses zero-shot.
+              Overall all five score about the same, but{" "}
+              <strong className="font-semibold text-primary">zero-shot</strong> rarely thanks you
+              for a weak answer (1 reply in 12, over two runs). The others did in 2–3 of 6, opening
+              with &ldquo;I appreciate the honesty&rdquo; when you admit you didn&apos;t do the
+              work. The app uses zero-shot.
             </>
           }
           footnote="Bar = Jev’s probability that the reply praises an answer that missed the question, mean over the vague and “don’t know” answers (lower is better). Quality = Jev’s good-reply score over all replies. 135 replies at the app’s settings, 27 per technique, Oct 3."
