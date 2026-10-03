@@ -80,6 +80,56 @@ export const localModels: BarRow[] = [
   { name: "GLM 4.7 Flash", value: 0.86, label: "0.86 · 0.3 s" },
 ];
 
+// "wrong" = the report misleads the candidate, "slow" = a practical problem.
+// Made-up details: the vague interview, counted by hand (borderline not counted)
+export type FeedbackCell = { text: string; flag?: "wrong" | "slow" };
+
+export type LocalFeedbackRow = {
+  name: string;
+  used?: boolean;
+  details: FeedbackCell;
+  percentages: FeedbackCell;
+  strengths: FeedbackCell;
+  failed: FeedbackCell;
+  seconds: FeedbackCell;
+};
+
+export const localFeedback: LocalFeedbackRow[] = [
+  {
+    name: "gpt-5-mini (cloud)",
+    used: true,
+    details: { text: "10 of 10", flag: "wrong" },
+    percentages: { text: "0 of 10" },
+    strengths: { text: "2–3" },
+    failed: { text: "0 of 13" },
+    seconds: { text: "15 s" },
+  },
+  {
+    name: "Gemma 4 31B",
+    details: { text: "1 of 10" },
+    percentages: { text: "0 of 10" },
+    strengths: { text: "3" },
+    failed: { text: "0 of 13" },
+    seconds: { text: "138 s", flag: "slow" },
+  },
+  {
+    name: "Qwen 3.8 27B",
+    details: { text: "4 of 9" },
+    percentages: { text: "0 of 9" },
+    strengths: { text: "2–3" },
+    failed: { text: "1 of 13", flag: "slow" },
+    seconds: { text: "80 s", flag: "slow" },
+  },
+  {
+    name: "gpt-oss-20b",
+    details: { text: "9 of 10", flag: "wrong" },
+    percentages: { text: "5 of 10", flag: "wrong" },
+    strengths: { text: "0", flag: "wrong" },
+    failed: { text: "0 of 13" },
+    seconds: { text: "6.5 s" },
+  },
+];
+
 export type PairedRow = {
   name: string;
   a: number;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BarRows } from "@/components/benchmarks/bar-rows";
 import { BeforeAfterBars } from "@/components/benchmarks/before-after-bars";
 import { ChallengeExamples } from "@/components/benchmarks/challenge-examples";
+import { FeedbackTable } from "@/components/benchmarks/feedback-table";
 import { OTHER, USED } from "@/components/benchmarks/chart-style";
 import { JailbreakResults } from "@/components/benchmarks/jailbreak-results";
 import { LatencyBars } from "@/components/benchmarks/latency-bars";
@@ -19,6 +20,7 @@ import {
   guards,
   jailbreakSteps,
   latency,
+  localFeedback,
   localModels,
   promptFixes,
   promptTechniques,
@@ -173,9 +175,23 @@ export default function BenchmarksPage() {
               the brief&apos;s model.
             </>
           }
-          footnote="Bar = Jev’s good-reply score (higher is better), 27 replies per model, same prompt and test cases. Seconds = median wait until the interviewer starts answering. Local models on one AMD RX 7900 XTX (24 GB) in LM Studio; gpt-oss-120b only partly fits on it. Interviewer replies only: reading the CV, the plan and the feedback weren’t tested locally."
+          footnote="Bar = Jev’s good-reply score (higher is better), 27 replies per model, same prompt and test cases. Seconds = median wait until the interviewer starts answering. Local models on one AMD RX 7900 XTX (24 GB) in LM Studio; gpt-oss-120b only partly fits on it. Interviewer replies only (the feedback is below); reading the CV and the plan weren’t tested locally."
         >
           <BarRows rows={localModels} max={1} valueName="Quality" />
+        </QuestionCard>
+        <QuestionCard
+          question="Could it write your feedback too?"
+          answer={
+            <>
+              Not with one model. Gemma and Qwen{" "}
+              <strong className="font-semibold text-primary">make up far fewer details</strong> in
+              the sample answer than the app&apos;s model, but you&apos;d wait one to two minutes
+              for your results. The fast gpt-oss-20b makes up the most, even results in percent.
+            </>
+          }
+          footnote="Made-up details = sample answers that stated a bug or fix the candidate never said, for a vague answer, counted by hand. Made-up % = results in percent the candidate never gave. Strengths named = per report, for an interview with good answers too. No report = the model thought until it ran out of tokens. Time = median per report. Red = misleads the candidate, amber = slow or missing. None praised a nonsense interview. Same PC and settings as above, with thinking on."
+        >
+          <FeedbackTable rows={localFeedback} />
         </QuestionCard>
       </BenchmarkSection>
 
