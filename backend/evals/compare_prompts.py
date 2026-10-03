@@ -12,7 +12,7 @@ uv run python evals/compare_prompts.py --techniques zero_shot \
 
 # open-weight models in LM Studio (another machine on the network): --models are its ids
 uv run python evals/compare_prompts.py --techniques zero_shot \
-    --local http://192.168.1.20:1234/v1 --models google/gemma-4-31b
+    --local http://localhost:1234/v1 --models qwen/qwen3.8-27b --efforts none
 
 Every reply goes through the real turn code (guard verdict -> plan note -> chain). The
 defaults are the app's model settings. The guard runs once per snapshot, so every config
@@ -32,11 +32,14 @@ from datetime import UTC, datetime
 from itertools import product
 from pathlib import Path
 from statistics import mean
-from typing import get_args
+from typing import Literal, get_args
 
 import httpx
+import openai
 from judge import LOWER_IS_BETTER, QUESTIONS, judge
-from langchain_core.runnables import Runnable
+from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.prompt_values import ChatPromptValue
+from langchain_core.runnables import Runnable, RunnableLambda
 from langchain_openai import ChatOpenAI
 from snapshots import PLAN, SNAPSHOTS, Snapshot
 
@@ -70,6 +73,7 @@ TECHNIQUES: list[Technique] = list(get_args(Technique))
 EFFORTS: list[Effort] = list(get_args(Effort))
 DEFAULTS = ModelSettings()  # what the app uses: effort low, 1000 max tokens
 PARALLEL = 6  # model calls at once, to stay clear of rate limits
+LOCAL_ATTEMPTS = 3
 
 # the prompts ask for plain text: bold, code, headings, list items
 MARKDOWN = re.compile(r"\*\*|__|`|^\s*(#|[-*] |\d+\. )", re.MULTILINE)
@@ -79,11 +83,21 @@ SHOWN_STEPS = re.compile(r"\b(draft|critique|checklist|step \d)\b", re.IGNORECAS
 THINKING = re.compile(r"<think>.*?(</think>|$)", re.DOTALL)
 
 
+def notes_as_user(prompt: ChatPromptValue) -> list[BaseMessage]:
+    # the turn note is a system message after the history: OpenAI's models take it, but
+    # chat templates like Qwen's allow a system message only first (and need a user one)
+    return [
+        HumanMessage(m.content) if m.type == "system" and i > 0 else m
+        for i, m in enumerate(prompt.to_messages())
+    ]
+
+
 @dataclass(frozen=True)
 class Config:
     technique: Technique
     model: str
-    effort: Effort | None  # None = not sent: LM Studio's own thinking setting applies
+    # local only: "none" = thinking off, None = not sent (LM Studio's setting applies)
+    effort: Effort | Literal["none"] | None
     max_tokens: int
     base_url: str | None = None  # an LM Studio server, None = OpenRouter
 
@@ -98,8 +112,13 @@ class Config:
             return build_interviewer_chain(
                 self.technique, self.model_settings(), with_plan=True
             )
-        # the app's prompt, only the model is swapped: LM Studio speaks OpenAI's API
-        llm = ChatOpenAI(
+        # the app's prompt, only the model is swapped
+        prompt = build_interviewer_prompt(self.technique, with_plan=True)
+        return prompt | RunnableLambda(notes_as_user) | self.local_model()
+
+    def local_model(self) -> ChatOpenAI:
+        # LM Studio speaks OpenAI's API; its thinking comes back apart from the reply
+        return ChatOpenAI(
             model=self.model,
             base_url=self.base_url,
             api_key="lm-studio",  # LM Studio ignores it, the client needs one
@@ -108,7 +127,6 @@ class Config:
             stream_usage=True,
             timeout=300,  # a model half in RAM is slow
         )
-        return build_interviewer_prompt(self.technique, with_plan=True) | llm
 
     def model_settings(self) -> ModelSettings:
         return ModelSettings(
@@ -209,6 +227,26 @@ async def reply(
     )
 
 
+async def reply_with_retry(
+        config: Config, snapshot: Snapshot, turn: TurnPlan, run: int
+) -> Reply:
+    # LM Studio's link to the other machine can drop for a moment, then it's back
+    for _ in range(LOCAL_ATTEMPTS - 1):
+        try:
+            return await reply(config, snapshot, turn, run)
+        except openai.APIError as error:
+            logger.warning("%s #%d failed (%s), again in 30 s", snapshot.name, run, error)
+            await asyncio.sleep(30)
+    return await reply(config, snapshot, turn, run)
+
+
+async def warm_up(config: Config) -> None:
+    # LM Studio loads a model on its first request: load it before the clock runs
+    start = time.perf_counter()
+    await config.local_model().ainvoke("Hi")
+    print(f"{config.model} loaded in {time.perf_counter() - start:.0f} s")
+
+
 async def judged(reply: Reply, snapshot: Snapshot) -> Reply:
     if not reply.text:
         return reply
@@ -287,8 +325,8 @@ async def main() -> None:
         metavar="URL",
         help="an LM Studio server (http://<ip>:1234/v1); --models are its model ids",
     )
-    # local: not sent unless given, the model's thinking is switched off in LM Studio
-    parser.add_argument("--efforts", nargs="*", choices=EFFORTS)
+    # local: not sent unless given; "none" switches a local model's thinking off
+    parser.add_argument("--efforts", nargs="*", choices=["none", *EFFORTS])
     parser.add_argument(
         "--max-tokens", nargs="*", type=int, default=[DEFAULTS.max_tokens]
     )
@@ -297,7 +335,11 @@ async def main() -> None:
     unknown = set(args.models) - set(app_settings.allowed_models)
     if unknown and not args.local:
         parser.error(f"not in the app's model list: {', '.join(sorted(unknown))}")
+    if args.local and len(args.models) != 1:
+        parser.error("one model per local run: LM Studio would reload between models")
     efforts = args.efforts or [None if args.local else DEFAULTS.reasoning_effort]
+    if "none" in efforts and not args.local:
+        parser.error("--efforts none is for local models")
 
     configs = [
         Config(technique, model, effort, max_tokens, args.local)
@@ -311,12 +353,16 @@ async def main() -> None:
     for snapshot, turn in zip(snapshots, turns):
         print(f"{snapshot.name}: hint {turn.hint}, note: {turn.note}")
 
+    if args.local:
+        await warm_up(configs[0])
+
     # local: one reply at a time, so the seconds are what one candidate would wait
     limit = asyncio.Semaphore(1 if args.local else PARALLEL)
 
     async def limited(config, snapshot, turn, run):
         async with limit:
-            return await judged(await reply(config, snapshot, turn, run), snapshot)
+            answer = reply_with_retry if args.local else reply
+            return await judged(await answer(config, snapshot, turn, run), snapshot)
 
     replies = await asyncio.gather(
         *(
