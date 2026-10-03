@@ -1,0 +1,5 @@
+{
+  "answer1": "Yes, hello, my name is Danny, nice to meet you, I'm glad that it worked out today for our meeting for the software engineering role. Yeah, to me, I'm a web developer since 2023 with about 2 years of professional experience.",
+  "answer2": "In my last role I migrated our monolith to Kubernetes. We split it into four services and moved the database to PostgreSQL, and we put Redis in front of it as a cache.",
+  "answer3": "Our p95 latency went from 900 milliseconds to 150 milliseconds. Honestly, I haven't used Terraform in production yet, but I'd be happy to learn it."
+}

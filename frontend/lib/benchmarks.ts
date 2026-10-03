@@ -18,7 +18,7 @@ export const writeUps = {
     writeUp("challenge signal", "challenge-signal.md"),
   ],
   voice: [
-    writeUp("speech-to-text", "stt-decision.md"),
+    writeUp("speech-to-text", "decisions/speech-to-text.md"),
     writeUp("text-to-speech", "decisions/text-to-speech.md"),
   ],
 } satisfies Record<string, WriteUp[]>;

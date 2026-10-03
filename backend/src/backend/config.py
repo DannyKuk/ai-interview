@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     # per interview (session_id). A normal interview costs about $0.01
     session_cost_cap_usd: float = 0.10
 
-    # speech-to-text, local on the CPU (docs/stt-decision.md)
+    # speech-to-text, local on the CPU (docs/decisions/speech-to-text.md)
     stt_model: str = "nemo-parakeet-tdt-0.6b-v2"
     stt_threads: int = 4  # the spike's setting: 0.3 s for a 15 s answer
 

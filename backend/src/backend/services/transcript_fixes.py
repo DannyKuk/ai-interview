@@ -1,7 +1,7 @@
 import re
 
 # tech words the STT model mishears -> what the candidate said. Only mishearings we
-# actually saw (STT spike, docs/stt-decision.md)
+# actually saw (STT spike, docs/decisions/speech-to-text.md)
 # Never map a correct word ("Postgres" alone is a real name, it stays)
 FIXES = {
     "postgresl": "PostgreSQL",

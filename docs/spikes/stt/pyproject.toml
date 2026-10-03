@@ -1,0 +1,11 @@
+[project]
+name = "stt"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "faster-whisper>=1.2.1",
+    "jiwer>=4.0.0",
+    "moonshine-voice>=0.1.5",
+    "onnx-asr[cpu,hub]>=0.12.0",
+    "whisper-normalizer>=0.1.15",
+]
