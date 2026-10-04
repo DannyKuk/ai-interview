@@ -9,7 +9,7 @@ const writeUp = (title: string, file: string): WriteUp => ({ title, href: `${DOC
 export const writeUps = {
   prompts: [
     writeUp("interviewer comparison", "evals/interviewer.md#1-which-prompt-technique"),
-    writeUp("feedback comparison", "feedback-prompt-comparison.md"),
+    writeUp("feedback comparison", "evals/feedback.md#1-does-the-prompting-technique-matter"),
   ],
   settings: [
     writeUp("settings experiments", "evals/interviewer.md#2-which-model-and-reasoning-effort"),
