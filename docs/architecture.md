@@ -31,11 +31,34 @@ flowchart TB
 | Stage | Endpoint | What happens | Models, in order |
 |---|---|---|---|
 | 1. Setup | `GET /api/presets`, `/api/config` | Pick a parody company (Guugle, Netflux, …), a role, difficulty, interviewer style. Optional: a job description, the "cloud voice" switch. | – |
-| 2. CV | `POST /api/cv/parse` | PDF checked by content (≤ 5 MB, 5 pages) → text with `pypdf` → Jev: "is this a CV? is there an injection?" → a structured profile the candidate can edit. Or pick a preset CV. | Jev, then gpt-5-mini (effort `low`) |
-| 3. Plan | `POST /api/interview/plan` | Jev checks role, job description and profile → a question plan tailored to the CV, each question with a scoring rubric. The plan is **signed** (HMAC) and kept by the browser. | Jev, then gpt-5-mini (`low`) |
-| 4. Turns | `POST /api/interview/chat/stream` | The interview itself, one turn per answer (below). | Parakeet (spoken answers), Jev, then gpt-5-mini (`minimal`) |
+| 2. CV | `POST /api/cv/parse` | Upload a PDF or pick a preset CV → checked by Jev → a structured profile the candidate can edit ([how it works](#cv-plan-and-scoring)). | Jev, then gpt-5-mini (effort `low`) |
+| 3. Plan | `POST /api/interview/plan` | Jev checks role, job description and profile → a question plan tailored to the CV, each question with a scoring rubric. **Signed** and kept by the browser. | Jev, then gpt-5-mini (`low`) |
+| 4. Turns | `POST /api/interview/chat/stream` | The interview itself, one turn per answer ([in detail](#one-turn-in-detail)). | Parakeet (spoken answers), Jev, then gpt-5-mini (`minimal`) |
 | 5. Feedback | `POST /api/interview/feedback` | Jev scores every answer against its rubric (one probability per criterion → 1–5). The LLM writes the text: feedback per question, strengths, improvements, a sample answer for the weakest one. | Jev, then gpt-5-mini (`low`) |
 | 6. Results | – | Scorecard, badges (wrong claim, contradiction, couldn't verify), printable report. | – |
+
+## CV, plan and scoring
+
+**Reading the CV**
+- The file must be a real PDF (checked by its content, not the extension), at most 5 MB and 5 pages. A scan without text is rejected.
+- `pypdf` extracts the plain text, and Unicode normalisation turns font ligatures back into letters. Without it, "ﬁ" stays one character and `lena.fischer@` becomes a different email. Hidden white text is extracted too, so the guard sees it.
+- Jev checks the text: is it a CV, and does it try to instruct an AI? In tests, normal CVs scored 0.01 and hidden injections 0.91–0.99.
+- gpt-5-mini turns the text into a **profile**: first name, headline, seniority, years of experience, skills, up to 5 jobs, education and interview topics. It never copies an email, phone number or address. Years are added up from the job dates against today's date. Two-column layouts and tables come out as clean, sorted fields.
+- The candidate can edit the profile before the interview, and Jev checks it again.
+
+**Writing the plan**
+- One call turns the profile, the role, an optional job description and the settings (difficulty, 3–8 questions) into a **plan**: a one-line approach, then per question its type (motivation, experience, behavioural, technical, situational), a topic, the question, why it's asked, and 2–4 yes/no rubric lines that describe a good answer.
+- Questions come from the candidate's real work. For example, a head baker changing careers was asked about the spreadsheet that cut flour waste 18%, not about years in software.
+- Each question asks about **one thing** in at most 25 words; details are left to the interviewer's follow-ups. A rule alone wasn't enough, so the prompt shows a "too much" and a "better" example.
+- The server signs the plan, and the browser sends it back on every turn. From the plan and Jev's signals, the server decides each turn: the next question, at most one extra turn per question, or the end.
+
+**Scoring the answers**
+- Each answered question gets one Jev call. Every rubric line, plus two fixed criteria, becomes a yes/no question:
+  - one criterion per question type, e.g. STAR for behavioural, "technically correct" for technical
+  - "gives concrete specifics"
+- Each criterion scores 1 + 4 × P(yes); the question's score is the average.
+- In tests, strong answers scored 4.6–4.8, partial ones 3.3–3.9, weak ones 1.3–1.6, and dodges 1.1–1.2. A confidently wrong technical answer still met a keyword rubric line, but scored 0.06 on "technically correct", which is why the fixed criteria exist.
+- A follow-up counts together with its question, so a good second answer rescues a weak first one.
 
 ## One turn in detail
 
