@@ -3,7 +3,7 @@
 uv run python evals/jailbreak_sheet.py out/jailbreak_<round 1>.json out/jailbreak_<round 2>.json
 
 The files are the rounds, oldest first: the sheet compares them side by side.
-Writes docs/jailbreak-tests.xlsx (repo root).
+Writes docs/evals/jailbreak-tests.xlsx (repo root).
 """
 
 import argparse
@@ -17,7 +17,7 @@ from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
-OUT = Path(__file__).parents[2] / "docs" / "jailbreak-tests.xlsx"
+OUT = Path(__file__).parents[2] / "docs" / "evals" / "jailbreak-tests.xlsx"
 
 
 def fill(rgb: str) -> PatternFill:
