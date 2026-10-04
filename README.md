@@ -69,12 +69,15 @@ cd backend && uv run pytest                       # tests use fake LLMs, no API 
 - **Raising reasoning effort** in the dev panel can cut a reply short (2 of 72 replies at `medium`).
 - **Runs locally only.** It isn't built for deployment: there's no login, and limits are kept in memory.
 
-## Credits
+## License and credits
 
-- [TalkingHead](https://github.com/met4citizen/TalkingHead), [HeadTTS](https://github.com/met4citizen/HeadTTS) and [HeadAudio](https://github.com/met4citizen/HeadAudio) by Mika Suominen, MIT. `frontend/lib/retargeter.mjs` is vendored from TalkingHead.
-- Avatars from the TalkingHead repo, both **non-commercial use only**:
+The code is MIT-licensed ([LICENSE](LICENSE)). The third-party parts below keep their own licences.
+
+- [TalkingHead](https://github.com/met4citizen/TalkingHead), [HeadTTS](https://github.com/met4citizen/HeadTTS) and [HeadAudio](https://github.com/met4citizen/HeadAudio) by Mika Suominen, MIT. `frontend/lib/retargeter.mjs` is vendored from TalkingHead, and `frontend/public/headaudio/` holds HeadAudio's worklet and viseme model.
+- Avatars from the TalkingHead repo, both **non-commercial use only**. The portraits in `frontend/public/avatars/` are rendered from them and fall under the same terms:
   - `brunette.glb`: Ready Player Me, [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)
   - `avatarsdk.glb`: Avatar SDK MetaPerson
 - [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) voices, Apache 2.0.
 - [Parakeet TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2) by NVIDIA, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), run with [onnx-asr](https://github.com/istupakov/onnx-asr).
+- The office backgrounds were generated with Google Gemini.
 - The companies are parodies: pun names only, no real logos.
