@@ -49,6 +49,7 @@ Round 1 tested the app's prompt plus 4 techniques built on it. Round 2 tested a 
 - **Why:** the `analysis` field correctly decides "no details given → use placeholders". Then the same output tells the candidate three times to "name the exact bug and the concrete fix", and the sample answer (the last field) follows that latest advice. Within one call, no wording beat it.
 - **Few-shot copied the shape of its first example** ("My goal was …"), not the placeholders of the second. An example that bends your own rule teaches the bend.
 - **The rewrite was faster and cheaper but brought made-up praise back** (2 of 3). So the app keeps the original zero-shot prompt.
+- **Why not round 2's chain-of-thought** (5 of 10, no made-up praise)? It still invents in half the runs, on only one tested vague interview. The cause above needs a structural fix, not another technique.
 
 **Decided along the way**
 - **No story → no invented story.** The prompt was given an honest route for this case: "I haven't … yet", then the closest real fact, then the steps as "I would …". It took invented stories from 3 of 3 to 0 of 3, and later 15 of 15 runs stayed honest.

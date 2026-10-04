@@ -64,6 +64,7 @@ sequenceDiagram
 
 - **The turn note decides the turn.** In one call Jev answers: is it an injection or abuse? Did they answer? Was it vague? Do they want to end? Is there a wrong claim or a contradiction? The answers become one short instruction for this reply: ask the next question, follow up on a vague answer, ask about a wrong claim or a contradiction, steer back, or end. The [evals](evals/interviewer.md) found this matters far more than the prompt technique.
 - **Streaming, sentence by sentence.** The first sentence is spoken while the rest is still being written. The voice is HeadTTS, or Gemini TTS through the backend when the cloud voice is on. Pressing the mic interrupts the avatar.
+- **Message roles:** the *system* message is the composed prompt: technique, plan, security rules, canary. The *user* messages are the candidate's answers, wrapped in `<candidate_message>` tags as data. The *assistant* messages are the interviewer's earlier replies, part of the signed history. The turn note goes in as a second system message after the history.
 - **The transcript is always on screen**, and the avatar is decoration: everything it says is also text.
 
 ## Security in short
