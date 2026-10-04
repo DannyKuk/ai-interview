@@ -6,6 +6,12 @@ Pick a parody company (Guugle, Netflux, Goldman Sax, …) and a role, then uploa
 
 Everything runs on your machine except the language models, which are called through [OpenRouter](https://openrouter.ai). Your voice is transcribed locally, and your CV is read in memory and never stored.
 
+
+
+https://github.com/user-attachments/assets/c323b606-990c-40c2-b810-ab7bd4f2cec8
+
+
+
 ## Quick start
 
 You need [Docker](https://www.docker.com/) with about 4 GB of memory, and an OpenRouter API key with access to `openai/gpt-5-mini` and `typesafe/jev-1.13` (and `google/gemini-3.8-flash-lite-tts` for the optional cloud voice).
