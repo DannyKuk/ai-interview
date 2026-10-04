@@ -8,7 +8,7 @@
 
 ## How we measure
 
-The same harness answers all three questions below (`backend/evals/compare_prompts.py`):
+One harness (`backend/evals/compare_prompts.py`) answers all three questions:
 
 - **Fixed snapshots, not a simulated candidate.** A snapshot is a short conversation that stops right after the candidate's answer. Each model or prompt writes the next interviewer reply to the same 9 snapshots, so differences come only from what we changed.
 - **The snapshots:**
