@@ -200,6 +200,9 @@ export type ChatStreamEvent =
     }
   | { event: "done"; data: { finish_reason: string | null; history_signature?: string } };
 
+// the model failed mid-reply: streamChat throws it, so it never reaches the turn
+type StreamError = { event: "error"; data: { message: string } };
+
 // one interviewer turn, streamed - yields each event as it arrives.
 export async function* streamChat(
   body: ChatRequest,
@@ -219,10 +222,15 @@ export async function* streamChat(
 
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
   let buffer = "";
+  let finished = false;
 
   while (true) {
     const { value, done } = await reader.read();
-    if (done) return;
+    if (done) {
+      // every turn ends with "done": without it the reply broke off (connection lost)
+      if (!finished) throw new Error("The reply stream ended early");
+      return;
+    }
     buffer += value;
     // an event is a block of lines ending in a blank line; a network chunk can hold
     // several events or half of one, so only complete blocks are parsed
@@ -233,14 +241,18 @@ export async function* streamChat(
       buffer = buffer.slice(end + 2);
       const event = parseEvent(block);
 
+      if (event?.event === "error") {
+        throw new ApiError(503, event.data.message);
+      }
       if (event) {
+        finished ||= event.event === "done";
         yield event;
       }
     }
   }
 }
 
-function parseEvent(block: string): ChatStreamEvent | null {
+function parseEvent(block: string): ChatStreamEvent | StreamError | null {
   let event = "";
   let data = "";
 
@@ -255,5 +267,5 @@ function parseEvent(block: string): ChatStreamEvent | null {
   if (!event || !data) {
     return null;
   }
-  return { event, data: JSON.parse(data) } as ChatStreamEvent;
+  return { event, data: JSON.parse(data) } as ChatStreamEvent | StreamError;
 }

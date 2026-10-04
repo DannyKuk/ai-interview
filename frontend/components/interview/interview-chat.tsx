@@ -75,6 +75,7 @@ export function InterviewChat() {
   const [micAnalyser, setMicAnalyser] = useState<AnalyserNode | null>(null);
   const [dictationCaption, setDictationCaption] = useState<string | null>(null);
   const speech = useSpeech(head);
+  const stopSpeech = speech.stop;
   const { turn, error, send, stop } = useChatStream({ onEvent: speech.handleEvent });
   const router = useRouter();
   const [draft, setDraft] = useState("");
@@ -151,10 +152,14 @@ export function InterviewChat() {
     return () => head.stopListening();
   }, [head, micAnalyser]);
 
-  // a new error (429, backend down, ...) pops up as a toast. The answer is back in the box
+  // a new error (429, backend down, ...) pops up as a toast. The answer is back in the box,
+  // and a reply that broke off isn't spoken to the end
   useEffect(() => {
-    if (error) toast.error(error.message);
-  }, [error]);
+    if (error) {
+      toast.error(error.message);
+      stopSpeech();
+    }
+  }, [error, stopSpeech]);
 
   async function answer(text: string) {
     const answerMessage: ChatMessage = { role: "user", content: text };
