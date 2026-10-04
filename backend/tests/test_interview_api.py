@@ -10,7 +10,12 @@ from langchain_core.outputs import ChatGeneration, ChatGenerationChunk, ChatResu
 from pydantic import Field
 
 from backend.api import cost_cap, interview, rate_limit
-from backend.api.interview import FALLBACK_REPLY, REFUSALS, to_langchain_messages
+from backend.api.interview import (
+    FALLBACK_REPLY,
+    REFUSALS,
+    REPLY_FAILED,
+    to_langchain_messages,
+)
 from backend.guard.plan_signature import sign_plan
 from backend.guard.transcript_signature import sign_transcript
 from backend.main import app
@@ -35,6 +40,7 @@ class FakeOpenRouterModel(BaseChatModel):
     # data: {"finish_reason": "stop"}
     words: list[str]
     finish_reason: str = "stop"
+    fails: bool = False  # True = raises after the first word, like a timeout mid-reply
     received: list = Field(default_factory=list)  # messages of every call
 
     @property
@@ -44,6 +50,8 @@ class FakeOpenRouterModel(BaseChatModel):
     def _generate(self, messages, stop=None, run_manager=None, **kwargs):
         # used by invoke(): the whole reply at once
         self.received.append(messages)
+        if self.fails:
+            raise TimeoutError
         message = AIMessage(
             content="".join(self.words), response_metadata={"cost": 0.0003}
         )
@@ -53,6 +61,8 @@ class FakeOpenRouterModel(BaseChatModel):
         self.received.append(messages)
         for word in self.words:
             yield ChatGenerationChunk(message=AIMessageChunk(content=word))
+            if self.fails:
+                raise TimeoutError
         yield ChatGenerationChunk(
             message=AIMessageChunk(
                 content="", response_metadata={"finish_reason": self.finish_reason}
@@ -72,9 +82,9 @@ class FakeOpenRouterModel(BaseChatModel):
 
 
 def use_fake_model(
-    monkeypatch, words: list[str], finish_reason="stop"
+    monkeypatch, words: list[str], finish_reason="stop", fails=False
 ) -> FakeOpenRouterModel:
-    fake = FakeOpenRouterModel(words=words, finish_reason=finish_reason)
+    fake = FakeOpenRouterModel(words=words, finish_reason=finish_reason, fails=fails)
     monkeypatch.setattr("backend.chains.interviewer.get_chat_model", lambda **_: fake)
     return fake
 
@@ -224,6 +234,28 @@ def test_chat_stream_sends_fallback_when_reply_is_empty(monkeypatch):
             "history_signature": signature_after([], FALLBACK_REPLY),
         },
     )
+
+
+def test_chat_returns_503_when_the_model_fails(monkeypatch):
+    use_fake_model(monkeypatch, ["Welcome"], fails=True)
+
+    response = post_chat([])
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": REPLY_FAILED}
+
+
+def test_stream_ends_with_an_error_when_the_model_fails_mid_reply(monkeypatch):
+    # no usage, no done, no signature: the half reply must not reach the history
+    use_fake_model(monkeypatch, ["Welcome", " to", " Guugle!"], fails=True)
+
+    events = parse_sse(post_chat_stream([]).text)
+
+    assert events == [
+        ("meta", NO_HINT),
+        ("token", {"text": "Welcome"}),
+        ("error", {"message": REPLY_FAILED}),
+    ]
 
 
 def test_both_endpoints_reject_system_role(monkeypatch):

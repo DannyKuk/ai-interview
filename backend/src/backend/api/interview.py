@@ -1,8 +1,9 @@
+import logging
 from collections.abc import AsyncIterator
 from contextlib import aclosing
 from dataclasses import dataclass
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import Runnable
@@ -31,6 +32,8 @@ from backend.schemas.chat import (
 from backend.schemas.guard import BlockReason, GuardVerdict
 from backend.schemas.plan import InterviewPlan, PlanProgress
 
+logger = logging.getLogger(__name__)
+
 # Add rate_limit to the APIRouter
 router = APIRouter(
     prefix="/api/interview", tags=["interview"], dependencies=[Depends(chat_rate_limit)]
@@ -38,6 +41,8 @@ router = APIRouter(
 
 # sent when the model returns no text (e.g. reasoning used up max_tokens)
 FALLBACK_REPLY = "Sorry, I lost my train of thought. Could you say that again?"
+# 503 = "not your fault, try again" (LLM timeout, provider error, …)
+REPLY_FAILED = "The interviewer couldn't answer right now. Please try again."
 
 # fallbacks if the message has been blocked by the guard
 REFUSALS: dict[BlockReason, str] = {
@@ -192,7 +197,11 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
         return ChatResponse(reply=REFUSALS[reason], blocked=reason, guard=turn.verdict)
 
-    result = await turn.chain.ainvoke(turn.chain_input)
+    try:
+        result = await turn.chain.ainvoke(turn.chain_input)
+    except Exception as error:
+        logger.warning("chat failed: %s", type(error).__name__)
+        raise HTTPException(status_code=503, detail=REPLY_FAILED) from error
     add_cost(request.session_id, result.response_metadata.get("cost"))
 
     if leaked(result.text, turn.chain_input["canary"]):
@@ -231,22 +240,28 @@ async def chat_stream(request: ChatRequest) -> AsyncIterator[ServerSentEvent]:
     usage = Usage()
 
     # answer comes in small chunks. aclosing - stop the model (and its cost) on return
-    async with aclosing(turn.chain.astream(turn.chain_input)) as stream:
-        async for chunk in stream:
-            if chunk.text:
-                reply += chunk.text
-                # check everything so far: the canary is split over several chunks
-                if leaked(reply, turn.chain_input["canary"]):
-                    for event in blocked_events("leak"):
-                        yield event
-                    return
-                yield ServerSentEvent(event="token", data={"text": chunk.text})
-            if "finish_reason" in chunk.response_metadata:
-                finish_reason = chunk.response_metadata["finish_reason"]
-            if chunk.usage_metadata:
-                usage.input_tokens = chunk.usage_metadata["input_tokens"]
-                usage.output_tokens = chunk.usage_metadata["output_tokens"]
-                usage.cost = chunk.response_metadata.get("cost")
+    try:
+        async with aclosing(turn.chain.astream(turn.chain_input)) as stream:
+            async for chunk in stream:
+                if chunk.text:
+                    reply += chunk.text
+                    # check everything so far: the canary is split over several chunks
+                    if leaked(reply, turn.chain_input["canary"]):
+                        for event in blocked_events("leak"):
+                            yield event
+                        return
+                    yield ServerSentEvent(event="token", data={"text": chunk.text})
+                if "finish_reason" in chunk.response_metadata:
+                    finish_reason = chunk.response_metadata["finish_reason"]
+                if chunk.usage_metadata:
+                    usage.input_tokens = chunk.usage_metadata["input_tokens"]
+                    usage.output_tokens = chunk.usage_metadata["output_tokens"]
+                    usage.cost = chunk.response_metadata.get("cost")
+    except Exception as error:  # noqa: BLE001 - timeout, provider error, …
+        # the status (200) is already sent, so the failure becomes the last event
+        logger.warning("chat stream failed: %s", type(error).__name__)
+        yield ServerSentEvent(event="error", data={"message": REPLY_FAILED})
+        return
 
     add_cost(request.session_id, usage.cost)
 
