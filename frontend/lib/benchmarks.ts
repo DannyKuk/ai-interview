@@ -8,11 +8,13 @@ const writeUp = (title: string, file: string): WriteUp => ({ title, href: `${DOC
 
 export const writeUps = {
   prompts: [
-    writeUp("interviewer comparison", "prompt-comparison.md"),
+    writeUp("interviewer comparison", "evals/interviewer.md#1-which-prompt-technique"),
     writeUp("feedback comparison", "feedback-prompt-comparison.md"),
   ],
-  settings: [writeUp("settings experiments", "settings-experiments.md")],
-  local: [writeUp("local models", "local-models.md")],
+  settings: [
+    writeUp("settings experiments", "evals/interviewer.md#2-which-model-and-reasoning-effort"),
+  ],
+  local: [writeUp("local models", "evals/interviewer.md#3-could-a-local-model-do-it")],
   security: [
     writeUp("jailbreak tests", "jailbreak-tests.md"),
     writeUp("challenge signal", "decisions/challenge-signal.md"),
