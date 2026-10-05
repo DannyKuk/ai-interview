@@ -1,11 +1,12 @@
 from langchain_core.messages import AIMessage, HumanMessage
 
-from backend.chains.interviewer import build_interviewer_chain
+from backend.chains.interviewer import build_interviewer_chain, build_interviewer_input
+from backend.schemas.chat import InterviewSettings
 
 
 def run(label: str, history: list) -> None:
     chain = build_interviewer_chain()
-    response = chain.invoke({"history": history})
+    response = chain.invoke(build_interviewer_input(InterviewSettings(), history))
 
     print(f"--- {label} ({len(history)} messages in history) ---")
     print("reply:", repr(response.text))

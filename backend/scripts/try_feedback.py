@@ -7,8 +7,8 @@ uv run python scripts/try_feedback.py no_example         # no story to tell: inv
 uv run python scripts/try_feedback.py nonsense           # praises it?
 uv run python scripts/try_feedback.py --questions 5
 
-Needs the cached profile from try_plan.py (out/profiles/09_career_changer.json). The plan is
-cached in out/plans/, every result is saved to out/feedback/.
+The profile and the plan are made on the first run (or taken from try_plan.py's cache in
+out/profiles/ and out/plans/), every result is saved to out/feedback/.
 """
 
 import argparse
@@ -21,7 +21,6 @@ from langchain_core.prompts import ChatPromptTemplate
 from try_plan import JUNIOR_JD, PLANS, load_profile
 
 from backend.api import feedback as feedback_api
-from backend.chains import feedback as feedback_chain
 from backend.chains.llm import get_chat_model
 from backend.chains.plan import make_plan, profile_text
 from backend.guard.plan_signature import sign_plan
@@ -78,6 +77,7 @@ async def load_plan(settings: InterviewSettings) -> InterviewPlan:
         return InterviewPlan.model_validate_json(cached.read_text())
     profile = await load_profile("09_career_changer.pdf", fresh=False)
     plan = (await make_plan(settings, profile, JUNIOR_JD)).value
+    PLANS.mkdir(parents=True, exist_ok=True)
     cached.write_text(plan.model_dump_json(indent=2))
     return plan
 
@@ -137,7 +137,7 @@ async def run(style: str, run_number: int, questions: int) -> None:
 
     card = result.scorecard
     print(
-        f"\n=== {feedback_chain.FEEDBACK_PROMPT}, {style} #{run_number}, "
+        f"\n=== {style} #{run_number}, "
         f"{questions} questions: total {total:.1f} s "
         f"(LLM {timing['llm']:.1f} s, Jev + rest {total - timing['llm']:.1f} s), "
         f"${timing['cost']}, overall {card.overall}"
@@ -153,8 +153,7 @@ async def run(style: str, run_number: int, questions: int) -> None:
     print(f"sample answer for Q{card.weakest_question + 1}: {card.sample_answer}")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    version = feedback_chain.FEEDBACK_PROMPT.rsplit("_", 1)[-1]
-    (OUT / f"{style}_{questions}q_{version}_{run_number}.json").write_text(
+    (OUT / f"{style}_{questions}q_{run_number}.json").write_text(
         result.model_dump_json(indent=2)
     )
 
@@ -164,10 +163,7 @@ async def main() -> None:
     parser.add_argument("styles", nargs="*", default=list(STYLES), choices=list(STYLES))
     parser.add_argument("--runs", type=int, default=1)
     parser.add_argument("--questions", type=int, default=8)
-    parser.add_argument("--prompt", default=feedback_chain.FEEDBACK_PROMPT)
     args = parser.parse_args()
-    # build_feedback_chain() reads it on every call
-    feedback_chain.FEEDBACK_PROMPT = args.prompt
 
     for style in args.styles:
         for run_number in range(1, args.runs + 1):
