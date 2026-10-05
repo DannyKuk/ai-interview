@@ -237,21 +237,16 @@ Nice to have: latte art, a barista certificate, ideas for making service faster.
         ),
         """Frontend Developer, Web (Netflux, Berlin)
 
-Every evening millions of people pick a series on Netflux in their browser. The web team builds the pages they browse and the account pages they manage their plan on.
+The Netflux web team builds the pages people browse and pick their next series on.
 
 What you'll do:
-- Build and improve features in Vue 3 and TypeScript
-- Work with the backend team on the REST APIs the pages use
-- Write tests and review code with the team
-- Keep the pages fast and accessible
+- Build features in Vue 3 and TypeScript
+- Write component tests
+- Work with the backend team on the APIs the pages use
 
 What we're looking for:
-- 2+ years building web apps with Vue or a similar framework
-- Good JavaScript or TypeScript, HTML and CSS
-- Experience with REST APIs and state management (Pinia or Vuex)
-- You explain your choices and ask when something is unclear
-
-Nice to have: Nuxt, performance work, accessibility.""",
+- 2+ years building web apps with Vue
+- Experience with tests and REST APIs""",
     ),
 ]
 

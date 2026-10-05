@@ -506,55 +506,40 @@
       "persona": "friendly",
       "question_count": 3
     },
-    "job_description": "Frontend Developer, Web (Netflux, Berlin)\n\nEvery evening millions of people pick a series on Netflux in their browser. The web team builds the pages they browse and the account pages they manage their plan on.\n\nWhat you'll do:\n- Build and improve features in Vue 3 and TypeScript\n- Work with the backend team on the REST APIs the pages use\n- Write tests and review code with the team\n- Keep the pages fast and accessible\n\nWhat we're looking for:\n- 2+ years building web apps with Vue or a similar framework\n- Good JavaScript or TypeScript, HTML and CSS\n- Experience with REST APIs and state management (Pinia or Vuex)\n- You explain your choices and ask when something is unclear\n\nNice to have: Nuxt, performance work, accessibility.",
+    "job_description": "Frontend Developer, Web (Netflux, Berlin)\n\nThe Netflux web team builds the pages people browse and pick their next series on.\n\nWhat you'll do:\n- Build features in Vue 3 and TypeScript\n- Write component tests\n- Work with the backend team on the APIs the pages use\n\nWhat we're looking for:\n- 2+ years building web apps with Vue\n- Experience with tests and REST APIs",
     "profile": {
       "first_name": "Max",
-      "headline": "Frontend Developer, 4 years, Vue and TypeScript",
+      "headline": "Web Developer, 3 years, focus on Vue and TypeScript",
       "seniority": "mid",
-      "years_experience": 4,
+      "years_experience": 3,
       "skills": [
         "Vue 3",
         "TypeScript",
-        "JavaScript",
-        "Pinia",
-        "Nuxt",
-        "HTML",
-        "CSS",
-        "Tailwind CSS",
-        "REST APIs",
+        "Python",
+        "FastAPI",
         "Vitest",
         "Git"
       ],
       "experience": [
         {
-          "title": "Frontend Developer",
+          "title": "Web Developer",
           "company": "Pixelhof Digital Agency",
           "period": "2023 – present",
           "highlights": [
-            "Built customer dashboards and booking tools in Vue 3, TypeScript and Pinia.",
-            "Migrated a large Vue 2 app to Vue 3 and the Composition API over four months without a feature freeze.",
-            "Added component tests with Vitest; team adopted writing a test for every bug fix."
-          ]
-        },
-        {
-          "title": "Junior Web Developer",
-          "company": "Stadtwerk Online",
-          "period": "2022 – 2023",
-          "highlights": [
-            "Built pages and forms for a customer portal in Vue connected to a REST API.",
-            "Fixed accessibility issues including keyboard navigation, form labels and colour contrast."
+            "Built HeadBook end to end; launched in September 2026",
+            "Frontend in Vue 3 and TypeScript; backend in Python (FastAPI)",
+            "Wrote component tests with Vitest"
           ]
         }
       ],
       "education": [
-        "BSc Media Informatics, Berlin University of Applied Sciences, 2022"
+        "BSc Media Informatics, Berlin University of Applied Sciences, 2023"
       ],
       "interview_topics": [
-        "Migration of large Vue 2 app to Vue 3 and Composition API",
-        "Introducing Vitest component tests and team testing practices",
-        "Accessibility fixes: keyboard navigation, form labels, colour contrast",
-        "Building customer dashboards and booking/booking tools in Vue and Pinia",
-        "Working with REST APIs for forms and customer portals"
+        "Building and launching HeadBook (social media app)",
+        "Frontend architecture with Vue 3 and TypeScript",
+        "Backend implementation with Python and FastAPI",
+        "Component testing using Vitest"
       ]
     },
     "cv_file": "/cvs/max-netflux.pdf"
