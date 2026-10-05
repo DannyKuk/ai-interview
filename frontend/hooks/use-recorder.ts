@@ -60,6 +60,7 @@ export function useRecorder({ maxSeconds = Infinity, onMaxLength }: RecorderOpti
   const recordingRef = useRef<Recording | null>(null);
   const chunksRef = useRef<Float32Array[]>([]);
   const samplesRef = useRef(0);
+  const unmountedRef = useRef(false);
   // the latest callback, read inside the audio handler
   const onMaxLengthRef = useRef(onMaxLength);
   useEffect(() => {
@@ -88,6 +89,10 @@ export function useRecorder({ maxSeconds = Infinity, onMaxLength }: RecorderOpti
 
     let stream: MediaStream | null = null;
     let context: AudioContext | null = null;
+    const closeMic = () => {
+      stream?.getTracks().forEach((track) => track.stop());
+      void context?.close();
+    };
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -114,12 +119,16 @@ export function useRecorder({ maxSeconds = Infinity, onMaxLength }: RecorderOpti
       source.connect(node);
       const meter = context.createAnalyser(); // reads the mic, outputs nowhere
       source.connect(meter);
+      // left while the mic was starting (e.g. the permission prompt was open)
+      if (unmountedRef.current) {
+        closeMic();
+        return;
+      }
       recordingRef.current = { stream, context, node };
       setAnalyser(meter);
       setStatus("recording");
     } catch (error) {
-      stream?.getTracks().forEach((track) => track.stop());
-      void context?.close();
+      closeMic();
       setError(micError(error));
       setStatus("idle");
     }
@@ -142,7 +151,13 @@ export function useRecorder({ maxSeconds = Infinity, onMaxLength }: RecorderOpti
   }, [release]);
 
   // leaving the page while recording: turn the mic off
-  useEffect(() => release, [release]);
+  useEffect(() => {
+    unmountedRef.current = false; // dev mode mounts twice
+    return () => {
+      unmountedRef.current = true;
+      release();
+    };
+  }, [release]);
 
   return { status, error, level, seconds, analyser, start, stop, audioSoFar };
 }
