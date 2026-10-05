@@ -74,8 +74,8 @@ async def transcribe_answer(request: Request) -> TranscriptResponse:
 )
 async def speak_sentence(request: SpeakRequest) -> Response:
     # the text is the interviewer's reply, already guarded and canary-checked by the
-    # chat. Sent back by the browser, so the cost cap + rate limit keep it from being a
-    # free TTS proxy
+    # chat. Sent back by the browser, so it can be any text: the per-IP rate limit is the
+    # hard bound (the cost cap is per session id, and the client picks that)
     if over_cap(request.session_id):
         raise HTTPException(status_code=429, detail=SPEAK_OVER_BUDGET)
     try:

@@ -46,7 +46,8 @@ async def extract_profile(cv_text: str) -> Priced[CandidateProfile]:
     )
     profile = priced(result, "cv profile")
     if has_control_chars(profile.value.model_dump()):
-        # safety net for the json_schema bug above. Only the fact is logged, no CV data
+        # safety net: with json_schema, gpt-5-mini broke dashes into control characters
+        # (function_calling: 0 of 8). Only the fact is logged, no CV data
         logger.warning("cv profile contains control characters")
     return profile
 

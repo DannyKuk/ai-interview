@@ -22,7 +22,7 @@ def build_plan_chain(effort: Effort = "low") -> Runnable:
             ("human", "{documents}"),
         ]
     )
-    # the JSON for 8 questions is ~1500 tokens, the rest is room for reasoning (medium).
+    # the JSON for 8 questions is ~1500 tokens, the rest is room for reasoning.
     # include_raw: the raw message carries the cost (the dev panel's cost breakdown)
     llm = get_chat_model(max_tokens=6000, effort=effort).with_structured_output(
         InterviewPlan, method="function_calling", strict=True, include_raw=True
