@@ -1,3 +1,5 @@
+from typing import get_args
+
 import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -7,7 +9,7 @@ from backend.prompts.interview_settings import DIFFICULTY, PERSONA
 from backend.prompts.turn_hints import HINTS
 from backend.schemas.chat import INTERVIEWERS, InterviewSettings, Technique
 
-TECHNIQUES = ["zero_shot", "few_shot", "chain_of_thought", "persona", "self_critique"]
+TECHNIQUES = get_args(Technique)
 
 
 def render_system_prompt(
