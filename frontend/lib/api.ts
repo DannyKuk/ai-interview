@@ -184,11 +184,6 @@ export async function speak(
   return { value: await response.arrayBuffer(), cost: costOf(response) };
 }
 
-// one whole interviewer turn as JSON (not streamed!)
-export function chat(body: ChatRequest): Promise<ChatResponse> {
-  return post<ChatResponse>("/api/interview/chat", body);
-}
-
 // stream events
 export type ChatStreamEvent =
   | { event: "meta"; data: Pick<ChatResponse, "hint" | "ended" | "progress" | "guard"> }
