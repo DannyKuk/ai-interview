@@ -3,12 +3,14 @@
 import type { Mood, TalkingHead } from "@met4citizen/talkinghead";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { useState } from "react";
 
 import { Equalizer } from "@/components/interview/equalizer";
 import { SelfView } from "@/components/interview/self-view";
 import { StageCaption } from "@/components/interview/stage-caption";
 import type { Interviewer, InterviewSettings } from "@/lib/api";
 import { AVATARS } from "@/lib/avatars";
+import { cn } from "@/lib/utils";
 
 // A still of the same avatar, rendered at the stage's height: shows while three.js and
 // the model load (~2-3 s), and stays if WebGL fails
@@ -86,6 +88,11 @@ export function InterviewStage({
   const gender = interviewer?.gender ?? "female";
   const look = AVATARS[gender];
   const TalkingHeadAvatar = TALKING_HEADS[gender];
+  // the 3D head plays the voice: switched to the still image mid-reply, it stays
+  // (invisible) until the reply ends, or the sentence it's playing would be cut off
+  const [headMounted, setHeadMounted] = useState(avatar);
+  if (avatar && !headMounted) setHeadMounted(true);
+  if (!avatar && !speaking && headMounted) setHeadMounted(false);
 
   return (
     <div
@@ -100,16 +107,17 @@ export function InterviewStage({
       )}
       <div className="stage-cone" />
       <div className="absolute inset-0">
-        {avatar ? (
-          <TalkingHeadAvatar
-            onReady={onReady}
-            placeholder={<Portrait src={look.portrait} />}
-            mood={persona && MOOD[persona]}
-            model={look.model}
-          />
-        ) : (
-          <RoundPortrait src={look.portrait} speaking={speaking} />
+        {headMounted && (
+          <div className={cn("absolute inset-0", !avatar && "invisible")}>
+            <TalkingHeadAvatar
+              onReady={onReady}
+              placeholder={<Portrait src={look.portrait} />}
+              mood={persona && MOOD[persona]}
+              model={look.model}
+            />
+          </div>
         )}
+        {!avatar && <RoundPortrait src={look.portrait} speaking={speaking} />}
       </div>
       <div className="film-grain" />
       {interviewer && (
