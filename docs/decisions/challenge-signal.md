@@ -43,7 +43,7 @@ The opposite mistake is worse: a candidate who says something **correct but new 
 
 ## What it shows
 
-- **Wrong claims separate cleanly:** every wrong claim scored ≥ 0.80, every correct one ≤ 0.75 (45 cases, every run).
+- **Wrong claims separate cleanly:** every wrong claim scored ≥ 0.80, every correct one ≤ 0.72 (45 cases, every run).
 - **Jev knows what it doesn't know:** recent or niche claims score high on "can't verify" (≥ 0.57) and stay below the wrong threshold.
 - **Contradictions separate too:** 0.64–0.97 against ≤ 0.13 for small corrections, changed opinions and new details. Claiming Kubernetes microservices after describing "a small Flask app" (the buzzwords case, 0.82) is a fair thing to ask about.
 - **The old feedback punished correct-but-unknown claims:** its "technically correct" criterion gave a true OpenRouter TTS answer 1.8 / 5. Fixing that was part of this work.

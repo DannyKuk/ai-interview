@@ -23,7 +23,7 @@ docker compose up --build     # the first build downloads the speech models (~1 
 
 Open **http://localhost:3000**.
 
-- **Developer panel:** gear icon, or `?dev=1`. Model, reasoning effort, max tokens, prompt technique, the full system prompt, cost per call and the guard log.
+- **Developer panel:** the Settings button (top right), or `?dev=1`. Model, reasoning effort, max tokens, prompt technique, the full system prompt, cost per call and the guard log.
 - **Benchmarks:** http://localhost:3000/benchmarks shows the eval results as charts.
 - **Cloud voice:** on the setup page. Off (the default) is a free local voice; on uses Gemini TTS through OpenRouter (~$0.03 per interview).
 

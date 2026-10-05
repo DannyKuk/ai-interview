@@ -96,8 +96,8 @@ Every piece of untrusted text (chat, transcript, CV, job description, role) goes
 
 | Layer | Kind | What it does |
 |---|---|---|
-| **Limits** | exact | Message length, CV size/pages/type, JD ≤ 8k chars, per-IP rate limits, $0.10 cost cap per interview |
-| **Signatures** | exact | HMAC over the plan and over the transcript: an edited plan or a forged history is rejected before any model runs |
+| **Limits** | exact | Message length, CV size/pages/type, JD ≤ 8k chars, per-IP rate limits, $0.10 cost cap per session. The browser picks the session id, so the rate limits are the hard bound |
+| **Signatures** | exact | HMAC over the plan and over the chat transcript: an edited plan or a forged chat history is rejected before any model runs. Feedback checks the plan's signature; the answers it scores are re-checked by Jev, not matched against the signed transcript |
 | **Jev guard** | probabilistic | Blocks when P(injection) + P(abuse) ≥ 0.5. Fails closed. Refuses in character ("Let's keep this about the interview…") |
 | **Data, not instructions** | exact + probabilistic | Candidate text is wrapped in tags with `<` `>` escaped, so it can't break out; the prompt tells the model to treat it as data |
 | **Canary token** | exact | A secret word in the system prompt: if it appears in a reply, the reply is replaced |
@@ -108,7 +108,7 @@ Tested with 37 attacks and 8 legit controls, 5 runs each: [jailbreak tests](eval
 
 - **Stateless backend.** No database and no sessions: the browser holds the interview, and the server proves it wasn't changed with signatures. The only server-side state is in memory: rate-limit counters and each session's spent cost.
 - **LangChain for LLM calls, plain HTTP for the rest.** All chat and structured-output calls are LangChain chains (`backend/src/backend/chains/`). Structured output uses strict function calling. Jev, TTS and STT aren't chat models, so they're direct calls.
-- **Prompts are files** (`backend/src/backend/prompts/`). The five interviewer techniques can be switched in the developer panel (gear icon or `?dev=1`), together with model, effort and max tokens. It also shows the full system prompt, the cost of each call and a log of the guard's verdicts.
+- **Prompts are files** (`backend/src/backend/prompts/`). The five interviewer techniques can be switched in the developer panel (Settings button top right, or `?dev=1`), together with model, effort and max tokens. It also shows the full system prompt, the cost of each call and a log of the guard's verdicts.
 - **Typed end to end.** Pydantic schemas on the backend; the frontend's API types are generated from FastAPI's OpenAPI schema.
 - **Office backgrounds** were generated once in Gemini (web), one per company, and committed as images. They contain no text or logos; the company name only appears in the interviewer's name tag.
 
