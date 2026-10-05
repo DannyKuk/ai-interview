@@ -1,5 +1,5 @@
 // Plays sentences one after another. The next sentence is synthesized while the
-// current one plays (FR-18), but only one ahead: on barge-in, or with Gemini's cost
+// current one plays, but only one ahead: on barge-in, or with Gemini's cost
 // per sentence, audio made further ahead would be thrown away.
 // Engine-agnostic: the TTS call and the playback are passed in (HeadTTS or Gemini,
 // with its fallback to HeadTTS inside `synthesize`)

@@ -17,7 +17,7 @@ const SENIORITIES: Seniority[] = ["junior", "mid", "senior", "lead"];
 // same as min_length on interview_topics in the backend: fewer → /plan says 422
 const MIN_TOPICS = 3;
 
-// FR-3 "Is this right?": what the interviewer will know. The bits the LLM gets wrong most
+// "Is this right?": what the interviewer will know. The bits the LLM gets wrong most
 // (headline, seniority, years, skills, topics) can be fixed; the rest is shown as read.
 // defaultOpen: open after an upload, closed for a preset (ours, already checked)
 export function ProfileOverview({ defaultOpen }: { defaultOpen: boolean }) {

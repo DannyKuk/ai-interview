@@ -1,5 +1,5 @@
 // Splits the streamed interviewer reply into sentences, so the first one can be spoken
-// while the rest is still being written (FR-18)
+// while the rest is still being written
 
 // a "." after these isn't the end of a sentence ("e.g. Kafka", "Dr. Smith"). Not "ms":
 // in an interview "200 ms." is milliseconds at the end of a sentence

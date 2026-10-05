@@ -152,7 +152,7 @@ def test_every_field_is_required_for_strict_mode():
 
 
 def test_analysis_comes_first():
-    # the model writes fields in schema order: reason first, then the feedback (FR-14)
+    # the model writes fields in schema order: reason first, then the feedback
     assert next(iter(FeedbackText.model_fields)) == "analysis"
 
 

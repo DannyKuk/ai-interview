@@ -95,7 +95,7 @@ class QuestionFeedback(BaseModel):
 class FeedbackText(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    # first, so the model reasons before it writes (FR-14). Not shown to the candidate
+    # first, so the model reasons before it writes. Not shown to the candidate
     analysis: str = Field(
         description="Per question: what the answer covered and missed, given the scores"
     )
