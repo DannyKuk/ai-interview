@@ -9,6 +9,7 @@ from backend.services.transcript_fixes import fix_transcript
         ("We moved from View 2 to View 3.", "We moved from Vue 2 to Vue 3."),
         ("I replaced it with Penia stores", "I replaced it with Pinia stores"),
         ("with peniastores.", "with Pinia stores."),
+        ("in view3 with a Pinea store", "in Vue 3 with a Pinia store"),
         ("We run Postgresl on q burnings", "We run PostgreSQL on Kubernetes"),
     ],
 )

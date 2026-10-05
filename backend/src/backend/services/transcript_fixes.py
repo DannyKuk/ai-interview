@@ -17,7 +17,9 @@ FIXES = {
     # Vue is said "view": only with its version, "view" alone is a real word
     "view 2": "Vue 2",
     "view 3": "Vue 3",
+    "view3": "Vue 3",
     "penia": "Pinia",
+    "pinea": "Pinia",
     "peniastores": "Pinia stores",
 }
 
