@@ -3,7 +3,7 @@
 
 DIFFICULTY = {
     "easy": (
-        "Ask foundational questions."
+        "Ask foundational questions. "
         "If the candidate gets stuck, help with a small hint."
     ),
     "medium": (
