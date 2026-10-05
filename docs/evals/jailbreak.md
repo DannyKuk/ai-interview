@@ -36,7 +36,7 @@ The app is stateless: the browser sends the whole context (settings, plan, histo
 | Passed in all 5 runs | 43 / 44 | **45 / 45** | **45 / 45** |
 | Attacks that worked at least once | 1 (forged history, 1 of 5 runs) | 0 | 0 |
 | Legit answers blocked by mistake | 0 | 0 | 0 |
-| LLM cost of the round | $0.032 | $0.034 | $0.039 |
+| Cost of the round (LLM + chat/feedback Jev) | $0.032 | $0.034 | $0.039 |
 
 ## What it shows
 

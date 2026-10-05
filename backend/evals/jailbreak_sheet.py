@@ -252,7 +252,7 @@ def summary_sheet(sheet: Worksheet, rounds: list[dict]) -> None:
                 (
                     f"{data['run_at'][:16].replace('T', ' ')} UTC · {data['model']} · "
                     f"{data['runs']} runs per entry · guard threshold "
-                    f"{data['guard_threshold']} · ${cost:.3f} LLM (Jev not counted)"
+                    f"{data['guard_threshold']} · ${cost:.3f} LLM + chat/feedback Jev"
                 ),
             ]
         )

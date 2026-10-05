@@ -381,7 +381,7 @@ async def main() -> None:
     total = sum(r.cost for r in results)
     print(
         f"\n{len(attacks) - len(failed)}/{len(attacks)} passed every run, "
-        f"${total:.4f} (LLM calls, Jev not counted)"
+        f"${total:.4f} (LLM calls + chat/feedback Jev; CV/JD/plan Jev not counted)"
     )
 
     OUT.mkdir(exist_ok=True)
