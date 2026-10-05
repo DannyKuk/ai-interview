@@ -1,13 +1,15 @@
 """Build the presets: guard + CandidateProfile for each preset CV, plus a sample job description.
 
 uv run python scripts/sample_cvs/make_sample_cvs.py   # build the PDFs first
-uv run python scripts/make_presets.py                 # 8 LLM calls in parallel, ~10 s
+uv run python scripts/make_presets.py                 # every preset: LLM calls in parallel, ~10 s
+uv run python scripts/make_presets.py --only max-netflux   # just these, the rest stays as it is
 
 Writes src/backend/data/presets.json (committed: the app never extracts a preset at runtime)
 and copies each PDF to frontend/public/cvs/, so it can be downloaded to try the upload.
 All people and employers are fictional.
 """
 
+import argparse
 import asyncio
 import json
 import shutil
@@ -19,7 +21,7 @@ from backend.guard.jev import check_document
 from backend.schemas.chat import InterviewSettings
 from backend.schemas.presets import Preset
 from backend.services.cv_reader import read_cv
-from backend.services.presets import PRESETS_FILE
+from backend.services.presets import PRESETS_FILE, load_presets
 
 CVS = Path(__file__).parent / "out" / "cvs"
 PUBLIC_CVS = Path(__file__).parents[2] / "frontend" / "public" / "cvs"
@@ -222,6 +224,35 @@ What we're looking for:
 
 Nice to have: latte art, a barista certificate, ideas for making service faster.""",
     ),
+    # the demo candidate: a plain profile, answers to read along in docs/demo.md
+    Spec(
+        "max-netflux",
+        "16_vue_developer",
+        InterviewSettings(
+            company="Netflux",
+            role="Frontend Developer",
+            difficulty="easy",
+            persona="friendly",
+            question_count=3,
+        ),
+        """Frontend Developer, Web (Netflux, Berlin)
+
+Every evening millions of people pick a series on Netflux in their browser. The web team builds the pages they browse and the account pages they manage their plan on.
+
+What you'll do:
+- Build and improve features in Vue 3 and TypeScript
+- Work with the backend team on the REST APIs the pages use
+- Write tests and review code with the team
+- Keep the pages fast and accessible
+
+What we're looking for:
+- 2+ years building web apps with Vue or a similar framework
+- Good JavaScript or TypeScript, HTML and CSS
+- Experience with REST APIs and state management (Pinia or Vuex)
+- You explain your choices and ask when something is unclear
+
+Nice to have: Nuxt, performance work, accessibility.""",
+    ),
 ]
 
 
@@ -247,7 +278,15 @@ async def build(spec: Spec) -> Preset:
 
 
 async def main() -> None:
-    presets = await asyncio.gather(*(build(spec) for spec in SPECS))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--only", nargs="+", choices=[spec.id for spec in SPECS])
+    args = parser.parse_args()
+    specs = [spec for spec in SPECS if not args.only or spec.id in args.only]
+
+    built = {p.id: p for p in await asyncio.gather(*(build(spec) for spec in specs))}
+    # --only: the other presets keep the profile they have, not a fresh extraction
+    kept = {p.id: p for p in load_presets()} if args.only else {}
+    presets = [built.get(spec.id) or kept[spec.id] for spec in SPECS]
 
     PRESETS_FILE.parent.mkdir(parents=True, exist_ok=True)
     PRESETS_FILE.write_text(
@@ -260,10 +299,10 @@ async def main() -> None:
         encoding="utf-8",
     )
     PUBLIC_CVS.mkdir(parents=True, exist_ok=True)
-    for spec in SPECS:
+    for spec in specs:
         shutil.copyfile(CVS / f"{spec.cv}.pdf", PUBLIC_CVS / f"{spec.id}.pdf")
 
-    for preset in presets:
+    for preset in built.values():
         p = preset.profile
         print(
             f"{preset.id:22} {p.first_name}, {p.seniority}, {p.years_experience} y, "

@@ -13,12 +13,13 @@ PUBLIC = Path(__file__).parents[2] / "frontend" / "public"
 def test_the_presets_file_loads_and_validates():
     # the committed JSON still fits the schemas (Preset, CandidateProfile, settings)
     presets = load_presets()
-    assert len({preset.id for preset in presets}) == len(presets) == 8
+    assert len({preset.id for preset in presets}) == len(presets) == 9
 
 
-def test_one_preset_per_company():
-    companies = [preset.settings.company for preset in load_presets()]
-    assert sorted(companies) == sorted(get_args(Company))
+def test_every_company_has_a_preset():
+    # one per company, plus the demo candidate (Netflux)
+    companies = {preset.settings.company for preset in load_presets()}
+    assert companies == set(get_args(Company))
 
 
 def test_one_interviewer_per_company():
