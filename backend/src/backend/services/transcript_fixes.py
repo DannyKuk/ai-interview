@@ -1,7 +1,8 @@
 import re
 
 # tech words the STT model mishears -> what the candidate said. Only mishearings we
-# actually saw (STT spike, docs/decisions/speech-to-text.md)
+# actually saw (STT spike, docs/decisions/speech-to-text.md; Vue and Pinia: the demo
+# answers in docs/demo.md, read by HeadTTS)
 # Never map a correct word ("Postgres" alone is a real name, it stays)
 FIXES = {
     "postgresl": "PostgreSQL",
@@ -13,6 +14,11 @@ FIXES = {
     "add in potency": "idempotency",
     "adem potency": "idempotency",
     "to raphform": "Terraform",
+    # Vue is said "view": only with its version, "view" alone is a real word
+    "view 2": "Vue 2",
+    "view 3": "Vue 3",
+    "penia": "Pinia",
+    "peniastores": "Pinia stores",
 }
 
 # whole words only, any case: "Postgresl," and "postgresl" both match
