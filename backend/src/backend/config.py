@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     # reject a CV / job description when P(kind of document) is below this
     document_min_match: float = 0.5
 
-    # per client IP, shared by both chat endpoints ("limits" syntax)
+    # per client IP, shared by chat, stream, plan, feedback, system-prompt ("limits" syntax)
     chat_rate_limit: str = "20/minute"
     cv_rate_limit: str = "5/minute"  # every CV upload is an LLM call
     # live captions re-send the answer so far ~1x per second, + the final pass
