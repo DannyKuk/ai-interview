@@ -23,6 +23,7 @@ export function useDictation(onTranscript: (text: string) => void) {
   const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const captionBusyRef = useRef(false);
+  const finalRef = useRef<AbortController | null>(null);
   const onTranscriptRef = useRef(onTranscript);
   useEffect(() => {
     onTranscriptRef.current = onTranscript;
@@ -60,6 +61,9 @@ export function useDictation(onTranscript: (text: string) => void) {
     };
   }, [status, audioSoFar]);
 
+  // the call ended or the page was left while transcribing: the answer isn't sent
+  useEffect(() => () => finalRef.current?.abort(), []);
+
   const start = useCallback(async () => {
     setError(null);
     setCaption("");
@@ -68,16 +72,18 @@ export function useDictation(onTranscript: (text: string) => void) {
 
   const stop = useCallback(async () => {
     const pcm = stopRecorder();
+    const controller = new AbortController();
+    finalRef.current = controller;
     setTranscribing(true);
     try {
-      const text = await transcribe(pcm);
+      const text = await transcribe(pcm, controller.signal);
       if (text) {
         onTranscriptRef.current(text);
       } else {
         setError(NOTHING_HEARD);
       }
     } catch (error) {
-      setError(errorMessage(error));
+      if (!controller.signal.aborted) setError(errorMessage(error));
     } finally {
       setTranscribing(false);
       setCaption("");

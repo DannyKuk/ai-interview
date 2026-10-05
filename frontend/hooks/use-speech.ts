@@ -74,7 +74,6 @@ function playOnAvatar(
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const durationMs = clip.buffer.duration * 1000;
-    const fallback = setTimeout(resolve, durationMs + AVATAR_END_GRACE_MS);
 
     let listener = clip.lipsync ? null : audioLipsync;
     if (listener) {
@@ -93,6 +92,9 @@ function playOnAvatar(
       release();
       resolve();
     };
+    // ends like a normal clip, or the late marker (e.g. after a hidden tab) would cut
+    // the lip-sync of the clip playing by then
+    const fallback = setTimeout(finish, durationMs + AVATAR_END_GRACE_MS);
 
     signal.addEventListener(
       "abort",
