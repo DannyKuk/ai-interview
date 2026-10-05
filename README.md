@@ -53,6 +53,7 @@ cd backend && uv run pytest                       # tests use fake LLMs, no API 
 
 | Doc | What's in it |
 |---|---|
+| [Demo](docs/demo.md) | A ready-made candidate (Max, Vue developer), answers to paste or read aloud, and lines that show the guard and the follow-ups |
 | [Architecture](docs/architecture.md) | The pieces, one interview from start to end, how the CV, plan and scoring work, one turn in detail, the security layers |
 | [Text-to-speech](docs/decisions/text-to-speech.md) | Why a local voice by default, Gemini as an option, and not `gpt-audio` |
 | [Speech-to-text](docs/decisions/speech-to-text.md) | Why Parakeet: 2.3% word errors on a real accented voice, 0.3 s per answer |
