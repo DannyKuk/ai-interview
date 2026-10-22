@@ -1,6 +1,17 @@
-# Interview Practice
+<h1 align="center">Interview Practice</h1>
 
-Practise a job interview with an AI interviewer who has read your CV.
+<p align="center"><b>Practise a job interview with an AI interviewer who has read your CV.</b></p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="Code: MIT" src="https://img.shields.io/badge/code-MIT-blue"></a>
+  <a href="backend/pyproject.toml"><img alt="Python 3.14" src="https://img.shields.io/badge/python-3.14-3776AB?logo=python&logoColor=white"></a>
+  <a href="backend/"><img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white"></a>
+  <a href="backend/src/backend/chains/"><img alt="LangChain" src="https://img.shields.io/badge/LangChain-1C3C3C?logo=langchain&logoColor=white"></a>
+  <a href="frontend/"><img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white"></a>
+  <a href="frontend/components/avatar/"><img alt="three.js" src="https://img.shields.io/badge/three.js-000000?logo=threedotjs&logoColor=white"></a>
+  <a href="https://openrouter.ai"><img alt="OpenRouter" src="https://img.shields.io/badge/OpenRouter-6566F1?logo=openrouter&logoColor=white"></a>
+  <a href="docker-compose.yaml"><img alt="Docker Compose" src="https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white"></a>
+</p>
 
 Pick a parody company (Guugle, Netflux, Goldman Sax, …) and a role, then upload your CV or use a preset. A 3D interviewer asks questions tailored to you. You answer by typing or speaking, and it follows up on vague answers and pushes back on wrong claims. At the end you get a scored report: feedback per question, strengths, what to improve, and a sample answer for your weakest question.
 
